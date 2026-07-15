@@ -15,7 +15,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - **Styling**: Tailwind CSS
 - **Data fetching/mutations**: TanStack Query + Start server functions
 - **Database**: SQLite (via Drizzle ORM) for local dev; portable to Postgres later
-- **Auth**: Email magic-link or simple session-based auth (decide during implementation)
+- **Auth**: Google OAuth sign-in, server-side sessions (HttpOnly cookie, session id hashed at rest)
 - **Deployment target**: Node server (Vinxi build output), e.g. Vercel/Fly/Render
 
 ## Core Data Model
@@ -25,6 +25,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - **CollectionRecipe**: collectionId, recipeId (join table)
 - **Share**: id, recipeId or collectionId, token (for unlisted link sharing), createdBy, createdAt
 - **SavedRecipe**: userId, recipeId, savedAt (bookmark/fork tracking)
+- **Comment**: id, recipeId, authorId, parentId (nullable, self-referencing — threaded replies), body, createdAt, updatedAt
 
 ## Key Screens / Routes
 - `/` — Landing/feed: public recipes + user's own recent recipes if logged in
@@ -48,7 +49,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - Meal planning calendar
 - Grocery list generation
 - Recipe scaling/unit conversion
-- Comments/ratings on recipes
+- Ratings on recipes (comments are in scope — threaded replies, arbitrary depth)
 
 ## Milestones
 1. Scaffold app (TanStack Start + Tailwind), basic routing shell

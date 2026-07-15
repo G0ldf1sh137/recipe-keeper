@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { sqliteTable, text, integer, primaryKey } from "drizzle-orm/sqlite-core";
+import type { AnySQLiteColumn } from "drizzle-orm/sqlite-core";
 
 const id = () =>
   text("id")
@@ -137,3 +138,16 @@ export const savedRecipes = sqliteTable(
   },
   (table) => [primaryKey({ columns: [table.userId, table.recipeId] })],
 );
+
+export const comments = sqliteTable("comments", {
+  id: id(),
+  recipeId: text("recipe_id")
+    .notNull()
+    .references(() => recipes.id, { onDelete: "cascade" }),
+  authorId: text("author_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  parentId: text("parent_id").references((): AnySQLiteColumn => comments.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  ...timestamps,
+});

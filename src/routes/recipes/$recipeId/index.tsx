@@ -2,11 +2,18 @@ import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getRecipe, deleteRecipe } from "#/recipes/recipes.functions";
+import { listComments } from "#/comments/comments.functions";
+import { getSessionUser } from "#/auth/auth.functions";
+import { CommentThread } from "#/comments/CommentThread";
 
 export const Route = createFileRoute("/recipes/$recipeId/")({
   loader: async ({ params }) => {
-    const recipe = await getRecipe({ data: { id: params.recipeId } });
-    return { recipe };
+    const [recipe, comments, user] = await Promise.all([
+      getRecipe({ data: { id: params.recipeId } }),
+      listComments({ data: { recipeId: params.recipeId } }),
+      getSessionUser(),
+    ]);
+    return { recipe, comments, user };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -23,7 +30,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe } = Route.useLoaderData();
+  const { recipe, comments, user } = Route.useLoaderData();
   const navigate = useNavigate();
   const deleteRecipeFn = useServerFn(deleteRecipe);
   const [deleting, setDeleting] = useState(false);
@@ -104,6 +111,8 @@ function RecipePage() {
           ))}
         </ol>
       </section>
+
+      <CommentThread recipeId={recipe.id} comments={comments} canComment={!!user} />
     </div>
   );
 }

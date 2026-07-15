@@ -15,6 +15,13 @@
       "when": 1784151511225,
       "tag": "0001_normal_nehzno",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784154073142,
+      "tag": "0002_bouncy_charles_xavier",
+      "breakpoints": true
     }
   ]
 }
