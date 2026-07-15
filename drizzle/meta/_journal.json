@@ -22,6 +22,13 @@
       "when": 1784154073142,
       "tag": "0002_bouncy_charles_xavier",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1784156021626,
+      "tag": "0003_perpetual_wildside",
+      "breakpoints": true
     }
   ]
 }

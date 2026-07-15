@@ -26,6 +26,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - **Share**: id, recipeId or collectionId, token (for unlisted link sharing), createdBy, createdAt
 - **SavedRecipe**: userId, recipeId, savedAt (bookmark/fork tracking)
 - **Comment**: id, recipeId, authorId, parentId (nullable, self-referencing — threaded replies), body, createdAt, updatedAt
+- **Rating**: recipeId, userId (composite key — one rating per user per recipe), value (1–5), createdAt, updatedAt
 
 ## Key Screens / Routes
 - `/` — Landing/feed: public recipes + user's own recent recipes if logged in
@@ -49,7 +50,6 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - Meal planning calendar
 - Grocery list generation
 - Recipe scaling/unit conversion
-- Ratings on recipes (comments are in scope — threaded replies, arbitrary depth)
 
 ## Milestones
 1. Scaffold app (TanStack Start + Tailwind), basic routing shell

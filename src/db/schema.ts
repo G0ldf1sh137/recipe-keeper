@@ -151,3 +151,18 @@ export const comments = sqliteTable("comments", {
   body: text("body").notNull(),
   ...timestamps,
 });
+
+export const ratings = sqliteTable(
+  "ratings",
+  {
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    value: integer("value").notNull(),
+    ...timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.recipeId, table.userId] })],
+);

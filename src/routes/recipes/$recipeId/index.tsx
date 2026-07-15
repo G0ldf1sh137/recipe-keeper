@@ -5,15 +5,18 @@ import { getRecipe, deleteRecipe } from "#/recipes/recipes.functions";
 import { listComments } from "#/comments/comments.functions";
 import { getSessionUser } from "#/auth/auth.functions";
 import { CommentThread } from "#/comments/CommentThread";
+import { getRatingSummary } from "#/ratings/ratings.functions";
+import { RecipeRating } from "#/ratings/RecipeRating";
 
 export const Route = createFileRoute("/recipes/$recipeId/")({
   loader: async ({ params }) => {
-    const [recipe, comments, user] = await Promise.all([
+    const [recipe, comments, user, rating] = await Promise.all([
       getRecipe({ data: { id: params.recipeId } }),
       listComments({ data: { recipeId: params.recipeId } }),
       getSessionUser(),
+      getRatingSummary({ data: { recipeId: params.recipeId } }),
     ]);
-    return { recipe, comments, user };
+    return { recipe, comments, user, rating };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -33,7 +36,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, comments, user } = Route.useLoaderData();
+  const { recipe, comments, user, rating } = Route.useLoaderData();
   const navigate = useNavigate();
   const deleteRecipeFn = useServerFn(deleteRecipe);
   const [deleting, setDeleting] = useState(false);
@@ -121,6 +124,14 @@ function RecipePage() {
           ))}
         </ol>
       </section>
+
+      <RecipeRating
+        recipeId={recipe.id}
+        average={rating.average}
+        count={rating.count}
+        myRating={rating.myRating}
+        canRate={!!user}
+      />
 
       <CommentThread recipeId={recipe.id} comments={comments} canComment={!!user} />
     </div>
