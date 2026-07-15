@@ -1,0 +1,60 @@
+# Recipe Keeper — Design Plan
+
+## Overview
+Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users can write up recipes with ingredients and steps, organize them into collections, and share them publicly or with specific people via a link.
+
+## Goals
+- Let a user quickly capture a recipe (title, ingredients, steps, photo, tags).
+- Let a user share a single recipe or a collection via a public link.
+- Let other users discover and save (fork/bookmark) recipes shared with them.
+- Keep the initial scope small: no meal planning, grocery lists, or nutrition calculators in v1.
+
+## Tech Stack
+- **Framework**: TanStack Start (React + TanStack Router, full-stack, SSR)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Data fetching/mutations**: TanStack Query + Start server functions
+- **Database**: SQLite (via Drizzle ORM) for local dev; portable to Postgres later
+- **Auth**: Email magic-link or simple session-based auth (decide during implementation)
+- **Deployment target**: Node server (Vinxi build output), e.g. Vercel/Fly/Render
+
+## Core Data Model
+- **User**: id, email, name, avatarUrl, createdAt
+- **Recipe**: id, ownerId, title, description, ingredients (list of {qty, unit, name}), steps (ordered list of strings), photoUrl, tags (list of strings), visibility (private | unlisted | public), createdAt, updatedAt
+- **Collection**: id, ownerId, name, description, visibility
+- **CollectionRecipe**: collectionId, recipeId (join table)
+- **Share**: id, recipeId or collectionId, token (for unlisted link sharing), createdBy, createdAt
+- **SavedRecipe**: userId, recipeId, savedAt (bookmark/fork tracking)
+
+## Key Screens / Routes
+- `/` — Landing/feed: public recipes + user's own recent recipes if logged in
+- `/login`, `/signup` — Auth
+- `/recipes/new` — Create recipe form
+- `/recipes/$recipeId` — View a recipe (ingredients, steps, photo, author, share button)
+- `/recipes/$recipeId/edit` — Edit recipe (owner only)
+- `/collections` — List user's collections
+- `/collections/$collectionId` — View a collection and its recipes
+- `/u/$username` — Public profile: a user's public recipes
+- `/shared/$token` — View an unlisted recipe/collection via share link (no login required)
+
+## Sharing Model (v1)
+- **Public**: visible on the owner's public profile and in search/feed.
+- **Unlisted**: only accessible via a generated share link (`/shared/:token`); not indexed or listed.
+- **Private**: visible only to the owner.
+- Sharing a recipe generates a `Share` record with a random token; revoking sharing deletes/invalidates the token.
+
+## Non-Goals (v1)
+- Nutrition facts / calorie calculation
+- Meal planning calendar
+- Grocery list generation
+- Recipe scaling/unit conversion
+- Comments/ratings on recipes
+
+## Milestones
+1. Scaffold app (TanStack Start + Tailwind), basic routing shell
+2. Data layer: Drizzle schema + migrations, server functions for CRUD
+3. Recipe CRUD UI (create/view/edit/delete)
+4. Auth (signup/login/session)
+5. Collections (create, add/remove recipes)
+6. Sharing (public/unlisted links, public profile page)
+7. Polish: search/filter by tag, responsive styling, empty states
