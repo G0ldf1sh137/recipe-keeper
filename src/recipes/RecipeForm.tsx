@@ -36,6 +36,9 @@ export function emptyRecipeFormValues(): RecipeFormValues {
   };
 }
 
+const inputClass =
+  "rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none";
+
 export function RecipeForm({
   initialValues,
   submitLabel,
@@ -98,9 +101,9 @@ export function RecipeForm({
   return (
     <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-6">
       <label className="flex flex-col gap-1">
-        <span className="font-medium">Title</span>
+        <span className="font-medium text-ink/70">Title</span>
         <input
-          className="rounded border px-3 py-2"
+          className={inputClass}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Grandma's pancakes"
@@ -108,9 +111,9 @@ export function RecipeForm({
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="font-medium">Description</span>
+        <span className="font-medium text-ink/70">Description</span>
         <textarea
-          className="rounded border px-3 py-2"
+          className={inputClass}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
@@ -118,9 +121,9 @@ export function RecipeForm({
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="font-medium">Photo URL</span>
+        <span className="font-medium text-ink/70">Photo URL</span>
         <input
-          className="rounded border px-3 py-2"
+          className={inputClass}
           value={photoUrl}
           onChange={(e) => setPhotoUrl(e.target.value)}
           placeholder="https://..."
@@ -128,30 +131,30 @@ export function RecipeForm({
       </label>
 
       <div className="flex flex-col gap-2">
-        <span className="font-medium">Ingredients</span>
+        <span className="font-medium text-ink/70">Ingredients</span>
         {ingredients.map((row, i) => (
           <div key={i} className="flex gap-2">
             <input
-              className="w-20 rounded border px-2 py-1"
+              className={`w-20 ${inputClass} px-2 py-1`}
               placeholder="qty"
               value={row.qty}
               onChange={(e) => updateIngredient(i, "qty", e.target.value)}
             />
             <input
-              className="w-24 rounded border px-2 py-1"
+              className={`w-24 ${inputClass} px-2 py-1`}
               placeholder="unit"
               value={row.unit}
               onChange={(e) => updateIngredient(i, "unit", e.target.value)}
             />
             <input
-              className="flex-1 rounded border px-2 py-1"
+              className={`flex-1 ${inputClass} px-2 py-1`}
               placeholder="ingredient"
               value={row.name}
               onChange={(e) => updateIngredient(i, "name", e.target.value)}
             />
             <button
               type="button"
-              className="px-2 text-red-600"
+              className="px-2 text-red-600 hover:text-red-700"
               onClick={() => setIngredients((rows) => rows.filter((_, idx) => idx !== i))}
               aria-label="Remove ingredient"
             >
@@ -161,7 +164,7 @@ export function RecipeForm({
         ))}
         <button
           type="button"
-          className="self-start text-sm text-blue-600"
+          className="self-start text-sm font-medium text-accent-600 hover:text-accent-700"
           onClick={() => setIngredients((rows) => [...rows, { qty: "", unit: "", name: "" }])}
         >
           + Add ingredient
@@ -169,19 +172,19 @@ export function RecipeForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="font-medium">Steps</span>
+        <span className="font-medium text-ink/70">Steps</span>
         {steps.map((step, i) => (
           <div key={i} className="flex gap-2">
-            <span className="pt-2 text-sm text-gray-500">{i + 1}.</span>
+            <span className="pt-2 text-sm text-ink/40">{i + 1}.</span>
             <textarea
-              className="flex-1 rounded border px-2 py-1"
+              className={`flex-1 ${inputClass} px-2 py-1`}
               value={step}
               onChange={(e) => updateStep(i, e.target.value)}
               rows={2}
             />
             <button
               type="button"
-              className="px-2 text-red-600"
+              className="px-2 text-red-600 hover:text-red-700"
               onClick={() => setSteps((rows) => rows.filter((_, idx) => idx !== i))}
               aria-label="Remove step"
             >
@@ -191,7 +194,7 @@ export function RecipeForm({
         ))}
         <button
           type="button"
-          className="self-start text-sm text-blue-600"
+          className="self-start text-sm font-medium text-accent-600 hover:text-accent-700"
           onClick={() => setSteps((rows) => [...rows, ""])}
         >
           + Add step
@@ -199,9 +202,9 @@ export function RecipeForm({
       </div>
 
       <label className="flex flex-col gap-1">
-        <span className="font-medium">Tags (comma separated)</span>
+        <span className="font-medium text-ink/70">Tags (comma separated)</span>
         <input
-          className="rounded border px-3 py-2"
+          className={inputClass}
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
           placeholder="breakfast, quick"
@@ -209,9 +212,9 @@ export function RecipeForm({
       </label>
 
       <label className="flex flex-col gap-1">
-        <span className="font-medium">Visibility</span>
+        <span className="font-medium text-ink/70">Visibility</span>
         <select
-          className="rounded border px-3 py-2"
+          className={inputClass}
           value={visibility}
           onChange={(e) => setVisibility(e.target.value as Visibility)}
         >
@@ -228,7 +231,7 @@ export function RecipeForm({
       <button
         type="submit"
         disabled={submitting}
-        className="self-start rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50"
+        className="self-start rounded-lg bg-accent-600 px-4 py-2 font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
       >
         {submitting ? "Saving..." : submitLabel}
       </button>

@@ -44,17 +44,20 @@ function RecipesListPage() {
   return (
     <div className="mx-auto max-w-2xl p-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Recipes</h1>
-        <Link to="/recipes/new" className="rounded bg-blue-600 px-4 py-2 font-medium text-white">
+        <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Recipes</h1>
+        <Link
+          to="/recipes/new"
+          className="rounded-lg bg-accent-600 px-4 py-2 font-medium text-white transition-colors hover:bg-accent-700"
+        >
           New recipe
         </Link>
       </div>
 
       <form onSubmit={handleFilterSubmit} className="mt-6 flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Tag</span>
+          <span className="text-sm font-medium text-ink/70">Tag</span>
           <input
-            className="rounded border px-3 py-2"
+            className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
             placeholder="breakfast"
@@ -62,9 +65,9 @@ function RecipesListPage() {
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium">Visibility</span>
+          <span className="text-sm font-medium text-ink/70">Visibility</span>
           <select
-            className="rounded border px-3 py-2"
+            className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
             value={search.visibility ?? ""}
             onChange={(e) => handleVisibilityChange(e.target.value)}
           >
@@ -77,19 +80,22 @@ function RecipesListPage() {
           </select>
         </label>
 
-        <button type="submit" className="rounded border px-4 py-2 font-medium">
+        <button
+          type="submit"
+          className="rounded-lg border border-accent-200 px-4 py-2 font-medium text-ink transition-colors hover:bg-accent-50"
+        >
           Apply
         </button>
 
         {hasFilters && (
-          <Link to="/recipes" className="text-sm text-blue-600">
+          <Link to="/recipes" className="text-sm font-medium text-accent-600 hover:text-accent-700">
             Clear filters
           </Link>
         )}
       </form>
 
       {recipes.length === 0 ? (
-        <p className="mt-6 text-gray-600">
+        <p className="mt-6 text-ink/60">
           {hasFilters ? "No recipes match these filters." : "No recipes yet. Create the first one!"}
         </p>
       ) : (
@@ -99,18 +105,21 @@ function RecipesListPage() {
               <Link
                 to="/recipes/$recipeId"
                 params={{ recipeId: recipe.id }}
-                className="block rounded border px-4 py-3 hover:bg-gray-50"
+                className="block rounded-xl border border-accent-100 bg-white px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">{recipe.title}</span>
-                  <span className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                  <span className="font-serif text-lg font-medium text-ink">{recipe.title}</span>
+                  <span className="text-xs font-medium uppercase tracking-wide text-ink/40">
                     {recipe.visibility}
                   </span>
                 </div>
                 {recipe.tags.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {recipe.tags.map((tag) => (
-                      <span key={tag} className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                      <span
+                        key={tag}
+                        className="rounded-full bg-accent-50 px-2 py-0.5 text-xs text-accent-700"
+                      >
                         {tag}
                       </span>
                     ))}

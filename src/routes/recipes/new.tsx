@@ -18,7 +18,7 @@ function NewRecipePage() {
 
   return (
     <div className="mx-auto max-w-2xl p-8">
-      <h1 className="text-3xl font-bold">New recipe</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">New recipe</h1>
       <RecipeForm
         initialValues={emptyRecipeFormValues()}
         submitLabel="Save recipe"

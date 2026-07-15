@@ -18,10 +18,10 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
   component: RecipePage,
   notFoundComponent: () => (
     <div className="mx-auto max-w-2xl p-8">
-      <h1 className="text-2xl font-bold">Recipe not found</h1>
-      <p className="mt-2 text-gray-600">
+      <h1 className="font-serif text-2xl font-semibold text-ink">Recipe not found</h1>
+      <p className="mt-2 text-ink/60">
         This recipe doesn't exist, or isn't shared with you.{" "}
-        <Link to="/" className="text-blue-600">
+        <Link to="/" className="font-medium text-accent-600 hover:text-accent-700">
           Back home
         </Link>
       </p>
@@ -49,7 +49,7 @@ function RecipePage() {
   return (
     <div className="mx-auto max-w-2xl p-8">
       <div className="flex items-center justify-between">
-        <Link to="/" className="text-sm text-blue-600">
+        <Link to="/" className="text-sm font-medium text-accent-600 hover:text-accent-700">
           ← Back home
         </Link>
         {recipe.isOwner && (
@@ -57,7 +57,7 @@ function RecipePage() {
             <Link
               to="/recipes/$recipeId/edit"
               params={{ recipeId: recipe.id }}
-              className="text-sm text-blue-600"
+              className="text-sm font-medium text-accent-600 hover:text-accent-700"
             >
               Edit
             </Link>
@@ -65,36 +65,40 @@ function RecipePage() {
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="text-sm text-red-600 disabled:opacity-50"
+              className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
             >
               {deleting ? "Deleting..." : "Delete"}
             </button>
           </div>
         )}
       </div>
-      <span className="mt-4 block text-xs font-medium uppercase tracking-wide text-gray-500">
+      <span className="mt-4 block text-xs font-medium uppercase tracking-wide text-accent-600">
         {recipe.visibility}
       </span>
-      <h1 className="text-3xl font-bold">{recipe.title}</h1>
-      {recipe.description && <p className="mt-2 text-gray-700">{recipe.description}</p>}
+      <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">{recipe.title}</h1>
+      {recipe.description && <p className="mt-2 text-ink/70">{recipe.description}</p>}
 
       {recipe.photoUrl && (
-        <img src={recipe.photoUrl} alt={recipe.title} className="mt-4 w-full rounded object-cover" />
+        <img
+          src={recipe.photoUrl}
+          alt={recipe.title}
+          className="mt-4 w-full rounded-xl object-cover shadow-sm"
+        />
       )}
 
       {recipe.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {recipe.tags.map((tag) => (
-            <span key={tag} className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">
+            <span key={tag} className="rounded-full bg-accent-50 px-3 py-1 text-sm text-accent-700">
               {tag}
             </span>
           ))}
         </div>
       )}
 
-      <section className="mt-6">
-        <h2 className="text-xl font-semibold">Ingredients</h2>
-        <ul className="mt-2 list-inside list-disc">
+      <section className="mt-8">
+        <h2 className="font-serif text-xl font-semibold text-ink">Ingredients</h2>
+        <ul className="mt-2 list-inside list-disc text-ink/80">
           {recipe.ingredients.map((ing, i) => (
             <li key={i}>
               {[ing.qty, ing.unit, ing.name].filter(Boolean).join(" ")}
@@ -103,9 +107,9 @@ function RecipePage() {
         </ul>
       </section>
 
-      <section className="mt-6">
-        <h2 className="text-xl font-semibold">Steps</h2>
-        <ol className="mt-2 list-inside list-decimal space-y-2">
+      <section className="mt-8">
+        <h2 className="font-serif text-xl font-semibold text-ink">Steps</h2>
+        <ol className="mt-2 list-inside list-decimal space-y-2 text-ink/80">
           {recipe.steps.map((step, i) => (
             <li key={i}>{step}</li>
           ))}

@@ -4,21 +4,23 @@ export const Route = createFileRoute('/')({ component: Home })
 
 function Home() {
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold">Welcome to TanStack Start</h1>
-      <p className="mt-4 text-lg">
-        Edit <code>src/routes/index.tsx</code> to get started.
+    <div className="mx-auto max-w-2xl px-8 py-16">
+      <h1 className="font-serif text-5xl font-semibold tracking-tight text-ink">
+        Keep the recipes worth keeping.
+      </h1>
+      <p className="mt-4 text-lg text-ink/70">
+        Write them down, tag them, and share the ones you want the world to see.
       </p>
-      <div className="mt-6 flex gap-3">
+      <div className="mt-8 flex gap-3">
         <Link
           to="/recipes/new"
-          className="inline-block rounded bg-blue-600 px-4 py-2 font-medium text-white"
+          className="inline-block rounded-lg bg-accent-600 px-5 py-2.5 font-medium text-white transition-colors hover:bg-accent-700"
         >
           New recipe
         </Link>
         <Link
           to="/recipes"
-          className="inline-block rounded border px-4 py-2 font-medium"
+          className="inline-block rounded-lg border border-accent-200 px-5 py-2.5 font-medium text-ink transition-colors hover:bg-accent-50"
         >
           Browse recipes
         </Link>

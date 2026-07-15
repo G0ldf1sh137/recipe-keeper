@@ -1,5 +1,22 @@
-
 @import "tailwindcss";
+
+@theme {
+  --font-serif: "Fraunces", ui-serif, Georgia, serif;
+
+  --color-accent-50: #fbf0ea;
+  --color-accent-100: #f4dbca;
+  --color-accent-200: #e9bd9f;
+  --color-accent-300: #dd9c72;
+  --color-accent-400: #cf7c4f;
+  --color-accent-500: #c2683f;
+  --color-accent-600: #a8522c;
+  --color-accent-700: #874025;
+  --color-accent-800: #67301c;
+  --color-accent-900: #482112;
+
+  --color-paper: #fbf8f4;
+  --color-ink: #2a2420;
+}
 
 * {
   box-sizing: border-box;
@@ -17,7 +34,6 @@ html {
 
 body {
   margin: 0;
-  background-color: #ffffff;
-  color: #111827;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
 }
-
