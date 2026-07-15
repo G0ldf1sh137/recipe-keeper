@@ -25,6 +25,7 @@ export async function findRecipeById(id: string, viewerId: string | undefined) {
 export async function findRecipes(filters: z.infer<typeof listRecipesSchema>) {
   const conditions = [visibleToViewer(filters.viewerId)];
   if (filters.ownerId) conditions.push(eq(recipes.ownerId, filters.ownerId));
+  if (filters.visibility) conditions.push(eq(recipes.visibility, filters.visibility));
   // Tags are stored as a JSON array string; match the quoted value as a substring.
   if (filters.tag) conditions.push(sql`${recipes.tags} LIKE ${`%"${filters.tag}"%`}`);
   return db.query.recipes.findMany({
