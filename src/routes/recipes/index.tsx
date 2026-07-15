@@ -88,7 +88,10 @@ function RecipesListPage() {
         </button>
 
         {hasFilters && (
-          <Link to="/recipes" className="text-sm font-medium text-accent-600 hover:text-accent-700">
+          <Link
+            to="/recipes"
+            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
             Clear filters
           </Link>
         )}
@@ -105,7 +108,7 @@ function RecipesListPage() {
               <Link
                 to="/recipes/$recipeId"
                 params={{ recipeId: recipe.id }}
-                className="block rounded-xl border border-accent-100 bg-white px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                className="block rounded-xl border border-accent-100 bg-surface px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
                 <div className="flex items-center justify-between">
                   <span className="font-serif text-lg font-medium text-ink">{recipe.title}</span>
@@ -118,7 +121,7 @@ function RecipesListPage() {
                     {recipe.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-full bg-accent-50 px-2 py-0.5 text-xs text-accent-700"
+                        className="rounded-full bg-accent-50 px-2 py-0.5 text-xs text-ink/70"
                       >
                         {tag}
                       </span>

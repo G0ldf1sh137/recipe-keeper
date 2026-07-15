@@ -91,7 +91,7 @@ function CommentItem({
       {canComment && (
         <button
           type="button"
-          className="mt-1 text-sm font-medium text-accent-600 hover:text-accent-700"
+          className="mt-1 text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
           onClick={() => onReplyClick(isReplying ? null : comment.id)}
         >
           {isReplying ? "Cancel" : "Reply"}
@@ -151,7 +151,10 @@ export function CommentThread({
         </div>
       ) : (
         <p className="mt-4 text-sm text-ink/60">
-          <a href="/auth/google" className="font-medium text-accent-600 hover:text-accent-700">
+          <a
+            href="/auth/google"
+            className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
             Sign in with Google
           </a>{" "}
           to leave a comment.

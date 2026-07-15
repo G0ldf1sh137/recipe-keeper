@@ -21,7 +21,10 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
       <h1 className="font-serif text-2xl font-semibold text-ink">Recipe not found</h1>
       <p className="mt-2 text-ink/60">
         This recipe doesn't exist, or isn't shared with you.{" "}
-        <Link to="/" className="font-medium text-accent-600 hover:text-accent-700">
+        <Link
+          to="/"
+          className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
           Back home
         </Link>
       </p>
@@ -49,7 +52,10 @@ function RecipePage() {
   return (
     <div className="mx-auto max-w-2xl p-8">
       <div className="flex items-center justify-between">
-        <Link to="/" className="text-sm font-medium text-accent-600 hover:text-accent-700">
+        <Link
+          to="/"
+          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
           ← Back home
         </Link>
         {recipe.isOwner && (
@@ -57,7 +63,7 @@ function RecipePage() {
             <Link
               to="/recipes/$recipeId/edit"
               params={{ recipeId: recipe.id }}
-              className="text-sm font-medium text-accent-600 hover:text-accent-700"
+              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
             >
               Edit
             </Link>
@@ -89,7 +95,7 @@ function RecipePage() {
       {recipe.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {recipe.tags.map((tag) => (
-            <span key={tag} className="rounded-full bg-accent-50 px-3 py-1 text-sm text-accent-700">
+            <span key={tag} className="rounded-full bg-accent-50 px-3 py-1 text-sm text-ink/70">
               {tag}
             </span>
           ))}

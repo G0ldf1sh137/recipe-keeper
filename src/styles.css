@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-serif: "Fraunces", ui-serif, Georgia, serif;
 
@@ -15,7 +17,27 @@
   --color-accent-900: #482112;
 
   --color-paper: #fbf8f4;
+  --color-surface: #ffffff;
   --color-ink: #2a2420;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --color-accent-50: #3a2a20;
+  --color-accent-100: #4a3527;
+  --color-accent-200: #5c4230;
+  --color-accent-300: #8a5c3c;
+  --color-accent-400: #e08a54;
+  --color-accent-500: #d97a4d;
+  --color-accent-600: #cf7c4f;
+  --color-accent-700: #a8552e;
+  --color-accent-800: #874025;
+  --color-accent-900: #67301c;
+
+  --color-paper: #1c1815;
+  --color-surface: #262019;
+  --color-ink: #f2ece4;
 }
 
 * {
@@ -36,4 +58,7 @@ body {
   margin: 0;
   background-color: var(--color-paper);
   color: var(--color-ink);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }

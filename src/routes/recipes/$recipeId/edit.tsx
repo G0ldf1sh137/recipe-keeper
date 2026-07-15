@@ -17,7 +17,10 @@ export const Route = createFileRoute("/recipes/$recipeId/edit")({
       <h1 className="font-serif text-2xl font-semibold text-ink">Recipe not found</h1>
       <p className="mt-2 text-ink/60">
         This recipe doesn't exist, or isn't shared with you.{" "}
-        <Link to="/" className="font-medium text-accent-600 hover:text-accent-700">
+        <Link
+          to="/"
+          className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
           Back home
         </Link>
       </p>

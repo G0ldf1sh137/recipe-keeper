@@ -4,6 +4,8 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { useServerFn } from '@tanstack/react-start'
 import { getSessionUser, logout } from '#/auth/auth.functions'
+import { getThemePreference } from '#/theme/theme.functions'
+import { ThemeToggle } from '#/theme/ThemeToggle'
 
 import appCss from '../styles.css?url'
 
@@ -41,20 +43,32 @@ export const Route = createRootRoute({
       },
     ],
   }),
-  loader: () => getSessionUser(),
+  loader: async () => {
+    const [user, theme] = await Promise.all([getSessionUser(), getThemePreference()])
+    return { user, theme }
+  },
   shellComponent: RootDocument,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const user = Route.useLoaderData()
+  const { user, theme } = Route.useLoaderData()
 
   return (
-    <html lang="en">
+    <html lang="en" className={theme === 'dark' ? 'dark' : undefined} suppressHydrationWarning>
       <head>
         <HeadContent />
+        {theme === 'system' && (
+          <script
+            // Runs before paint so a system-dark OS preference doesn't flash light first.
+            dangerouslySetInnerHTML={{
+              __html:
+                "if (window.matchMedia('(prefers-color-scheme: dark)').matches) { document.documentElement.classList.add('dark'); }",
+            }}
+          />
+        )}
       </head>
       <body>
-        <AuthHeader user={user} />
+        <AuthHeader user={user} theme={theme} />
         {children}
         <TanStackDevtools
           config={{
@@ -73,7 +87,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
-function AuthHeader({ user }: { user: Awaited<ReturnType<typeof getSessionUser>> }) {
+function AuthHeader({
+  user,
+  theme,
+}: {
+  user: Awaited<ReturnType<typeof getSessionUser>>
+  theme: Awaited<ReturnType<typeof getThemePreference>>
+}) {
   const router = useRouter()
   const logoutFn = useServerFn(logout)
   const [pending, setPending] = useState(false)
@@ -93,30 +113,36 @@ function AuthHeader({ user }: { user: Awaited<ReturnType<typeof getSessionUser>>
       <Link to="/" className="font-serif text-xl font-semibold tracking-tight text-ink">
         Recipe Keeper
       </Link>
-      {user ? (
-        <div className="flex items-center gap-3">
-          {user.avatarUrl && (
-            <img
-              src={user.avatarUrl}
-              alt=""
-              className="h-7 w-7 rounded-full ring-2 ring-accent-100"
-            />
-          )}
-          <span className="text-sm text-ink/80">{user.name}</span>
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={pending}
-            className="text-sm font-medium text-accent-600 hover:text-accent-700 disabled:opacity-50"
+      <div className="flex items-center gap-4">
+        <ThemeToggle initialTheme={theme} />
+        {user ? (
+          <div className="flex items-center gap-3">
+            {user.avatarUrl && (
+              <img
+                src={user.avatarUrl}
+                alt=""
+                className="h-7 w-7 rounded-full ring-2 ring-accent-100"
+              />
+            )}
+            <span className="text-sm text-ink/80">{user.name}</span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={pending}
+              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 disabled:opacity-50"
+            >
+              {pending ? 'Signing out...' : 'Sign out'}
+            </button>
+          </div>
+        ) : (
+          <a
+            href="/auth/google"
+            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
           >
-            {pending ? 'Signing out...' : 'Sign out'}
-          </button>
-        </div>
-      ) : (
-        <a href="/auth/google" className="text-sm font-medium text-accent-600 hover:text-accent-700">
-          Sign in with Google
-        </a>
-      )}
+            Sign in with Google
+          </a>
+        )}
+      </div>
     </header>
   )
 }

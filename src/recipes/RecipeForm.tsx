@@ -164,7 +164,7 @@ export function RecipeForm({
         ))}
         <button
           type="button"
-          className="self-start text-sm font-medium text-accent-600 hover:text-accent-700"
+          className="self-start text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
           onClick={() => setIngredients((rows) => [...rows, { qty: "", unit: "", name: "" }])}
         >
           + Add ingredient
@@ -194,7 +194,7 @@ export function RecipeForm({
         ))}
         <button
           type="button"
-          className="self-start text-sm font-medium text-accent-600 hover:text-accent-700"
+          className="self-start text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
           onClick={() => setSteps((rows) => [...rows, ""])}
         >
           + Add step

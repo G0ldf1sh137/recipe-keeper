@@ -16,7 +16,7 @@ function LoginPage() {
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Sign in</h1>
       <p className="mt-2 text-ink/60">Sign in with your Google account to create and manage recipes.</p>
       {error && (
-        <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-red-700">
+        <p className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-red-700 dark:bg-red-950 dark:text-red-300">
           Something went wrong signing you in. Please try again.
         </p>
       )}
