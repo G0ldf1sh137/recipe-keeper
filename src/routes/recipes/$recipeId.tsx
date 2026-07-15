@@ -27,7 +27,12 @@ function RecipePage() {
 
   return (
     <div className="mx-auto max-w-2xl p-8">
-      <span className="text-xs font-medium uppercase tracking-wide text-gray-500">{recipe.visibility}</span>
+      <Link to="/" className="text-sm text-blue-600">
+        ← Back home
+      </Link>
+      <span className="mt-4 block text-xs font-medium uppercase tracking-wide text-gray-500">
+        {recipe.visibility}
+      </span>
       <h1 className="text-3xl font-bold">{recipe.title}</h1>
       {recipe.description && <p className="mt-2 text-gray-700">{recipe.description}</p>}
 
