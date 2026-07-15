@@ -1,4 +1,4 @@
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
 import { recipes } from "#/db/schema";
 import type {
@@ -32,6 +32,15 @@ export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, vi
     where: and(...conditions),
     orderBy: (r, { desc }) => [desc(r.createdAt)],
   });
+}
+
+export async function filterVisibleRecipeIds(recipeIds: string[], viewerId: string | undefined) {
+  if (recipeIds.length === 0) return [];
+  const rows = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(and(inArray(recipes.id, recipeIds), visibleToViewer(viewerId)));
+  return rows.map((row) => row.id);
 }
 
 export async function insertRecipe(input: z.infer<typeof createRecipeSchema>, ownerId: string) {

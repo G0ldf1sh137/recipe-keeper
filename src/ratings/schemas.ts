@@ -8,3 +8,7 @@ export const rateRecipeSchema = z.object({
 export const getRatingSummarySchema = z.object({
   recipeId: z.string().min(1),
 });
+
+export const getRatingSummariesSchema = z.object({
+  recipeIds: z.array(z.string().min(1)),
+});

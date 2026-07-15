@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Star } from "lucide-react";
 import { rateRecipe } from "./ratings.functions";
 
-function Stars({
+export function Stars({
   value,
   size = 20,
   interactive = false,
