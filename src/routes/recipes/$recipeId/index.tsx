@@ -1,7 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { getRecipe } from "#/recipes/recipes.functions";
+import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { getRecipe, deleteRecipe } from "#/recipes/recipes.functions";
 
-export const Route = createFileRoute("/recipes/$recipeId")({
+export const Route = createFileRoute("/recipes/$recipeId/")({
   loader: async ({ params }) => {
     const recipe = await getRecipe({ data: { id: params.recipeId } });
     return { recipe };
@@ -22,12 +24,47 @@ export const Route = createFileRoute("/recipes/$recipeId")({
 
 function RecipePage() {
   const { recipe } = Route.useLoaderData();
+  const navigate = useNavigate();
+  const deleteRecipeFn = useServerFn(deleteRecipe);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!window.confirm(`Delete "${recipe.title}"? This can't be undone.`)) return;
+    setDeleting(true);
+    try {
+      await deleteRecipeFn({ data: { id: recipe.id } });
+      await navigate({ to: "/recipes" });
+    } catch {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl p-8">
-      <Link to="/" className="text-sm text-blue-600">
-        ← Back home
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link to="/" className="text-sm text-blue-600">
+          ← Back home
+        </Link>
+        {recipe.isOwner && (
+          <div className="flex gap-3">
+            <Link
+              to="/recipes/$recipeId/edit"
+              params={{ recipeId: recipe.id }}
+              className="text-sm text-blue-600"
+            >
+              Edit
+            </Link>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-sm text-red-600 disabled:opacity-50"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        )}
+      </div>
       <span className="mt-4 block text-xs font-medium uppercase tracking-wide text-gray-500">
         {recipe.visibility}
       </span>

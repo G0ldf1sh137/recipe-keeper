@@ -27,7 +27,7 @@ export const getRecipe = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const recipe = await findRecipeById(data.id, context.user?.id);
     if (!recipe) throw notFound();
-    return recipe;
+    return { ...recipe, isOwner: recipe.ownerId === context.user?.id };
   });
 
 export const createRecipe = createServerFn({ method: "POST" })

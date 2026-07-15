@@ -13,8 +13,9 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
-import { Route as RecipesRecipeIdRouteImport } from './routes/recipes/$recipeId'
+import { Route as RecipesRecipeIdIndexRouteImport } from './routes/recipes/$recipeId/index'
 import { Route as AuthGoogleIndexRouteImport } from './routes/auth/google/index'
+import { Route as RecipesRecipeIdEditRouteImport } from './routes/recipes/$recipeId/edit'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth/google/callback'
 
 const LoginRoute = LoginRouteImport.update({
@@ -37,14 +38,19 @@ const RecipesNewRoute = RecipesNewRouteImport.update({
   path: '/recipes/new',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RecipesRecipeIdRoute = RecipesRecipeIdRouteImport.update({
-  id: '/recipes/$recipeId',
-  path: '/recipes/$recipeId',
+const RecipesRecipeIdIndexRoute = RecipesRecipeIdIndexRouteImport.update({
+  id: '/recipes/$recipeId/',
+  path: '/recipes/$recipeId/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthGoogleIndexRoute = AuthGoogleIndexRouteImport.update({
   id: '/auth/google/',
   path: '/auth/google/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecipesRecipeIdEditRoute = RecipesRecipeIdEditRouteImport.update({
+  id: '/recipes/$recipeId/edit',
+  path: '/recipes/$recipeId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
@@ -56,69 +62,76 @@ const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
+  '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
   '/auth/google/': typeof AuthGoogleIndexRoute
+  '/recipes/$recipeId/': typeof RecipesRecipeIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
+  '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
   '/auth/google': typeof AuthGoogleIndexRoute
+  '/recipes/$recipeId': typeof RecipesRecipeIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/recipes/$recipeId': typeof RecipesRecipeIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
+  '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
   '/auth/google/': typeof AuthGoogleIndexRoute
+  '/recipes/$recipeId/': typeof RecipesRecipeIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
-    | '/recipes/$recipeId'
     | '/recipes/new'
     | '/recipes/'
     | '/auth/google/callback'
+    | '/recipes/$recipeId/edit'
     | '/auth/google/'
+    | '/recipes/$recipeId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
-    | '/recipes/$recipeId'
     | '/recipes/new'
     | '/recipes'
     | '/auth/google/callback'
+    | '/recipes/$recipeId/edit'
     | '/auth/google'
+    | '/recipes/$recipeId'
   id:
     | '__root__'
     | '/'
     | '/login'
-    | '/recipes/$recipeId'
     | '/recipes/new'
     | '/recipes/'
     | '/auth/google/callback'
+    | '/recipes/$recipeId/edit'
     | '/auth/google/'
+    | '/recipes/$recipeId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
-  RecipesRecipeIdRoute: typeof RecipesRecipeIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
+  RecipesRecipeIdEditRoute: typeof RecipesRecipeIdEditRoute
   AuthGoogleIndexRoute: typeof AuthGoogleIndexRoute
+  RecipesRecipeIdIndexRoute: typeof RecipesRecipeIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -151,11 +164,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/recipes/$recipeId': {
-      id: '/recipes/$recipeId'
+    '/recipes/$recipeId/': {
+      id: '/recipes/$recipeId/'
       path: '/recipes/$recipeId'
-      fullPath: '/recipes/$recipeId'
-      preLoaderRoute: typeof RecipesRecipeIdRouteImport
+      fullPath: '/recipes/$recipeId/'
+      preLoaderRoute: typeof RecipesRecipeIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/google/': {
@@ -163,6 +176,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/google'
       fullPath: '/auth/google/'
       preLoaderRoute: typeof AuthGoogleIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recipes/$recipeId/edit': {
+      id: '/recipes/$recipeId/edit'
+      path: '/recipes/$recipeId/edit'
+      fullPath: '/recipes/$recipeId/edit'
+      preLoaderRoute: typeof RecipesRecipeIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/google/callback': {
@@ -178,11 +198,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
-  RecipesRecipeIdRoute: RecipesRecipeIdRoute,
   RecipesNewRoute: RecipesNewRoute,
   RecipesIndexRoute: RecipesIndexRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
+  RecipesRecipeIdEditRoute: RecipesRecipeIdEditRoute,
   AuthGoogleIndexRoute: AuthGoogleIndexRoute,
+  RecipesRecipeIdIndexRoute: RecipesRecipeIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
