@@ -7,6 +7,8 @@ import { getSessionUser } from "#/auth/auth.functions";
 import { CommentThread } from "#/comments/CommentThread";
 import { getRatingSummary } from "#/ratings/ratings.functions";
 import { RecipeRating } from "#/ratings/RecipeRating";
+import { getCollectionsForRecipe } from "#/collections/collections.functions";
+import { SaveToList } from "#/collections/SaveToList";
 
 export const Route = createFileRoute("/recipes/$recipeId/")({
   loader: async ({ params }) => {
@@ -16,7 +18,10 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
       getSessionUser(),
       getRatingSummary({ data: { recipeId: params.recipeId } }),
     ]);
-    return { recipe, comments, user, rating };
+    const collections = user
+      ? await getCollectionsForRecipe({ data: { recipeId: params.recipeId } })
+      : [];
+    return { recipe, comments, user, rating, collections };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -36,7 +41,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, comments, user, rating } = Route.useLoaderData();
+  const { recipe, comments, user, rating, collections } = Route.useLoaderData();
   const navigate = useNavigate();
   const deleteRecipeFn = useServerFn(deleteRecipe);
   const [deleting, setDeleting] = useState(false);
@@ -132,6 +137,8 @@ function RecipePage() {
         myRating={rating.myRating}
         canRate={!!user}
       />
+
+      <SaveToList recipeId={recipe.id} collections={collections} canSave={!!user} />
 
       <CommentThread recipeId={recipe.id} comments={comments} canComment={!!user} />
     </div>

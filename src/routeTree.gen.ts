@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
+import { Route as CollectionsIndexRouteImport } from './routes/collections/index'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
+import { Route as CollectionsCollectionIdRouteImport } from './routes/collections/$collectionId'
 import { Route as RecipesRecipeIdIndexRouteImport } from './routes/recipes/$recipeId/index'
 import { Route as AuthGoogleIndexRouteImport } from './routes/auth/google/index'
 import { Route as RecipesRecipeIdEditRouteImport } from './routes/recipes/$recipeId/edit'
@@ -33,9 +35,19 @@ const RecipesIndexRoute = RecipesIndexRouteImport.update({
   path: '/recipes/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
+  id: '/collections/',
+  path: '/collections/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipesNewRoute = RecipesNewRouteImport.update({
   id: '/recipes/new',
   path: '/recipes/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CollectionsCollectionIdRoute = CollectionsCollectionIdRouteImport.update({
+  id: '/collections/$collectionId',
+  path: '/collections/$collectionId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesRecipeIdIndexRoute = RecipesRecipeIdIndexRouteImport.update({
@@ -62,7 +74,9 @@ const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/collections/': typeof CollectionsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
@@ -72,7 +86,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/collections': typeof CollectionsIndexRoute
   '/recipes': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
@@ -83,7 +99,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/collections/': typeof CollectionsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
@@ -95,7 +113,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/collections/$collectionId'
     | '/recipes/new'
+    | '/collections/'
     | '/recipes/'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
@@ -105,7 +125,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/collections/$collectionId'
     | '/recipes/new'
+    | '/collections'
     | '/recipes'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
@@ -115,7 +137,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/collections/$collectionId'
     | '/recipes/new'
+    | '/collections/'
     | '/recipes/'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
@@ -126,7 +150,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  CollectionsCollectionIdRoute: typeof CollectionsCollectionIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
+  CollectionsIndexRoute: typeof CollectionsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
   RecipesRecipeIdEditRoute: typeof RecipesRecipeIdEditRoute
@@ -157,11 +183,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/collections/': {
+      id: '/collections/'
+      path: '/collections'
+      fullPath: '/collections/'
+      preLoaderRoute: typeof CollectionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipes/new': {
       id: '/recipes/new'
       path: '/recipes/new'
       fullPath: '/recipes/new'
       preLoaderRoute: typeof RecipesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/collections/$collectionId': {
+      id: '/collections/$collectionId'
+      path: '/collections/$collectionId'
+      fullPath: '/collections/$collectionId'
+      preLoaderRoute: typeof CollectionsCollectionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/$recipeId/': {
@@ -198,7 +238,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  CollectionsCollectionIdRoute: CollectionsCollectionIdRoute,
   RecipesNewRoute: RecipesNewRoute,
+  CollectionsIndexRoute: CollectionsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
   RecipesRecipeIdEditRoute: RecipesRecipeIdEditRoute,

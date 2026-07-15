@@ -117,6 +117,12 @@ function AuthHeader({
         <ThemeToggle initialTheme={theme} />
         {user ? (
           <div className="flex items-center gap-3">
+            <Link
+              to="/collections"
+              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+            >
+              Your lists
+            </Link>
             {user.avatarUrl && (
               <img
                 src={user.avatarUrl}
