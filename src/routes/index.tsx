@@ -9,12 +9,20 @@ function Home() {
       <p className="mt-4 text-lg">
         Edit <code>src/routes/index.tsx</code> to get started.
       </p>
-      <Link
-        to="/recipes/new"
-        className="mt-6 inline-block rounded bg-blue-600 px-4 py-2 font-medium text-white"
-      >
-        New recipe
-      </Link>
+      <div className="mt-6 flex gap-3">
+        <Link
+          to="/recipes/new"
+          className="inline-block rounded bg-blue-600 px-4 py-2 font-medium text-white"
+        >
+          New recipe
+        </Link>
+        <Link
+          to="/recipes"
+          className="inline-block rounded border px-4 py-2 font-medium"
+        >
+          Browse recipes
+        </Link>
+      </div>
     </div>
   )
 }
