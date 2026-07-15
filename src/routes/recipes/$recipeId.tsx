@@ -1,11 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getRecipe } from "#/recipes/recipes.functions";
-import { getCurrentUser } from "#/users/users.functions";
 
 export const Route = createFileRoute("/recipes/$recipeId")({
   loader: async ({ params }) => {
-    const viewer = await getCurrentUser();
-    const recipe = await getRecipe({ data: { id: params.recipeId, viewerId: viewer.id } });
+    const recipe = await getRecipe({ data: { id: params.recipeId } });
     return { recipe };
   },
   component: RecipePage,

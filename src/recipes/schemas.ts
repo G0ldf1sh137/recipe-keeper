@@ -10,7 +10,6 @@ export const ingredientSchema = z.object({
 export const visibilitySchema = z.enum(visibilityValues);
 
 export const createRecipeSchema = z.object({
-  ownerId: z.string().min(1),
   title: z.string().min(1),
   description: z.string().optional(),
   ingredients: z.array(ingredientSchema).default([]),
@@ -22,7 +21,6 @@ export const createRecipeSchema = z.object({
 
 export const updateRecipeSchema = z.object({
   id: z.string().min(1),
-  ownerId: z.string().min(1),
   title: z.string().min(1).optional(),
   description: z.string().optional(),
   ingredients: z.array(ingredientSchema).optional(),
@@ -34,17 +32,14 @@ export const updateRecipeSchema = z.object({
 
 export const deleteRecipeSchema = z.object({
   id: z.string().min(1),
-  ownerId: z.string().min(1),
 });
 
 export const getRecipeSchema = z.object({
   id: z.string().min(1),
-  viewerId: z.string().min(1).optional(),
 });
 
 export const listRecipesSchema = z.object({
   ownerId: z.string().min(1).optional(),
-  viewerId: z.string().min(1).optional(),
   tag: z.string().min(1).optional(),
   visibility: visibilitySchema.optional(),
 });

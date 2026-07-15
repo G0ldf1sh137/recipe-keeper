@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { listRecipes } from "#/recipes/recipes.functions";
-import { getCurrentUser } from "#/users/users.functions";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
@@ -15,10 +14,7 @@ export const Route = createFileRoute("/recipes/")({
   validateSearch: recipesSearchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    const viewer = await getCurrentUser();
-    const recipes = await listRecipes({
-      data: { viewerId: viewer.id, tag: deps.tag, visibility: deps.visibility },
-    });
+    const recipes = await listRecipes({ data: deps });
     return { recipes };
   },
   component: RecipesListPage,

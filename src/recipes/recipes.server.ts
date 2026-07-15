@@ -22,8 +22,8 @@ export async function findRecipeById(id: string, viewerId: string | undefined) {
   });
 }
 
-export async function findRecipes(filters: z.infer<typeof listRecipesSchema>) {
-  const conditions = [visibleToViewer(filters.viewerId)];
+export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, viewerId: string | undefined) {
+  const conditions = [visibleToViewer(viewerId)];
   if (filters.ownerId) conditions.push(eq(recipes.ownerId, filters.ownerId));
   if (filters.visibility) conditions.push(eq(recipes.visibility, filters.visibility));
   // Tags are stored as a JSON array string; match the quoted value as a substring.
@@ -34,13 +34,16 @@ export async function findRecipes(filters: z.infer<typeof listRecipesSchema>) {
   });
 }
 
-export async function insertRecipe(input: z.infer<typeof createRecipeSchema>) {
-  const [recipe] = await db.insert(recipes).values(input).returning();
+export async function insertRecipe(input: z.infer<typeof createRecipeSchema>, ownerId: string) {
+  const [recipe] = await db
+    .insert(recipes)
+    .values({ ...input, ownerId })
+    .returning();
   return recipe;
 }
 
-export async function updateOwnedRecipe(input: z.infer<typeof updateRecipeSchema>) {
-  const { id, ownerId, ...changes } = input;
+export async function updateOwnedRecipe(input: z.infer<typeof updateRecipeSchema>, ownerId: string) {
+  const { id, ...changes } = input;
   const rows = await db
     .update(recipes)
     .set(changes)
@@ -49,10 +52,10 @@ export async function updateOwnedRecipe(input: z.infer<typeof updateRecipeSchema
   return rows.at(0);
 }
 
-export async function deleteOwnedRecipe(input: z.infer<typeof deleteRecipeSchema>) {
+export async function deleteOwnedRecipe(input: z.infer<typeof deleteRecipeSchema>, ownerId: string) {
   const rows = await db
     .delete(recipes)
-    .where(and(eq(recipes.id, input.id), eq(recipes.ownerId, input.ownerId)))
+    .where(and(eq(recipes.id, input.id), eq(recipes.ownerId, ownerId)))
     .returning();
   return rows.at(0);
 }

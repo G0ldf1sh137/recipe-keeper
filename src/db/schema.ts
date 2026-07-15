@@ -27,9 +27,21 @@ export type Ingredient = {
 
 export const users = sqliteTable("users", {
   id: id(),
+  googleId: text("google_id").notNull().unique(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   avatarUrl: text("avatar_url"),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
+});
+
+export const sessions = sqliteTable("sessions", {
+  id: text("id").primaryKey(), // sha256 hash of the session token held by the client
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),

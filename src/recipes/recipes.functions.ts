@@ -14,39 +14,41 @@ import {
   insertRecipe,
   updateOwnedRecipe,
 } from "./recipes.server";
-
-// NOTE: these take ownerId/viewerId as plain input because there is no
-// session/auth layer yet (see design-plan.md milestone 4). Once auth lands,
-// swap these for a session middleware instead of trusting client-supplied ids.
+import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
 
 export const listRecipes = createServerFn({ method: "GET" })
+  .middleware([sessionMiddleware])
   .validator(listRecipesSchema)
-  .handler(async ({ data }) => findRecipes(data));
+  .handler(async ({ data, context }) => findRecipes(data, context.user?.id));
 
 export const getRecipe = createServerFn({ method: "GET" })
+  .middleware([sessionMiddleware])
   .validator(getRecipeSchema)
-  .handler(async ({ data }) => {
-    const recipe = await findRecipeById(data.id, data.viewerId);
+  .handler(async ({ data, context }) => {
+    const recipe = await findRecipeById(data.id, context.user?.id);
     if (!recipe) throw notFound();
     return recipe;
   });
 
 export const createRecipe = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
   .validator(createRecipeSchema)
-  .handler(async ({ data }) => insertRecipe(data));
+  .handler(async ({ data, context }) => insertRecipe(data, context.user.id));
 
 export const updateRecipe = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
   .validator(updateRecipeSchema)
-  .handler(async ({ data }) => {
-    const recipe = await updateOwnedRecipe(data);
+  .handler(async ({ data, context }) => {
+    const recipe = await updateOwnedRecipe(data, context.user.id);
     if (!recipe) throw notFound();
     return recipe;
   });
 
 export const deleteRecipe = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
   .validator(deleteRecipeSchema)
-  .handler(async ({ data }) => {
-    const recipe = await deleteOwnedRecipe(data);
+  .handler(async ({ data, context }) => {
+    const recipe = await deleteOwnedRecipe(data, context.user.id);
     if (!recipe) throw notFound();
     return recipe;
   });

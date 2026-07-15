@@ -8,6 +8,13 @@
       "when": 1784149450112,
       "tag": "0000_legal_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784151511225,
+      "tag": "0001_normal_nehzno",
+      "breakpoints": true
     }
   ]
 }

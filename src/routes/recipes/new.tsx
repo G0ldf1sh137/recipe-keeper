@@ -1,20 +1,22 @@
 import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { createRecipe } from "#/recipes/recipes.functions";
-import { getCurrentUser } from "#/users/users.functions";
+import { getSessionUser } from "#/auth/auth.functions";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
 export const Route = createFileRoute("/recipes/new")({
-  loader: () => getCurrentUser(),
+  beforeLoad: async () => {
+    const user = await getSessionUser();
+    if (!user) throw redirect({ to: "/login" });
+  },
   component: NewRecipePage,
 });
 
 type IngredientRow = { qty: string; unit: string; name: string };
 
 function NewRecipePage() {
-  const owner = Route.useLoaderData();
   const navigate = useNavigate();
   const createRecipeFn = useServerFn(createRecipe);
 
@@ -49,7 +51,6 @@ function NewRecipePage() {
     try {
       const recipe = await createRecipeFn({
         data: {
-          ownerId: owner.id,
           title: title.trim(),
           description: description.trim() || undefined,
           photoUrl: photoUrl.trim() || undefined,
