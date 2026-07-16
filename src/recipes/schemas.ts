@@ -7,11 +7,7 @@ export const ingredientSchema = z.object({
   name: z.string().min(1),
 });
 
-// Either an absolute URL or a path produced by our own upload endpoint.
-export const imageUrlSchema = z.union([
-  z.string().url(),
-  z.string().regex(/^\/uploads\/[0-9a-f]{32}\.(jpg|png|webp|gif)$/),
-]);
+export const imageUrlSchema = z.string().url();
 
 export const stepSchema = z.object({
   text: z.string().min(1),

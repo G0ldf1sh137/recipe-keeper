@@ -17,7 +17,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - **Database**: Postgres (via Drizzle ORM); local dev via `docker-compose.yml`, prod via managed Render Postgres
 - **Auth**: Google OAuth sign-in, server-side sessions (HttpOnly cookie, session id hashed at rest)
 - **AI**: Claude API (claude-opus-4-8, vision + structured outputs) — transcribes handwritten recipe photos into the recipe record via an owner-only "Process photos" button with preview-then-confirm
-- **Deployment target**: Render (see `render.yaml`) — Node service + managed Postgres + disk for uploaded photos
+- **Deployment target**: Render (see `render.yaml`) — Node service + managed Postgres; recipe photos stored in S3
 
 ## Core Data Model
 - **User**: id, email, name, avatarUrl, createdAt

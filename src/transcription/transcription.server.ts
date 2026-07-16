@@ -1,7 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { readUpload } from "#/uploads/uploads.server";
 
 const transcriptionOutputSchema = z.object({
   isHandwrittenRecipe: z
@@ -52,29 +51,12 @@ If they do show a handwritten or typed recipe:
 
 If they do not, say so and briefly explain what the photos appear to show instead.`;
 
-async function buildImageBlocks(photoUrls: string[]): Promise<Anthropic.ImageBlockParam[]> {
-  const blocks: Anthropic.ImageBlockParam[] = [];
-  for (const url of photoUrls) {
-    if (url.startsWith("/uploads/")) {
-      const upload = await readUpload(url.slice("/uploads/".length));
-      if (!upload) continue; // file deleted from disk; skip rather than fail the scan
-      blocks.push({
-        type: "image",
-        source: {
-          type: "base64",
-          media_type: upload.mime as "image/jpeg" | "image/png" | "image/webp" | "image/gif",
-          data: upload.bytes.toString("base64"),
-        },
-      });
-    } else {
-      blocks.push({ type: "image", source: { type: "url", url } });
-    }
-  }
-  return blocks;
+function buildImageBlocks(photoUrls: string[]): Anthropic.ImageBlockParam[] {
+  return photoUrls.map((url) => ({ type: "image", source: { type: "url", url } }));
 }
 
 export async function transcribeRecipePhotos(photoUrls: string[]): Promise<TranscriptionResult> {
-  const images = await buildImageBlocks(photoUrls);
+  const images = buildImageBlocks(photoUrls);
   if (images.length === 0) {
     return { status: "error", message: "None of this recipe's photos could be read." };
   }

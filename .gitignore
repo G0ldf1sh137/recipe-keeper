@@ -15,4 +15,3 @@ todos.json
 *.db-journal
 *.db-wal
 *.db-shm
-/uploads/

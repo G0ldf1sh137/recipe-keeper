@@ -46,6 +46,33 @@ See `.env.example` for the full list. You'll need:
 - `DATABASE_URL` — defaults to the local `docker-compose.yml` Postgres instance, no changes needed for local dev
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` — from a Google Cloud OAuth client
 - `ANTHROPIC_API_KEY` — only required for the photo-transcription feature
+- `S3_BUCKET` / `S3_REGION` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — recipe photos are stored in S3; see below
+
+### S3 bucket setup
+
+Recipe photos upload to S3 and are served directly from there (no local disk
+storage). The app only ever validates and uploads bytes server-side — it never
+trusts a client-supplied file type — so the bucket just needs to allow public
+reads on uploaded objects:
+
+1. Create a bucket (e.g. `aws s3api create-bucket --bucket recipe-keeper --region us-east-2 --create-bucket-configuration LocationConstraint=us-east-2`).
+2. Under **Block Public Access**, uncheck "Block public access to buckets and objects granted through new public bucket policies" (and the matching "existing" checkbox).
+3. Add a bucket policy allowing public `GetObject`:
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Sid": "PublicReadGetObject",
+         "Effect": "Allow",
+         "Principal": "*",
+         "Action": "s3:GetObject",
+         "Resource": "arn:aws:s3:::recipe-keeper/*"
+       }
+     ]
+   }
+   ```
+4. Create an IAM user (or role) with a policy scoped to `s3:PutObject` and `s3:GetObject` on `arn:aws:s3:::recipe-keeper/*`, and generate an access key pair for `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY`.
 
 ## Scripts
 
@@ -63,8 +90,8 @@ See `.env.example` for the full list. You'll need:
 ## Deployment
 
 `render.yaml` defines a [Render](https://render.com) Blueprint: a Node web
-service, a managed Postgres database, and a persistent disk for uploaded
-photos. See the comments in that file for one-time setup steps (setting
+service and a managed Postgres database (recipe photos live in S3, not on a
+disk). See the comments in that file for one-time setup steps (setting
 secrets, updating the OAuth redirect URI).
 
 ## Project structure

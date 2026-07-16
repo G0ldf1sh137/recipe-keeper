@@ -1,10 +1,19 @@
 import { randomBytes } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
 
-const UPLOADS_DIR = process.env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads");
+const S3_BUCKET = process.env.S3_BUCKET;
+const S3_REGION = process.env.S3_REGION ?? "us-east-2";
+const S3_PUBLIC_URL_BASE =
+  process.env.S3_PUBLIC_URL_BASE ?? `https://${S3_BUCKET}.s3.${S3_REGION}.amazonaws.com`;
+
+const s3 = new S3Client({
+  region: S3_REGION,
+  // Without these, a network/credential problem hangs the upload request indefinitely
+  // instead of failing — requestTimeout alone only warns; throwOnRequestTimeout makes it throw.
+  requestHandler: { connectionTimeout: 5000, requestTimeout: 10000, throwOnRequestTimeout: true },
+});
 
 // Extension is derived from the verified MIME type, never from the client filename.
 const EXTENSION_BY_MIME: Record<string, string> = {
@@ -13,10 +22,6 @@ const EXTENSION_BY_MIME: Record<string, string> = {
   "image/webp": "webp",
   "image/gif": "gif",
 };
-
-const MIME_BY_EXTENSION = Object.fromEntries(
-  Object.entries(EXTENSION_BY_MIME).map(([mime, ext]) => [ext, mime]),
-);
 
 function sniffImageMime(bytes: Uint8Array): string | null {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
@@ -55,20 +60,19 @@ export async function saveImageUpload(file: File): Promise<{ url: string } | { e
   if (!mime) return { error: "Unsupported image type. Use JPEG, PNG, WebP, or GIF." };
 
   const name = `${randomBytes(16).toString("hex")}.${EXTENSION_BY_MIME[mime]}`;
-  await mkdir(UPLOADS_DIR, { recursive: true });
-  await writeFile(path.join(UPLOADS_DIR, name), bytes);
-  return { url: `/uploads/${name}` };
-}
-
-export async function readUpload(name: string): Promise<{ bytes: Buffer; mime: string } | null> {
-  // Strict allowlisted shape (hex + known extension) — no path traversal possible.
-  const match = /^([0-9a-f]{32})\.(jpg|png|webp|gif)$/.exec(name);
-  if (!match) return null;
-  const mime = MIME_BY_EXTENSION[match[2]];
   try {
-    const bytes = await readFile(path.join(UPLOADS_DIR, name));
-    return { bytes, mime };
-  } catch {
-    return null;
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: S3_BUCKET,
+        Key: name,
+        Body: bytes,
+        ContentType: mime,
+        CacheControl: "public, max-age=31536000, immutable",
+      }),
+    );
+  } catch (error) {
+    console.error("S3 upload failed:", error);
+    return { error: "Could not upload the image. Please try again." };
   }
+  return { url: `${S3_PUBLIC_URL_BASE}/${name}` };
 }
