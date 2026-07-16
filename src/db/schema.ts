@@ -26,6 +26,11 @@ export type Ingredient = {
   name: string;
 };
 
+export type Step = {
+  text: string;
+  imageUrls: string[];
+};
+
 export const users = sqliteTable("users", {
   id: id(),
   googleId: text("google_id").notNull().unique(),
@@ -61,9 +66,12 @@ export const recipes = sqliteTable("recipes", {
     .default(sql`'[]'`),
   steps: text("steps", { mode: "json" })
     .notNull()
+    .$type<Step[]>()
+    .default(sql`'[]'`),
+  photoUrls: text("photo_urls", { mode: "json" })
+    .notNull()
     .$type<string[]>()
     .default(sql`'[]'`),
-  photoUrl: text("photo_url"),
   tags: text("tags", { mode: "json" })
     .notNull()
     .$type<string[]>()

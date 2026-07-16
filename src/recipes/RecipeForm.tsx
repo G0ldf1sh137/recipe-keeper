@@ -1,26 +1,28 @@
 import { useState } from "react";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
+import { MultiImageUpload } from "#/uploads/ImageUpload";
 
 export type IngredientRow = { qty: string; unit: string; name: string };
+export type StepRow = { text: string; imageUrls: string[] };
 
 export type RecipeFormValues = {
   title: string;
   description: string;
-  photoUrl: string;
+  photoUrls: string[];
   tagsInput: string;
   visibility: Visibility;
   ingredients: IngredientRow[];
-  steps: string[];
+  steps: StepRow[];
 };
 
 export type RecipeFormSubmitValues = {
   title: string;
   description?: string;
-  photoUrl?: string;
+  photoUrls: string[];
   visibility: Visibility;
   ingredients: IngredientRow[];
-  steps: string[];
+  steps: StepRow[];
   tags: string[];
 };
 
@@ -28,11 +30,11 @@ export function emptyRecipeFormValues(): RecipeFormValues {
   return {
     title: "",
     description: "",
-    photoUrl: "",
+    photoUrls: [],
     tagsInput: "",
     visibility: "private",
     ingredients: [{ qty: "", unit: "", name: "" }],
-    steps: [""],
+    steps: [{ text: "", imageUrls: [] }],
   };
 }
 
@@ -50,11 +52,11 @@ export function RecipeForm({
 }) {
   const [title, setTitle] = useState(initialValues.title);
   const [description, setDescription] = useState(initialValues.description);
-  const [photoUrl, setPhotoUrl] = useState(initialValues.photoUrl);
+  const [photoUrls, setPhotoUrls] = useState<string[]>(initialValues.photoUrls);
   const [tagsInput, setTagsInput] = useState(initialValues.tagsInput);
   const [visibility, setVisibility] = useState<Visibility>(initialValues.visibility);
   const [ingredients, setIngredients] = useState<IngredientRow[]>(initialValues.ingredients);
-  const [steps, setSteps] = useState<string[]>(initialValues.steps);
+  const [steps, setSteps] = useState<StepRow[]>(initialValues.steps);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -62,8 +64,8 @@ export function RecipeForm({
     setIngredients((rows) => rows.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
   }
 
-  function updateStep(index: number, value: string) {
-    setSteps((rows) => rows.map((row, i) => (i === index ? value : row)));
+  function updateStep(index: number, changes: Partial<StepRow>) {
+    setSteps((rows) => rows.map((row, i) => (i === index ? { ...row, ...changes } : row)));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -80,12 +82,14 @@ export function RecipeForm({
       await onSubmit({
         title: title.trim(),
         description: description.trim() || undefined,
-        photoUrl: photoUrl.trim() || undefined,
+        photoUrls,
         visibility,
         ingredients: ingredients
           .filter((row) => row.name.trim())
           .map((row) => ({ qty: row.qty.trim(), unit: row.unit.trim(), name: row.name.trim() })),
-        steps: steps.map((s) => s.trim()).filter(Boolean),
+        steps: steps
+          .filter((row) => row.text.trim())
+          .map((row) => ({ text: row.text.trim(), imageUrls: row.imageUrls })),
         tags: tagsInput
           .split(",")
           .map((t) => t.trim())
@@ -120,15 +124,14 @@ export function RecipeForm({
         />
       </label>
 
-      <label className="flex flex-col gap-1">
-        <span className="font-medium text-ink/70">Photo URL</span>
-        <input
-          className={inputClass}
-          value={photoUrl}
-          onChange={(e) => setPhotoUrl(e.target.value)}
-          placeholder="https://..."
+      <div className="flex flex-col gap-2">
+        <span className="font-medium text-ink/70">Photos</span>
+        <MultiImageUpload
+          imageUrls={photoUrls}
+          onChange={setPhotoUrls}
+          previewClassName="h-32 w-48 rounded-lg object-cover"
         />
-      </label>
+      </div>
 
       <div className="flex flex-col gap-2">
         <span className="font-medium text-ink/70">Ingredients</span>
@@ -174,28 +177,38 @@ export function RecipeForm({
       <div className="flex flex-col gap-2">
         <span className="font-medium text-ink/70">Steps</span>
         {steps.map((step, i) => (
-          <div key={i} className="flex gap-2">
-            <span className="pt-2 text-sm text-ink/40">{i + 1}.</span>
-            <textarea
-              className={`flex-1 ${inputClass} px-2 py-1`}
-              value={step}
-              onChange={(e) => updateStep(i, e.target.value)}
-              rows={2}
-            />
-            <button
-              type="button"
-              className="px-2 text-red-600 hover:text-red-700"
-              onClick={() => setSteps((rows) => rows.filter((_, idx) => idx !== i))}
-              aria-label="Remove step"
-            >
-              ✕
-            </button>
+          <div key={i} className="flex flex-col gap-2 rounded-lg border border-accent-100 p-3">
+            <div className="flex gap-2">
+              <span className="pt-2 text-sm text-ink/40">{i + 1}.</span>
+              <textarea
+                className={`flex-1 ${inputClass} px-2 py-1`}
+                value={step.text}
+                onChange={(e) => updateStep(i, { text: e.target.value })}
+                rows={2}
+              />
+              <button
+                type="button"
+                className="px-2 text-red-600 hover:text-red-700"
+                onClick={() => setSteps((rows) => rows.filter((_, idx) => idx !== i))}
+                aria-label="Remove step"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="pl-6">
+              <MultiImageUpload
+                imageUrls={step.imageUrls}
+                onChange={(urls) => updateStep(i, { imageUrls: urls })}
+                label="Add step photos"
+                previewClassName="h-16 w-16 rounded-lg object-cover"
+              />
+            </div>
           </div>
         ))}
         <button
           type="button"
           className="self-start text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-          onClick={() => setSteps((rows) => [...rows, ""])}
+          onClick={() => setSteps((rows) => [...rows, { text: "", imageUrls: [] }])}
         >
           + Add step
         </button>

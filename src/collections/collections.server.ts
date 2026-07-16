@@ -28,7 +28,7 @@ export async function findRecipesInCollection(collectionId: string, ownerId: str
     .select({
       id: recipes.id,
       title: recipes.title,
-      photoUrl: recipes.photoUrl,
+      photoUrls: recipes.photoUrls,
       visibility: recipes.visibility,
       addedAt: collectionRecipes.addedAt,
     })

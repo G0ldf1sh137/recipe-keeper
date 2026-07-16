@@ -40,11 +40,11 @@ function EditRecipePage() {
         initialValues={{
           title: recipe.title,
           description: recipe.description ?? "",
-          photoUrl: recipe.photoUrl ?? "",
+          photoUrls: recipe.photoUrls,
           tagsInput: recipe.tags.join(", "),
           visibility: recipe.visibility,
           ingredients: recipe.ingredients.length ? recipe.ingredients : [{ qty: "", unit: "", name: "" }],
-          steps: recipe.steps.length ? recipe.steps : [""],
+          steps: recipe.steps.length ? recipe.steps : [{ text: "", imageUrls: [] }],
         }}
         submitLabel="Save changes"
         onSubmit={async (values) => {

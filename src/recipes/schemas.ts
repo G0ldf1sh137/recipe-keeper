@@ -7,14 +7,25 @@ export const ingredientSchema = z.object({
   name: z.string().min(1),
 });
 
+// Either an absolute URL or a path produced by our own upload endpoint.
+export const imageUrlSchema = z.union([
+  z.string().url(),
+  z.string().regex(/^\/uploads\/[0-9a-f]{32}\.(jpg|png|webp|gif)$/),
+]);
+
+export const stepSchema = z.object({
+  text: z.string().min(1),
+  imageUrls: z.array(imageUrlSchema).default([]),
+});
+
 export const visibilitySchema = z.enum(visibilityValues);
 
 export const createRecipeSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   ingredients: z.array(ingredientSchema).default([]),
-  steps: z.array(z.string().min(1)).default([]),
-  photoUrl: z.string().url().optional(),
+  steps: z.array(stepSchema).default([]),
+  photoUrls: z.array(imageUrlSchema).default([]),
   tags: z.array(z.string()).default([]),
   visibility: visibilitySchema.default("private"),
 });
@@ -24,8 +35,8 @@ export const updateRecipeSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
   ingredients: z.array(ingredientSchema).optional(),
-  steps: z.array(z.string().min(1)).optional(),
-  photoUrl: z.string().url().optional(),
+  steps: z.array(stepSchema).optional(),
+  photoUrls: z.array(imageUrlSchema).optional(),
   tags: z.array(z.string()).optional(),
   visibility: visibilitySchema.optional(),
 });

@@ -1,0 +1,89 @@
+import { useRef, useState } from "react";
+
+export function MultiImageUpload({
+  imageUrls,
+  onChange,
+  label = "Add photos",
+  previewClassName = "h-24 w-24 rounded-lg object-cover",
+}: {
+  imageUrls: string[];
+  onChange: (urls: string[]) => void;
+  label?: string;
+  previewClassName?: string;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function uploadOne(file: File): Promise<string> {
+    const body = new FormData();
+    body.append("file", file);
+    const response = await fetch("/api/upload", { method: "POST", body });
+    const json: { url?: string; error?: string } = await response.json();
+    if (!response.ok || !json.url) throw new Error(json.error ?? "Upload failed.");
+    return json.url;
+  }
+
+  async function handleFiles(files: File[]) {
+    setUploading(true);
+    setError(null);
+    const added: string[] = [];
+    try {
+      for (const file of files) {
+        added.push(await uploadOne(file));
+      }
+      onChange([...imageUrls, ...added]);
+    } catch (e) {
+      // Keep whatever did upload before the failure.
+      if (added.length > 0) onChange([...imageUrls, ...added]);
+      setError(e instanceof Error ? e.message : "Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          const files = [...(e.target.files ?? [])];
+          if (files.length) void handleFiles(files);
+        }}
+      />
+      {imageUrls.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {imageUrls.map((url, i) => (
+            <div key={url} className="relative">
+              <img src={url} alt="" className={previewClassName} />
+              <button
+                type="button"
+                onClick={() => onChange(imageUrls.filter((_, idx) => idx !== i))}
+                aria-label="Remove photo"
+                className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white hover:bg-red-700"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex flex-col items-start gap-1">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="rounded-lg border border-accent-200 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50 disabled:opacity-50"
+        >
+          {uploading ? "Uploading..." : label}
+        </button>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </div>
+    </div>
+  );
+}

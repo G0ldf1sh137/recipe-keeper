@@ -92,12 +92,19 @@ function RecipePage() {
       <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">{recipe.title}</h1>
       {recipe.description && <p className="mt-2 text-ink/70">{recipe.description}</p>}
 
-      {recipe.photoUrl && (
-        <img
-          src={recipe.photoUrl}
-          alt={recipe.title}
-          className="mt-4 w-full rounded-xl object-cover shadow-sm"
-        />
+      {recipe.photoUrls.length > 0 && (
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          {recipe.photoUrls.map((url, i) => (
+            <img
+              key={url}
+              src={url}
+              alt={`${recipe.title} photo ${i + 1}`}
+              className={`w-full rounded-xl object-cover shadow-sm ${
+                recipe.photoUrls.length === 1 ? "col-span-2" : ""
+              }`}
+            />
+          ))}
+        </div>
       )}
 
       {recipe.tags.length > 0 && (
@@ -123,9 +130,23 @@ function RecipePage() {
 
       <section className="mt-8">
         <h2 className="font-serif text-xl font-semibold text-ink">Steps</h2>
-        <ol className="mt-2 list-inside list-decimal space-y-2 text-ink/80">
+        <ol className="mt-2 list-inside list-decimal space-y-3 text-ink/80">
           {recipe.steps.map((step, i) => (
-            <li key={i}>{step}</li>
+            <li key={i}>
+              {step.text}
+              {step.imageUrls.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {step.imageUrls.map((url, j) => (
+                    <img
+                      key={url}
+                      src={url}
+                      alt={`Step ${i + 1} photo ${j + 1}`}
+                      className="max-h-48 rounded-lg object-cover shadow-sm"
+                    />
+                  ))}
+                </div>
+              )}
+            </li>
           ))}
         </ol>
       </section>

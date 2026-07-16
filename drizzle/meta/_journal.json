@@ -29,6 +29,34 @@
       "when": 1784156021626,
       "tag": "0003_perpetual_wildside",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1784159122273,
+      "tag": "0004_steps_to_objects",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1784160291785,
+      "tag": "0005_add_photo_urls",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1784160300405,
+      "tag": "0006_copy_images_to_arrays",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1784160347880,
+      "tag": "0007_drop_photo_url",
+      "breakpoints": true
     }
   ]
 }

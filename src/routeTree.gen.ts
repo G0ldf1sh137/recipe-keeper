@@ -13,8 +13,10 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections/index'
+import { Route as UploadsSplatRouteImport } from './routes/uploads/$'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
 import { Route as CollectionsCollectionIdRouteImport } from './routes/collections/$collectionId'
+import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as RecipesRecipeIdIndexRouteImport } from './routes/recipes/$recipeId/index'
 import { Route as AuthGoogleIndexRouteImport } from './routes/auth/google/index'
 import { Route as RecipesRecipeIdEditRouteImport } from './routes/recipes/$recipeId/edit'
@@ -40,6 +42,11 @@ const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
   path: '/collections/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UploadsSplatRoute = UploadsSplatRouteImport.update({
+  id: '/uploads/$',
+  path: '/uploads/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipesNewRoute = RecipesNewRouteImport.update({
   id: '/recipes/new',
   path: '/recipes/new',
@@ -48,6 +55,11 @@ const RecipesNewRoute = RecipesNewRouteImport.update({
 const CollectionsCollectionIdRoute = CollectionsCollectionIdRouteImport.update({
   id: '/collections/$collectionId',
   path: '/collections/$collectionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUploadRoute = ApiUploadRouteImport.update({
+  id: '/api/upload',
+  path: '/api/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesRecipeIdIndexRoute = RecipesRecipeIdIndexRouteImport.update({
@@ -74,8 +86,10 @@ const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/uploads/$': typeof UploadsSplatRoute
   '/collections/': typeof CollectionsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -86,8 +100,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/uploads/$': typeof UploadsSplatRoute
   '/collections': typeof CollectionsIndexRoute
   '/recipes': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -99,8 +115,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/uploads/$': typeof UploadsSplatRoute
   '/collections/': typeof CollectionsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -113,8 +131,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/api/upload'
     | '/collections/$collectionId'
     | '/recipes/new'
+    | '/uploads/$'
     | '/collections/'
     | '/recipes/'
     | '/auth/google/callback'
@@ -125,8 +145,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/api/upload'
     | '/collections/$collectionId'
     | '/recipes/new'
+    | '/uploads/$'
     | '/collections'
     | '/recipes'
     | '/auth/google/callback'
@@ -137,8 +159,10 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/api/upload'
     | '/collections/$collectionId'
     | '/recipes/new'
+    | '/uploads/$'
     | '/collections/'
     | '/recipes/'
     | '/auth/google/callback'
@@ -150,8 +174,10 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  ApiUploadRoute: typeof ApiUploadRoute
   CollectionsCollectionIdRoute: typeof CollectionsCollectionIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
+  UploadsSplatRoute: typeof UploadsSplatRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
@@ -190,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/uploads/$': {
+      id: '/uploads/$'
+      path: '/uploads/$'
+      fullPath: '/uploads/$'
+      preLoaderRoute: typeof UploadsSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipes/new': {
       id: '/recipes/new'
       path: '/recipes/new'
@@ -202,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/collections/$collectionId'
       fullPath: '/collections/$collectionId'
       preLoaderRoute: typeof CollectionsCollectionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/upload': {
+      id: '/api/upload'
+      path: '/api/upload'
+      fullPath: '/api/upload'
+      preLoaderRoute: typeof ApiUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/$recipeId/': {
@@ -238,8 +278,10 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  ApiUploadRoute: ApiUploadRoute,
   CollectionsCollectionIdRoute: CollectionsCollectionIdRoute,
   RecipesNewRoute: RecipesNewRoute,
+  UploadsSplatRoute: UploadsSplatRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
