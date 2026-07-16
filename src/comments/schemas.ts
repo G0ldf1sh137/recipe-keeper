@@ -8,4 +8,5 @@ export const createCommentSchema = z.object({
 
 export const listCommentsSchema = z.object({
   recipeId: z.string().min(1),
+  shareToken: z.string().min(1).optional(),
 });

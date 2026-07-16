@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections/index'
+import { Route as SharedTokenRouteImport } from './routes/shared/$token'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
 import { Route as CollectionsCollectionIdRouteImport } from './routes/collections/$collectionId'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
@@ -39,6 +40,11 @@ const RecipesIndexRoute = RecipesIndexRouteImport.update({
 const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
   id: '/collections/',
   path: '/collections/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SharedTokenRoute = SharedTokenRouteImport.update({
+  id: '/shared/$token',
+  path: '/shared/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesNewRoute = RecipesNewRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/shared/$token': typeof SharedTokenRoute
   '/collections/': typeof CollectionsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/shared/$token': typeof SharedTokenRoute
   '/collections': typeof CollectionsIndexRoute
   '/recipes': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/shared/$token': typeof SharedTokenRoute
   '/collections/': typeof CollectionsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/collections/$collectionId'
     | '/recipes/new'
+    | '/shared/$token'
     | '/collections/'
     | '/recipes/'
     | '/auth/google/callback'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/collections/$collectionId'
     | '/recipes/new'
+    | '/shared/$token'
     | '/collections'
     | '/recipes'
     | '/auth/google/callback'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/collections/$collectionId'
     | '/recipes/new'
+    | '/shared/$token'
     | '/collections/'
     | '/recipes/'
     | '/auth/google/callback'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   ApiUploadRoute: typeof ApiUploadRoute
   CollectionsCollectionIdRoute: typeof CollectionsCollectionIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
+  SharedTokenRoute: typeof SharedTokenRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/collections'
       fullPath: '/collections/'
       preLoaderRoute: typeof CollectionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shared/$token': {
+      id: '/shared/$token'
+      path: '/shared/$token'
+      fullPath: '/shared/$token'
+      preLoaderRoute: typeof SharedTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/new': {
@@ -261,6 +281,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUploadRoute: ApiUploadRoute,
   CollectionsCollectionIdRoute: CollectionsCollectionIdRoute,
   RecipesNewRoute: RecipesNewRoute,
+  SharedTokenRoute: SharedTokenRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,

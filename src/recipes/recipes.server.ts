@@ -1,6 +1,6 @@
-import { and, arrayContains, eq, inArray, or } from "drizzle-orm";
+import { and, arrayContains, eq, inArray, ne, or } from "drizzle-orm";
 import { db } from "#/db/index";
-import { recipes } from "#/db/schema";
+import { recipes, shares } from "#/db/schema";
 import type {
   createRecipeSchema,
   deleteRecipeSchema,
@@ -9,16 +9,28 @@ import type {
 } from "./schemas";
 import type { z } from "zod";
 
-// A recipe is visible to a viewer if it's public/unlisted, or the viewer owns it.
+// A recipe is visible to a viewer if it's public, or the viewer owns it.
+// "unlisted" recipes are intentionally excluded here — they're only reachable
+// via a valid share token (see findRecipeById's shareToken param).
 function visibleToViewer(viewerId: string | undefined) {
   return viewerId
-    ? or(eq(recipes.visibility, "public"), eq(recipes.visibility, "unlisted"), eq(recipes.ownerId, viewerId))
-    : or(eq(recipes.visibility, "public"), eq(recipes.visibility, "unlisted"));
+    ? or(eq(recipes.visibility, "public"), eq(recipes.ownerId, viewerId))
+    : eq(recipes.visibility, "public");
 }
 
-export async function findRecipeById(id: string, viewerId: string | undefined) {
-  return db.query.recipes.findFirst({
+export async function findRecipeById(id: string, viewerId: string | undefined, shareToken?: string) {
+  const recipe = await db.query.recipes.findFirst({
     where: and(eq(recipes.id, id), visibleToViewer(viewerId)),
+  });
+  if (recipe) return recipe;
+  if (!shareToken) return undefined;
+
+  const share = await db.query.shares.findFirst({
+    where: and(eq(shares.token, shareToken), eq(shares.recipeId, id)),
+  });
+  if (!share) return undefined;
+  return db.query.recipes.findFirst({
+    where: and(eq(recipes.id, id), ne(recipes.visibility, "private")),
   });
 }
 
@@ -66,4 +78,38 @@ export async function deleteOwnedRecipe(input: z.infer<typeof deleteRecipeSchema
     .where(and(eq(recipes.id, input.id), eq(recipes.ownerId, ownerId)))
     .returning();
   return rows.at(0);
+}
+
+export async function findShareTokenForRecipe(recipeId: string, ownerId: string) {
+  const recipe = await db.query.recipes.findFirst({
+    where: and(eq(recipes.id, recipeId), eq(recipes.ownerId, ownerId)),
+  });
+  if (!recipe) return undefined;
+  const share = await db.query.shares.findFirst({ where: eq(shares.recipeId, recipeId) });
+  return share?.token ?? null;
+}
+
+export async function createShareForRecipe(recipeId: string, ownerId: string) {
+  const recipe = await db.query.recipes.findFirst({
+    where: and(eq(recipes.id, recipeId), eq(recipes.ownerId, ownerId)),
+  });
+  if (!recipe) return undefined;
+  if (recipe.visibility === "private") {
+    throw new Error("Set the recipe to unlisted or public before sharing it.");
+  }
+
+  const existing = await db.query.shares.findFirst({ where: eq(shares.recipeId, recipeId) });
+  if (existing) return existing.token;
+
+  const [share] = await db.insert(shares).values({ recipeId, createdBy: ownerId }).returning();
+  return share.token;
+}
+
+export async function revokeShareForRecipe(recipeId: string, ownerId: string) {
+  const recipe = await db.query.recipes.findFirst({
+    where: and(eq(recipes.id, recipeId), eq(recipes.ownerId, ownerId)),
+  });
+  if (!recipe) return undefined;
+  await db.delete(shares).where(eq(shares.recipeId, recipeId));
+  return true;
 }

@@ -1,6 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
-import { collections, collectionRecipes, recipes } from "#/db/schema";
+import { collections, collectionRecipes, recipes, shares } from "#/db/schema";
+import type { Visibility } from "#/db/schema";
 
 export async function findCollectionsByOwner(ownerId: string) {
   return db
@@ -23,7 +24,29 @@ export async function findCollectionById(id: string, ownerId: string) {
   });
 }
 
-export async function findRecipesInCollection(collectionId: string, ownerId: string) {
+// A collection is visible to a viewer if it's public, the viewer owns it, or
+// they hold a valid share token. "unlisted" collections are only reachable
+// via a share token, mirroring recipes' visibleToViewer/findRecipeById.
+export async function findCollectionForViewer(id: string, viewerId: string | undefined, shareToken?: string) {
+  const visible = viewerId
+    ? or(eq(collections.visibility, "public"), eq(collections.ownerId, viewerId))
+    : eq(collections.visibility, "public");
+  const collection = await db.query.collections.findFirst({
+    where: and(eq(collections.id, id), visible),
+  });
+  if (collection) return collection;
+  if (!shareToken) return undefined;
+
+  const share = await db.query.shares.findFirst({
+    where: and(eq(shares.token, shareToken), eq(shares.collectionId, id)),
+  });
+  if (!share) return undefined;
+  return db.query.collections.findFirst({
+    where: and(eq(collections.id, id), ne(collections.visibility, "private")),
+  });
+}
+
+export async function findRecipesInCollection(collectionId: string) {
   return db
     .select({
       id: recipes.id,
@@ -34,8 +57,7 @@ export async function findRecipesInCollection(collectionId: string, ownerId: str
     })
     .from(collectionRecipes)
     .innerJoin(recipes, eq(collectionRecipes.recipeId, recipes.id))
-    .innerJoin(collections, eq(collectionRecipes.collectionId, collections.id))
-    .where(and(eq(collectionRecipes.collectionId, collectionId), eq(collections.ownerId, ownerId)))
+    .where(eq(collectionRecipes.collectionId, collectionId))
     .orderBy(collectionRecipes.addedAt);
 }
 
@@ -95,4 +117,41 @@ export async function toggleMembership(collectionId: string, recipeId: string, o
 
   await db.insert(collectionRecipes).values({ collectionId, recipeId });
   return { inCollection: true };
+}
+
+export async function updateCollectionVisibility(id: string, ownerId: string, visibility: Visibility) {
+  const rows = await db
+    .update(collections)
+    .set({ visibility })
+    .where(and(eq(collections.id, id), eq(collections.ownerId, ownerId)))
+    .returning();
+  return rows.at(0);
+}
+
+export async function findShareTokenForCollection(collectionId: string, ownerId: string) {
+  const collection = await findCollectionById(collectionId, ownerId);
+  if (!collection) return undefined;
+  const share = await db.query.shares.findFirst({ where: eq(shares.collectionId, collectionId) });
+  return share?.token ?? null;
+}
+
+export async function createShareForCollection(collectionId: string, ownerId: string) {
+  const collection = await findCollectionById(collectionId, ownerId);
+  if (!collection) return undefined;
+  if (collection.visibility === "private") {
+    throw new Error("Set the list to unlisted or public before sharing it.");
+  }
+
+  const existing = await db.query.shares.findFirst({ where: eq(shares.collectionId, collectionId) });
+  if (existing) return existing.token;
+
+  const [share] = await db.insert(shares).values({ collectionId, createdBy: ownerId }).returning();
+  return share.token;
+}
+
+export async function revokeShareForCollection(collectionId: string, ownerId: string) {
+  const collection = await findCollectionById(collectionId, ownerId);
+  if (!collection) return undefined;
+  await db.delete(shares).where(eq(shares.collectionId, collectionId));
+  return true;
 }

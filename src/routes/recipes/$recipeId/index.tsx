@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { getRecipe, deleteRecipe } from "#/recipes/recipes.functions";
+import { z } from "zod";
+import { getRecipe, deleteRecipe, createRecipeShare, revokeRecipeShare } from "#/recipes/recipes.functions";
 import { listComments } from "#/comments/comments.functions";
 import { getSessionUser } from "#/auth/auth.functions";
 import { CommentThread } from "#/comments/CommentThread";
@@ -9,14 +10,19 @@ import { getRatingSummary } from "#/ratings/ratings.functions";
 import { RecipeRating } from "#/ratings/RecipeRating";
 import { getCollectionsForRecipe } from "#/collections/collections.functions";
 import { SaveToList } from "#/collections/SaveToList";
+import { ShareControl } from "#/sharing/ShareControl";
+
+const recipeSearchSchema = z.object({ st: z.string().optional() });
 
 export const Route = createFileRoute("/recipes/$recipeId/")({
-  loader: async ({ params }) => {
+  validateSearch: recipeSearchSchema,
+  loaderDeps: ({ search }) => ({ shareToken: search.st }),
+  loader: async ({ params, deps }) => {
     const [recipe, comments, user, rating] = await Promise.all([
-      getRecipe({ data: { id: params.recipeId } }),
-      listComments({ data: { recipeId: params.recipeId } }),
+      getRecipe({ data: { id: params.recipeId, shareToken: deps.shareToken } }),
+      listComments({ data: { recipeId: params.recipeId, shareToken: deps.shareToken } }),
       getSessionUser(),
-      getRatingSummary({ data: { recipeId: params.recipeId } }),
+      getRatingSummary({ data: { recipeId: params.recipeId, shareToken: deps.shareToken } }),
     ]);
     const collections = user
       ? await getCollectionsForRecipe({ data: { recipeId: params.recipeId } })
@@ -43,8 +49,21 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 function RecipePage() {
   const { recipe, comments, user, rating, collections } = Route.useLoaderData();
   const navigate = useNavigate();
+  const router = useRouter();
   const deleteRecipeFn = useServerFn(deleteRecipe);
+  const createShareFn = useServerFn(createRecipeShare);
+  const revokeShareFn = useServerFn(revokeRecipeShare);
   const [deleting, setDeleting] = useState(false);
+
+  async function handleShare() {
+    await createShareFn({ data: { recipeId: recipe.id } });
+    await router.invalidate();
+  }
+
+  async function handleRevoke() {
+    await revokeShareFn({ data: { recipeId: recipe.id } });
+    await router.invalidate();
+  }
 
   async function handleDelete() {
     if (!window.confirm(`Delete "${recipe.title}"? This can't be undone.`)) return;
@@ -89,6 +108,16 @@ function RecipePage() {
       <span className="mt-4 block text-xs font-medium uppercase tracking-wide text-accent-600">
         {recipe.visibility}
       </span>
+      {recipe.isOwner && (
+        <div className="mt-3">
+          <ShareControl
+            shareUrl={recipe.shareUrl}
+            disabled={recipe.visibility === "private"}
+            onShare={handleShare}
+            onRevoke={handleRevoke}
+          />
+        </div>
+      )}
       <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">{recipe.title}</h1>
       {recipe.description && <p className="mt-2 text-ink/70">{recipe.description}</p>}
 

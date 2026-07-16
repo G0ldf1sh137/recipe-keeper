@@ -9,7 +9,7 @@ export const getRatingSummary = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
   .validator(getRatingSummarySchema)
   .handler(async ({ data, context }) => {
-    const recipe = await findRecipeById(data.recipeId, context.user?.id);
+    const recipe = await findRecipeById(data.recipeId, context.user?.id, data.shareToken);
     if (!recipe) throw notFound();
     return findRatingSummary(data.recipeId, context.user?.id);
   });

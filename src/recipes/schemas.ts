@@ -43,6 +43,11 @@ export const deleteRecipeSchema = z.object({
 
 export const getRecipeSchema = z.object({
   id: z.string().min(1),
+  shareToken: z.string().min(1).optional(),
+});
+
+export const recipeShareSchema = z.object({
+  recipeId: z.string().min(1),
 });
 
 export const listRecipesSchema = z.object({

@@ -6,33 +6,71 @@ import {
   deleteCollectionSchema,
   getCollectionSchema,
   collectionsForRecipeSchema,
+  collectionShareSchema,
   toggleRecipeInCollectionSchema,
+  updateCollectionVisibilitySchema,
 } from "./schemas";
 import {
+  createShareForCollection,
   findCollectionsByOwner,
-  findCollectionById,
+  findCollectionForViewer,
   findRecipesInCollection,
+  findShareTokenForCollection,
   insertCollection,
   renameOwnedCollection,
   deleteOwnedCollection,
   findCollectionsWithMembership,
+  revokeShareForCollection,
   toggleMembership,
+  updateCollectionVisibility as updateOwnedCollectionVisibility,
 } from "./collections.server";
 import { findRecipeById } from "#/recipes/recipes.server";
-import { requireAuthMiddleware } from "#/auth/auth-middleware";
+import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
 
 export const listMyCollections = createServerFn({ method: "GET" })
   .middleware([requireAuthMiddleware])
   .handler(async ({ context }) => findCollectionsByOwner(context.user.id));
 
 export const getCollection = createServerFn({ method: "GET" })
-  .middleware([requireAuthMiddleware])
+  .middleware([sessionMiddleware])
   .validator(getCollectionSchema)
   .handler(async ({ data, context }) => {
-    const collection = await findCollectionById(data.id, context.user.id);
+    const collection = await findCollectionForViewer(data.id, context.user?.id, data.shareToken);
     if (!collection) throw notFound();
-    const items = await findRecipesInCollection(data.id, context.user.id);
-    return { collection, items };
+    const isOwner = collection.ownerId === context.user?.id;
+    const shareToken = isOwner ? await findShareTokenForCollection(collection.id, context.user!.id) : null;
+    const items = await findRecipesInCollection(data.id);
+    return {
+      collection: { ...collection, isOwner, shareUrl: shareToken ? `/shared/${shareToken}` : null },
+      items,
+    };
+  });
+
+export const createCollectionShare = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .validator(collectionShareSchema)
+  .handler(async ({ data, context }) => {
+    const token = await createShareForCollection(data.collectionId, context.user.id);
+    if (token === undefined) throw notFound();
+    return { shareUrl: `/shared/${token}` };
+  });
+
+export const revokeCollectionShare = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .validator(collectionShareSchema)
+  .handler(async ({ data, context }) => {
+    const result = await revokeShareForCollection(data.collectionId, context.user.id);
+    if (result === undefined) throw notFound();
+    return { ok: true };
+  });
+
+export const updateCollectionVisibility = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .validator(updateCollectionVisibilitySchema)
+  .handler(async ({ data, context }) => {
+    const updated = await updateOwnedCollectionVisibility(data.id, context.user.id, data.visibility);
+    if (!updated) throw notFound();
+    return updated;
   });
 
 export const createCollection = createServerFn({ method: "POST" })

@@ -7,6 +7,7 @@ export const rateRecipeSchema = z.object({
 
 export const getRatingSummarySchema = z.object({
   recipeId: z.string().min(1),
+  shareToken: z.string().min(1).optional(),
 });
 
 export const getRatingSummariesSchema = z.object({

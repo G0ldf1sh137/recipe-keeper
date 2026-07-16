@@ -9,7 +9,7 @@ export const listComments = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
   .validator(listCommentsSchema)
   .handler(async ({ data, context }) => {
-    const recipe = await findRecipeById(data.recipeId, context.user?.id);
+    const recipe = await findRecipeById(data.recipeId, context.user?.id, data.shareToken);
     if (!recipe) throw notFound();
     return findCommentTreeForRecipe(data.recipeId);
   });

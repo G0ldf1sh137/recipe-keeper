@@ -92,12 +92,16 @@ export const shares = pgTable("shares", {
     .notNull()
     .unique()
     .$defaultFn(() => crypto.randomUUID()),
-  recipeId: text("recipe_id").references(() => recipes.id, {
-    onDelete: "cascade",
-  }),
-  collectionId: text("collection_id").references(() => collections.id, {
-    onDelete: "cascade",
-  }),
+  recipeId: text("recipe_id")
+    .unique()
+    .references(() => recipes.id, {
+      onDelete: "cascade",
+    }),
+  collectionId: text("collection_id")
+    .unique()
+    .references(() => collections.id, {
+      onDelete: "cascade",
+    }),
   createdBy: text("created_by")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
