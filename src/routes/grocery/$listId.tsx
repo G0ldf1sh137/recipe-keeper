@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { getSessionUser } from "#/auth/auth.functions";
 import {
   getGroceryList,
   renameGroceryList,
@@ -11,6 +12,10 @@ import {
 } from "#/grocery/grocery.functions";
 
 export const Route = createFileRoute("/grocery/$listId")({
+  beforeLoad: async () => {
+    const user = await getSessionUser();
+    if (!user) throw redirect({ to: "/login" });
+  },
   loader: async ({ params }) => getGroceryList({ data: { id: params.listId } }),
   component: GroceryListPage,
   notFoundComponent: () => (
