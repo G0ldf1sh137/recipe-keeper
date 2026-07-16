@@ -47,7 +47,7 @@ export function SaveToList({
   if (!canSave) {
     return (
       <section className="mt-8">
-        <h2 className="font-serif text-xl font-semibold text-ink">Save to a list</h2>
+        <h2 className="font-serif text-xl font-semibold text-ink">Save to a cookbook</h2>
         <p className="mt-3 text-sm text-ink/60">
           <a
             href="/auth/google"
@@ -63,7 +63,7 @@ export function SaveToList({
 
   return (
     <section className="mt-8">
-      <h2 className="font-serif text-xl font-semibold text-ink">Save to a list</h2>
+      <h2 className="font-serif text-xl font-semibold text-ink">Save to a cookbook</h2>
 
       {collections.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -90,14 +90,14 @@ export function SaveToList({
           className="flex-1 rounded-lg border border-accent-100 px-3 py-1.5 text-sm focus:border-accent-400 focus:outline-none"
           value={newListName}
           onChange={(e) => setNewListName(e.target.value)}
-          placeholder="New list name"
+          placeholder="New cookbook name"
         />
         <button
           type="submit"
           disabled={busy === "new" || !newListName.trim()}
           className="rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
         >
-          {busy === "new" ? "Adding..." : "+ New list"}
+          {busy === "new" ? "Adding..." : "+ New cookbook"}
         </button>
       </form>
     </section>

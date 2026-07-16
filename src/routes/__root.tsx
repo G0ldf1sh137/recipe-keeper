@@ -118,7 +118,7 @@ function AuthHeader({
           onClick={() => setMenuOpen(false)}
           className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
         >
-          Your lists
+          Your cookbooks
         </Link>
         <Link
           to="/grocery"

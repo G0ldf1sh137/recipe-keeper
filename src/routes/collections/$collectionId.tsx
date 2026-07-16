@@ -98,7 +98,7 @@ function CollectionPage() {
         to="/collections"
         className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
       >
-        ← Your lists
+        ← Your cookbooks
       </Link>
 
       <div className="mt-4 flex items-center justify-between">

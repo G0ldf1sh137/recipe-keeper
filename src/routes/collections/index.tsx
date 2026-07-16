@@ -68,14 +68,14 @@ function CollectionsPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
-      <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Your lists</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Your cookbooks</h1>
 
       <form onSubmit={handleCreate} className="mt-6 flex gap-3">
         <input
           className="flex-1 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="New list name"
+          placeholder="New cookbook name"
         />
         <button
           type="submit"
@@ -91,14 +91,14 @@ function CollectionsPage() {
           className="mt-6 w-full rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search your lists"
+          placeholder="Search your cookbooks"
         />
       )}
 
       {collections.length === 0 ? (
-        <p className="mt-6 text-ink/60">No lists yet. Create one to start bookmarking recipes.</p>
+        <p className="mt-6 text-ink/60">No cookbooks yet. Create one to start bookmarking recipes.</p>
       ) : filteredCollections.length === 0 ? (
-        <p className="mt-6 text-ink/60">No lists match "{query}".</p>
+        <p className="mt-6 text-ink/60">No cookbooks match "{query}".</p>
       ) : (
         <ul className="mt-6 flex flex-col gap-3">
           {filteredCollections.map((collection) => (
