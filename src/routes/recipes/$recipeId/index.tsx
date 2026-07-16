@@ -167,6 +167,15 @@ function RecipePage() {
         </div>
       )}
       <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">{recipe.title}</h1>
+
+      <RecipeRating
+        recipeId={recipe.id}
+        average={rating.average}
+        count={rating.count}
+        myRating={rating.myRating}
+        canRate={!!user}
+      />
+
       {recipe.owner.username ? (
         <Link
           to="/u/$username"
@@ -286,14 +295,6 @@ function RecipePage() {
           ))}
         </ol>
       </section>
-
-      <RecipeRating
-        recipeId={recipe.id}
-        average={rating.average}
-        count={rating.count}
-        myRating={rating.myRating}
-        canRate={!!user}
-      />
 
       <SaveToList recipeId={recipe.id} collections={collections} canSave={!!user} />
 
