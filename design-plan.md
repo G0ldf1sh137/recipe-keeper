@@ -70,7 +70,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 4. Auth (signup/login/session)
 5. Collections (create, add/remove recipes)
 6. Sharing — done: revocable share links for public recipes and collections, plus public profile pages (`/u/$username`).
-7. Grocery lists — done: multiple named lists, add/remove a recipe's ingredients with duplicates combined, manual items, check off; ingredient-name and unit autocomplete on the recipe form.
+7. Grocery lists — done: multiple named lists, add/remove a recipe's ingredients with duplicates combined (quantities are parsed as exact fractions, so whole numbers, decimals, simple fractions like "1/2", and mixed numbers like "1 1/2" all sum correctly, e.g. 1/2 + 1/4 = 3/4), manual items, check off; ingredient-name and unit autocomplete on the recipe form.
 8. Recipe forking — done: clone any recipe you can see into your own private copy, referencing the original; the original's page lists its forks (visible ones only).
 9. Polish — done: exact tag/visibility filters plus free-text search (title/description) on `/recipes`, with lightweight client-side search on collections and profile pages; responsive layout (mobile nav, wrapping rows, responsive grids/padding) across the app; empty-state messaging on every list view.
 10. Calendars — reusable weekly meal-plan templates (Mon–Sun slots, multiple recipes per day), shareable like collections via public/private visibility plus revocable links.
