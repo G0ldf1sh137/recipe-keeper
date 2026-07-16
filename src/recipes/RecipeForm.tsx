@@ -166,6 +166,25 @@ export function RecipeForm({
         />
       </label>
 
+      <div className="flex flex-col gap-2">
+        <span className="font-medium text-ink/70">Photos</span>
+        <MultiImageUpload
+          imageUrls={photoUrls}
+          onChange={updatePhotoUrls}
+          previewClassName="h-32 w-48 rounded-lg object-cover"
+          coverUrl={coverPhotoUrl}
+          onSetCover={setCoverPhotoUrl}
+        />
+        {photoUrls.length > 1 && (
+          <p className="text-xs text-ink/50">Click ☆ on a photo to use it as the cover shown in recipe lists.</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="font-medium text-ink/70">Recipe PDF</span>
+        <PdfUpload url={sourcePdfUrl} onChange={updateSourcePdfUrl} />
+      </div>
+
       <label className="flex flex-col gap-1">
         <span className="font-medium text-ink/70">Description</span>
         <textarea
@@ -209,25 +228,6 @@ export function RecipeForm({
             placeholder="320"
           />
         </label>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <span className="font-medium text-ink/70">Photos</span>
-        <MultiImageUpload
-          imageUrls={photoUrls}
-          onChange={updatePhotoUrls}
-          previewClassName="h-32 w-48 rounded-lg object-cover"
-          coverUrl={coverPhotoUrl}
-          onSetCover={setCoverPhotoUrl}
-        />
-        {photoUrls.length > 1 && (
-          <p className="text-xs text-ink/50">Click ☆ on a photo to use it as the cover shown in recipe lists.</p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <span className="font-medium text-ink/70">Recipe PDF</span>
-        <PdfUpload url={sourcePdfUrl} onChange={updateSourcePdfUrl} />
       </div>
 
       <div className="flex flex-col gap-2">
