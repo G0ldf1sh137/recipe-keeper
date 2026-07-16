@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getRecipe, updateRecipe } from "#/recipes/recipes.functions";
 import { RecipeForm } from "#/recipes/RecipeForm";
+import type { RecipeFormValues } from "#/recipes/RecipeForm";
+import { ProcessPhotos } from "#/transcription/ProcessPhotos";
+import type { TranscribedRecipe } from "#/transcription/transcription.server";
 
 export const Route = createFileRoute("/recipes/$recipeId/edit")({
   loader: async ({ params }) => {
@@ -33,19 +37,46 @@ function EditRecipePage() {
   const navigate = useNavigate();
   const updateRecipeFn = useServerFn(updateRecipe);
 
+  const [formValues, setFormValues] = useState<RecipeFormValues>({
+    title: recipe.title,
+    description: recipe.description ?? "",
+    photoUrls: recipe.photoUrls,
+    tagsInput: recipe.tags.join(", "),
+    visibility: recipe.visibility,
+    ingredients: recipe.ingredients.length ? recipe.ingredients : [{ qty: "", unit: "", name: "" }],
+    steps: recipe.steps.length ? recipe.steps : [{ text: "", imageUrls: [] }],
+  });
+  // Bumped to force RecipeForm to re-initialize its internal state from formValues
+  // after a transcription is applied (RecipeForm otherwise only reads initialValues once).
+  const [formKey, setFormKey] = useState(0);
+
+  function applyTranscription(transcribed: TranscribedRecipe) {
+    setFormValues((prev) => ({
+      ...prev,
+      ...(transcribed.title.trim() ? { title: transcribed.title.trim() } : {}),
+      ...(transcribed.description.trim() ? { description: transcribed.description.trim() } : {}),
+      ingredients: transcribed.ingredients.length ? transcribed.ingredients : prev.ingredients,
+      steps: transcribed.steps.length
+        ? transcribed.steps.map((step) => ({ text: step.text, imageUrls: [] }))
+        : prev.steps,
+      tagsInput: transcribed.tags.length ? transcribed.tags.join(", ") : prev.tagsInput,
+    }));
+    setFormKey((k) => k + 1);
+  }
+
   return (
     <div className="mx-auto max-w-2xl p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Edit recipe</h1>
+
+      {recipe.photoUrls.length > 0 && (
+        <div className="mt-6">
+          <ProcessPhotos recipeId={recipe.id} onApply={applyTranscription} />
+        </div>
+      )}
+
       <RecipeForm
-        initialValues={{
-          title: recipe.title,
-          description: recipe.description ?? "",
-          photoUrls: recipe.photoUrls,
-          tagsInput: recipe.tags.join(", "),
-          visibility: recipe.visibility,
-          ingredients: recipe.ingredients.length ? recipe.ingredients : [{ qty: "", unit: "", name: "" }],
-          steps: recipe.steps.length ? recipe.steps : [{ text: "", imageUrls: [] }],
-        }}
+        key={formKey}
+        initialValues={formValues}
         submitLabel="Save changes"
         onSubmit={async (values) => {
           await updateRecipeFn({ data: { id: recipe.id, ...values } });
