@@ -93,6 +93,13 @@ function GroceryListPage() {
     await router.invalidate();
   }
 
+  // Fully-checked groups sink to the bottom, keeping still-needed items in view.
+  const sortedGroups = [...groups].sort((a, b) => {
+    const aDone = a.lines.every((l) => l.checked);
+    const bDone = b.lines.every((l) => l.checked);
+    return aDone === bDone ? 0 : aDone ? 1 : -1;
+  });
+
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <Link
@@ -183,27 +190,30 @@ function GroceryListPage() {
         <p className="mt-6 text-ink/60">No items yet. Add a recipe or an item above.</p>
       ) : (
         <div className="mt-6 flex flex-col gap-4">
-          {groups.map((group) => (
-            <div key={group.name} className="rounded-xl border border-accent-100 bg-surface px-4 py-3 shadow-sm">
-              <span className="font-serif text-lg font-medium capitalize text-ink">{group.name}</span>
-              <ul className="mt-1 flex flex-col gap-1">
-                {group.lines.map((line) => (
-                  <li key={line.itemIds.join(",")} className="flex items-center gap-2">
-                    <label className="flex flex-1 items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={line.checked}
-                        onChange={() => handleToggleLine(line.itemIds, line.checked)}
-                      />
-                      <span className={line.checked ? "text-ink/40 line-through" : "text-ink/80"}>
-                        {[line.qty, line.unit].filter(Boolean).join(" ")}
-                      </span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {sortedGroups.map((group) => {
+            const sortedLines = [...group.lines].sort((a, b) => (a.checked === b.checked ? 0 : a.checked ? 1 : -1));
+            return (
+              <div key={group.name} className="rounded-xl border border-accent-100 bg-surface px-4 py-3 shadow-sm">
+                <span className="font-serif text-lg font-medium capitalize text-ink">{group.name}</span>
+                <ul className="mt-1 flex flex-col gap-1">
+                  {sortedLines.map((line) => (
+                    <li key={line.itemIds.join(",")} className="flex items-center gap-2">
+                      <label className="flex flex-1 items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={line.checked}
+                          onChange={() => handleToggleLine(line.itemIds, line.checked)}
+                        />
+                        <span className={line.checked ? "text-ink/40 line-through" : "text-ink/80"}>
+                          {[line.qty, line.unit].filter(Boolean).join(" ")}
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
         </div>
       )}
 
