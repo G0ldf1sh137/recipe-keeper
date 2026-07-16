@@ -44,7 +44,7 @@ function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Settings</h1>
 
       <div className="mt-6 flex items-center gap-4">

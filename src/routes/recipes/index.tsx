@@ -46,7 +46,7 @@ function RecipesListPage() {
   const hasFilters = Boolean(search.tag || search.visibility);
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Recipes</h1>
         <Link

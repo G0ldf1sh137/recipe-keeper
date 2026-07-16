@@ -12,7 +12,7 @@ function LoginPage() {
   const { error } = Route.useSearch();
 
   return (
-    <div className="mx-auto max-w-md p-8 text-center">
+    <div className="mx-auto max-w-md p-4 sm:p-8 text-center">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Sign in</h1>
       <p className="mt-2 text-ink/60">Sign in with your Google account to create and manage recipes.</p>
       {error && (

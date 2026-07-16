@@ -6,7 +6,7 @@ export const Route = createFileRoute("/u/$username")({
   loader: async ({ params }) => getProfile({ data: { username: params.username } }),
   component: ProfilePage,
   notFoundComponent: () => (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-2xl font-semibold text-ink">User not found</h1>
       <p className="mt-2 text-ink/60">
         This profile doesn't exist.{" "}
@@ -25,7 +25,7 @@ function ProfilePage() {
   const { user, recipes, collections } = Route.useLoaderData();
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <div className="flex items-center gap-4">
         {user.avatarUrl && (
           <img src={user.avatarUrl} alt={user.name} className="h-16 w-16 rounded-full" />

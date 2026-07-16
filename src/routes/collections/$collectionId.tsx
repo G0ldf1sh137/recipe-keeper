@@ -24,7 +24,7 @@ export const Route = createFileRoute("/collections/$collectionId")({
     getCollection({ data: { id: params.collectionId, shareToken: deps.shareToken } }),
   component: CollectionPage,
   notFoundComponent: () => (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-2xl font-semibold text-ink">List not found</h1>
       <p className="mt-2 text-ink/60">
         This list doesn't exist, or isn't shared with you.{" "}
@@ -88,7 +88,7 @@ function CollectionPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <Link
         to="/collections"
         className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"

@@ -43,7 +43,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
   },
   component: RecipePage,
   notFoundComponent: () => (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-2xl font-semibold text-ink">Recipe not found</h1>
       <p className="mt-2 text-ink/60">
         This recipe doesn't exist, or isn't shared with you.{" "}
@@ -102,7 +102,7 @@ function RecipePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <div className="flex items-center justify-between">
         <Link
           to="/"
@@ -183,7 +183,7 @@ function RecipePage() {
       {recipe.description && <p className="mt-2 text-ink/70">{recipe.description}</p>}
 
       {recipe.photoUrls.length > 0 && (
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {recipe.photoUrls.map((url, i) => (
             <img
               key={url}

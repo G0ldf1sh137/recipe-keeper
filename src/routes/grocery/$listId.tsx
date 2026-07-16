@@ -19,7 +19,7 @@ export const Route = createFileRoute("/grocery/$listId")({
   loader: async ({ params }) => getGroceryList({ data: { id: params.listId } }),
   component: GroceryListPage,
   notFoundComponent: () => (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-2xl font-semibold text-ink">List not found</h1>
       <p className="mt-2 text-ink/60">
         This grocery list doesn't exist, or isn't yours.{" "}
@@ -94,7 +94,7 @@ function GroceryListPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <Link
         to="/grocery"
         className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
@@ -151,7 +151,7 @@ function GroceryListPage() {
         )}
       </div>
 
-      <form onSubmit={handleAddItem} className="mt-6 flex gap-2">
+      <form onSubmit={handleAddItem} className="mt-6 flex flex-wrap gap-2">
         <input
           className="w-20 rounded-lg border border-accent-100 px-2 py-1 focus:border-accent-400 focus:outline-none"
           placeholder="qty"
@@ -165,7 +165,7 @@ function GroceryListPage() {
           onChange={(e) => setItemUnit(e.target.value)}
         />
         <input
-          className="flex-1 rounded-lg border border-accent-100 px-2 py-1 focus:border-accent-400 focus:outline-none"
+          className="min-w-[10rem] flex-1 rounded-lg border border-accent-100 px-2 py-1 focus:border-accent-400 focus:outline-none"
           placeholder="item"
           value={itemName}
           onChange={(e) => setItemName(e.target.value)}

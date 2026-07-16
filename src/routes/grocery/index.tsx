@@ -62,7 +62,7 @@ function GroceryListsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Grocery lists</h1>
 
       <form onSubmit={handleCreate} className="mt-6 flex gap-3">

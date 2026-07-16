@@ -21,7 +21,7 @@ export const Route = createFileRoute("/recipes/$recipeId/edit")({
   },
   component: EditRecipePage,
   notFoundComponent: () => (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-2xl font-semibold text-ink">Recipe not found</h1>
       <p className="mt-2 text-ink/60">
         This recipe doesn't exist, or isn't shared with you.{" "}
@@ -69,7 +69,7 @@ function EditRecipePage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Edit recipe</h1>
 
       {formValues.photoUrls.length > 0 && (

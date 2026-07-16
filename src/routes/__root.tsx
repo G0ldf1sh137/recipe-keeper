@@ -97,6 +97,7 @@ function AuthHeader({
   const router = useRouter()
   const logoutFn = useServerFn(logout)
   const [pending, setPending] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   async function handleLogout() {
     setPending(true)
@@ -105,59 +106,80 @@ function AuthHeader({
       await router.invalidate()
     } finally {
       setPending(false)
+      setMenuOpen(false)
     }
   }
 
+  function renderNavLinks(currentUser: NonNullable<typeof user>) {
+    return (
+      <>
+        <Link
+          to="/collections"
+          onClick={() => setMenuOpen(false)}
+          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
+          Your lists
+        </Link>
+        <Link
+          to="/grocery"
+          onClick={() => setMenuOpen(false)}
+          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
+          Grocery lists
+        </Link>
+        <Link
+          to="/settings"
+          onClick={() => setMenuOpen(false)}
+          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
+          Settings
+        </Link>
+        {currentUser.avatarUrl && (
+          <img src={currentUser.avatarUrl} alt="" className="h-7 w-7 rounded-full ring-2 ring-accent-100" />
+        )}
+        {currentUser.username ? (
+          <Link
+            to="/u/$username"
+            params={{ username: currentUser.username }}
+            onClick={() => setMenuOpen(false)}
+            className="text-sm text-ink/80"
+          >
+            {currentUser.name}
+          </Link>
+        ) : (
+          <span className="text-sm text-ink/80">{currentUser.name}</span>
+        )}
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={pending}
+          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 disabled:opacity-50"
+        >
+          {pending ? 'Signing out...' : 'Sign out'}
+        </button>
+      </>
+    )
+  }
+
   return (
-    <header className="flex items-center justify-between border-b border-accent-100 bg-paper px-8 py-4">
+    <header className="relative flex items-center justify-between border-b border-accent-100 bg-paper px-4 py-4 sm:px-8">
       <Link to="/" className="font-serif text-xl font-semibold tracking-tight text-ink">
         Recipe Keeper
       </Link>
       <div className="flex items-center gap-4">
         <ThemeToggle initialTheme={theme} />
         {user ? (
-          <div className="flex items-center gap-3">
-            <Link
-              to="/collections"
-              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-            >
-              Your lists
-            </Link>
-            <Link
-              to="/grocery"
-              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-            >
-              Grocery lists
-            </Link>
-            <Link
-              to="/settings"
-              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-            >
-              Settings
-            </Link>
-            {user.avatarUrl && (
-              <img
-                src={user.avatarUrl}
-                alt=""
-                className="h-7 w-7 rounded-full ring-2 ring-accent-100"
-              />
-            )}
-            {user.username ? (
-              <Link to="/u/$username" params={{ username: user.username }} className="text-sm text-ink/80">
-                {user.name}
-              </Link>
-            ) : (
-              <span className="text-sm text-ink/80">{user.name}</span>
-            )}
+          <>
+            <div className="hidden items-center gap-3 sm:flex">{renderNavLinks(user)}</div>
             <button
               type="button"
-              onClick={handleLogout}
-              disabled={pending}
-              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 disabled:opacity-50"
+              onClick={() => setMenuOpen((open) => !open)}
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 sm:hidden"
             >
-              {pending ? 'Signing out...' : 'Sign out'}
+              {menuOpen ? '✕' : '☰'}
             </button>
-          </div>
+          </>
         ) : (
           <a
             href="/auth/google"
@@ -167,6 +189,11 @@ function AuthHeader({
           </a>
         )}
       </div>
+      {user && menuOpen && (
+        <div className="absolute inset-x-0 top-full flex flex-col gap-3 border-b border-accent-100 bg-paper px-4 py-4 sm:hidden">
+          {renderNavLinks(user)}
+        </div>
+      )}
     </header>
   )
 }

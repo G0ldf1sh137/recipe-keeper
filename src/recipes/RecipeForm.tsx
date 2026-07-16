@@ -147,7 +147,7 @@ export function RecipeForm({
       <div className="flex flex-col gap-2">
         <span className="font-medium text-ink/70">Ingredients</span>
         {ingredients.map((row, i) => (
-          <div key={i} className="flex gap-2">
+          <div key={i} className="flex flex-wrap gap-2">
             <input
               className={`w-20 ${inputClass} px-2 py-1`}
               placeholder="qty"
@@ -162,7 +162,7 @@ export function RecipeForm({
               list="unit-names"
             />
             <input
-              className={`flex-1 ${inputClass} px-2 py-1`}
+              className={`min-w-[10rem] flex-1 ${inputClass} px-2 py-1`}
               placeholder="ingredient"
               value={row.name}
               onChange={(e) => updateIngredient(i, "name", e.target.value)}

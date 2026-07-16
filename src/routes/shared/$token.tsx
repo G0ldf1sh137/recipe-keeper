@@ -19,7 +19,7 @@ export const Route = createFileRoute("/shared/$token")({
     });
   },
   notFoundComponent: () => (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-2xl font-semibold text-ink">Link not found</h1>
       <p className="mt-2 text-ink/60">
         This share link is invalid or has been revoked.{" "}
