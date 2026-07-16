@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { createRecipe, getIngredientNames } from "#/recipes/recipes.functions";
+import { createRecipe, getIngredientNames, getUnitNames } from "#/recipes/recipes.functions";
 import { getSessionUser } from "#/auth/auth.functions";
 import { RecipeForm, emptyRecipeFormValues } from "#/recipes/RecipeForm";
 import type { RecipeFormValues } from "#/recipes/RecipeForm";
@@ -13,12 +13,15 @@ export const Route = createFileRoute("/recipes/new")({
     const user = await getSessionUser();
     if (!user) throw redirect({ to: "/login" });
   },
-  loader: async () => ({ knownIngredientNames: await getIngredientNames() }),
+  loader: async () => {
+    const [knownIngredientNames, knownUnitNames] = await Promise.all([getIngredientNames(), getUnitNames()]);
+    return { knownIngredientNames, knownUnitNames };
+  },
   component: NewRecipePage,
 });
 
 function NewRecipePage() {
-  const { knownIngredientNames } = Route.useLoaderData();
+  const { knownIngredientNames, knownUnitNames } = Route.useLoaderData();
   const navigate = useNavigate();
   const createRecipeFn = useServerFn(createRecipe);
 
@@ -56,6 +59,7 @@ function NewRecipePage() {
         initialValues={formValues}
         submitLabel="Save recipe"
         knownIngredientNames={knownIngredientNames}
+        knownUnitNames={knownUnitNames}
         onPhotoUrlsChange={(photoUrls) => setFormValues((prev) => ({ ...prev, photoUrls }))}
         onSubmit={async (values) => {
           const recipe = await createRecipeFn({ data: values });

@@ -47,12 +47,14 @@ export function RecipeForm({
   onSubmit,
   onPhotoUrlsChange,
   knownIngredientNames = [],
+  knownUnitNames = [],
 }: {
   initialValues: RecipeFormValues;
   submitLabel: string;
   onSubmit: (values: RecipeFormSubmitValues) => Promise<void>;
   onPhotoUrlsChange?: (urls: string[]) => void;
   knownIngredientNames?: string[];
+  knownUnitNames?: string[];
 }) {
   const [title, setTitle] = useState(initialValues.title);
   const [description, setDescription] = useState(initialValues.description);
@@ -157,6 +159,7 @@ export function RecipeForm({
               placeholder="unit"
               value={row.unit}
               onChange={(e) => updateIngredient(i, "unit", e.target.value)}
+              list="unit-names"
             />
             <input
               className={`flex-1 ${inputClass} px-2 py-1`}
@@ -261,6 +264,11 @@ export function RecipeForm({
 
       <datalist id="ingredient-names">
         {knownIngredientNames.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
+      <datalist id="unit-names">
+        {knownUnitNames.map((name) => (
           <option key={name} value={name} />
         ))}
       </datalist>
