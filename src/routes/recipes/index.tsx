@@ -51,16 +51,32 @@ function RecipesListPage() {
 
   const hasFilters = Boolean(search.tag || search.visibility || search.q);
 
+  function handleRandom() {
+    const recipe = recipes[Math.floor(Math.random() * recipes.length)];
+    void navigate({ to: "/recipes/$recipeId", params: { recipeId: recipe.id } });
+  }
+
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Recipes</h1>
-        <Link
-          to="/recipes/new"
-          className="rounded-lg bg-accent-600 px-4 py-2 font-medium text-white transition-colors hover:bg-accent-700"
-        >
-          New recipe
-        </Link>
+        <div className="flex gap-3">
+          {recipes.length > 0 && (
+            <button
+              type="button"
+              onClick={handleRandom}
+              className="rounded-lg border border-accent-200 px-4 py-2 font-medium text-ink transition-colors hover:bg-accent-50"
+            >
+              Random recipe
+            </button>
+          )}
+          <Link
+            to="/recipes/new"
+            className="rounded-lg bg-accent-600 px-4 py-2 font-medium text-white transition-colors hover:bg-accent-700"
+          >
+            New recipe
+          </Link>
+        </div>
       </div>
 
       <form onSubmit={handleFilterSubmit} className="mt-6 flex flex-wrap items-end gap-3">

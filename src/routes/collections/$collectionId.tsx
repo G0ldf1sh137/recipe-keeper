@@ -87,6 +87,11 @@ function CollectionPage() {
     await router.invalidate();
   }
 
+  function handleRandom() {
+    const item = items[Math.floor(Math.random() * items.length)];
+    void navigate({ to: "/recipes/$recipeId", params: { recipeId: item.id } });
+  }
+
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <Link
@@ -125,24 +130,35 @@ function CollectionPage() {
         ) : (
           <>
             <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">{collection.name}</h1>
-            {collection.isOwner && (
-              <div className="flex gap-3">
+            <div className="flex gap-3">
+              {items.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setEditing(true)}
+                  onClick={handleRandom}
                   className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
                 >
-                  Rename
+                  Random recipe
                 </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="text-sm font-medium text-red-600 hover:text-red-700"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
+              )}
+              {collection.isOwner && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+                  >
+                    Rename
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="text-sm font-medium text-red-600 hover:text-red-700"
+                  >
+                    Delete
+                  </button>
+                </>
+              )}
+            </div>
           </>
         )}
       </div>
