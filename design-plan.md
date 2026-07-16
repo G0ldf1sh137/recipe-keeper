@@ -36,15 +36,16 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - `/recipes/$recipeId` — View a recipe (ingredients, steps, photo, author, share button)
 - `/recipes/$recipeId/edit` — Edit recipe (owner only)
 - `/collections` — List user's collections
-- `/collections/$collectionId` — View a collection and its recipes
-- `/u/$username` — Public profile: a user's public recipes
-- `/shared/$token` — View an unlisted recipe/collection via share link (no login required)
+- `/collections/$collectionId` — View a collection and its recipes (owner controls, plus anonymous/shared viewing)
+- `/u/$username` — Public profile: a user's public recipes (not yet built)
+- `/shared/$token` — Resolves a share link and redirects to the canonical recipe/collection page (no login required)
 
-## Sharing Model (v1)
-- **Public**: visible on the owner's public profile and in search/feed.
-- **Unlisted**: only accessible via a generated share link (`/shared/:token`); not indexed or listed.
-- **Private**: visible only to the owner.
-- Sharing a recipe generates a `Share` record with a random token; revoking sharing deletes/invalidates the token.
+## Sharing Model (v1) — done
+- **Public**: directly viewable by anyone at its normal URL, listed in `/recipes` browse.
+- **Unlisted**: not listed anywhere; reachable only via a valid share link (`/shared/:token`), which redirects to the normal page with the token attached.
+- **Private**: visible only to the owner; not shareable.
+- Sharing a recipe or collection generates (or reuses) a `Share` record with a random token, one per resource; revoking deletes the row. Visibility is re-checked live on every access, so setting a resource back to private immediately invalidates any existing share link, without needing to explicitly revoke it first.
+- Public profile pages (`/u/$username`) are not part of this — still open, see Milestones.
 
 ## Non-Goals (v1)
 - Nutrition facts / calorie calculation
@@ -58,5 +59,5 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 3. Recipe CRUD UI (create/view/edit/delete)
 4. Auth (signup/login/session)
 5. Collections (create, add/remove recipes)
-6. Sharing (public/unlisted links, public profile page)
+6. Sharing — done: revocable public/unlisted links for recipes and collections. Public profile page (`/u/$username`) still open.
 7. Polish: search/filter by tag, responsive styling, empty states
