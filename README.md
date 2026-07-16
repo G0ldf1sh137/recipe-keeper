@@ -1,204 +1,79 @@
-Welcome to your new TanStack Start app! 
+# Recipe Keeper
 
-# Getting Started
+A recipe-sharing web app: write up recipes with ingredients and steps, organize
+them into collections, share them publicly or via a link, and let Claude
+transcribe a handwritten recipe card into the record for you.
 
-To run this application:
+## Features
+
+- Recipe CRUD with ingredients, ordered steps, tags, and multiple photos per
+  recipe and per step
+- Google OAuth sign-in with server-side sessions
+- Threaded comments and 1–5 star ratings on recipes
+- Collections (bookmark lists) — save recipes into named lists
+- Private / unlisted / public visibility per recipe
+- Light / dark / auto theme
+- **AI photo transcription** — on the recipe edit page, scan a recipe's saved
+  photos with Claude; if they show a handwritten recipe card, it transcribes
+  the title, ingredients, steps, and tags into the edit form for review before
+  you save
+
+## Tech stack
+
+- [TanStack Start](https://tanstack.com/start) (React + TanStack Router, SSR)
+- TypeScript, Tailwind CSS
+- Postgres via [Drizzle ORM](https://orm.drizzle.team)
+- [Claude API](https://platform.claude.com) (`claude-opus-4-8`, vision + structured outputs)
+
+## Getting started
+
+**Prerequisites:** Node 22+, Docker (for local Postgres).
 
 ```bash
 npm install
+docker compose up -d      # starts a local Postgres instance
+cp .env.example .env      # fill in Google OAuth + Anthropic credentials
+npm run db:migrate
 npm run dev
 ```
 
-# Building For Production
+The app runs at `http://localhost:3000`.
 
-To build this application for production:
+### Environment variables
 
-```bash
-npm run build
-```
+See `.env.example` for the full list. You'll need:
 
-## Testing
+- `DATABASE_URL` — defaults to the local `docker-compose.yml` Postgres instance, no changes needed for local dev
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` — from a Google Cloud OAuth client
+- `ANTHROPIC_API_KEY` — only required for the photo-transcription feature
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+## Scripts
 
-```bash
-npm run test
-```
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Production build |
+| `npm run start` | Serve the production build (used in deployment) |
+| `npm run test` | Run tests (Vitest) |
+| `npm run lint` / `npm run format` | Lint / format the codebase |
+| `npm run db:generate` | Generate a new Drizzle migration from schema changes |
+| `npm run db:migrate` | Apply pending migrations |
+| `npm run db:studio` | Open Drizzle Studio to browse the database |
 
-## Styling
+## Deployment
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+`render.yaml` defines a [Render](https://render.com) Blueprint: a Node web
+service, a managed Postgres database, and a persistent disk for uploaded
+photos. See the comments in that file for one-time setup steps (setting
+secrets, updating the OAuth redirect URI).
 
-### Removing Tailwind CSS
+## Project structure
 
-If you prefer not to use Tailwind CSS:
+Each feature lives in its own directory under `src/` with a consistent shape:
+`schemas.ts` (Zod validation), `<feature>.server.ts` (DB access), and
+`<feature>.functions.ts` (TanStack Start server functions) — e.g. `src/recipes/`,
+`src/comments/`, `src/ratings/`, `src/collections/`, `src/uploads/`,
+`src/transcription/`. Routes live in `src/routes/` (file-based routing). The
+Drizzle schema is in `src/db/schema.ts`; migrations are in `drizzle/`.
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `npm install @tailwindcss/vite tailwindcss -D`
-
-## Linting & Formatting
-
-
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
-
-```bash
-npm run lint
-npm run format
-npm run check
-```
-
-
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+See `design-plan.md` for the original feature/design plan.
