@@ -14,7 +14,7 @@ const timestamps = {
     .$onUpdate(() => new Date()),
 };
 
-export const visibilityValues = ["private", "unlisted", "public"] as const;
+export const visibilityValues = ["private", "public"] as const;
 export type Visibility = (typeof visibilityValues)[number];
 
 export type Ingredient = {
@@ -66,7 +66,7 @@ export const recipes = pgTable("recipes", {
   tags: text("tags").array().notNull().default([]),
   yield: text("yield"),
   calories: integer("calories"),
-  visibility: text("visibility", { enum: visibilityValues }).notNull().default("private"),
+  visibility: text("visibility", { enum: visibilityValues }).notNull().default("public"),
   ...timestamps,
 });
 

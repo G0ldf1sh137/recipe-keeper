@@ -24,9 +24,7 @@ export async function findCalendarById(id: string, ownerId: string) {
   });
 }
 
-// A calendar is visible to a viewer if it's public, the viewer owns it, or
-// they hold a valid share token. "unlisted" calendars are only reachable
-// via a share token, mirroring collections' findCollectionForViewer.
+// A calendar is visible to a viewer if it's public, or the viewer owns it.
 export async function findCalendarForViewer(id: string, viewerId: string | undefined, shareToken?: string) {
   const visible = viewerId
     ? or(eq(calendars.visibility, "public"), eq(calendars.ownerId, viewerId))
@@ -156,7 +154,7 @@ export async function createShareForCalendar(calendarId: string, ownerId: string
   const calendar = await findCalendarById(calendarId, ownerId);
   if (!calendar) return undefined;
   if (calendar.visibility === "private") {
-    throw new Error("Set the calendar to unlisted or public before sharing it.");
+    throw new Error("Set the calendar to public before sharing it.");
   }
 
   const existing = await db.query.shares.findFirst({ where: eq(shares.calendarId, calendarId) });

@@ -11,8 +11,6 @@ import type {
 import type { z } from "zod";
 
 // A recipe is visible to a viewer if it's public, or the viewer owns it.
-// "unlisted" recipes are intentionally excluded here — they're only reachable
-// via a valid share token (see findRecipeById's shareToken param).
 function visibleToViewer(viewerId: string | undefined) {
   return viewerId
     ? or(eq(recipes.visibility, "public"), eq(recipes.ownerId, viewerId))
@@ -254,7 +252,7 @@ export async function createShareForRecipe(recipeId: string, ownerId: string) {
   });
   if (!recipe) return undefined;
   if (recipe.visibility === "private") {
-    throw new Error("Set the recipe to unlisted or public before sharing it.");
+    throw new Error("Set the recipe to public before sharing it.");
   }
 
   const existing = await db.query.shares.findFirst({ where: eq(shares.recipeId, recipeId) });

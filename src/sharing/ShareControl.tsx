@@ -18,7 +18,7 @@ export function ShareControl({ shareUrl, disabled, onShare, onRevoke }: ShareCon
     try {
       await onShare();
     } catch {
-      setError("Set the visibility to unlisted or public before sharing.");
+      setError("Set the visibility to public before sharing.");
     } finally {
       setPending(false);
     }
@@ -82,7 +82,7 @@ export function ShareControl({ shareUrl, disabled, onShare, onRevoke }: ShareCon
       >
         {pending ? "Creating link..." : "Share"}
       </button>
-      {disabled && <p className="text-sm text-ink/50">Set visibility to unlisted or public to share.</p>}
+      {disabled && <p className="text-sm text-ink/50">Set visibility to public to share.</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>
   );

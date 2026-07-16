@@ -39,9 +39,7 @@ export async function findCollectionById(id: string, ownerId: string) {
   });
 }
 
-// A collection is visible to a viewer if it's public, the viewer owns it, or
-// they hold a valid share token. "unlisted" collections are only reachable
-// via a share token, mirroring recipes' visibleToViewer/findRecipeById.
+// A collection is visible to a viewer if it's public, or the viewer owns it.
 export async function findCollectionForViewer(id: string, viewerId: string | undefined, shareToken?: string) {
   const visible = viewerId
     ? or(eq(collections.visibility, "public"), eq(collections.ownerId, viewerId))
@@ -154,7 +152,7 @@ export async function createShareForCollection(collectionId: string, ownerId: st
   const collection = await findCollectionById(collectionId, ownerId);
   if (!collection) return undefined;
   if (collection.visibility === "private") {
-    throw new Error("Set the list to unlisted or public before sharing it.");
+    throw new Error("Set the list to public before sharing it.");
   }
 
   const existing = await db.query.shares.findFirst({ where: eq(shares.collectionId, collectionId) });

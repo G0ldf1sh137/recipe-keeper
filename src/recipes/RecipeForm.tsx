@@ -46,7 +46,7 @@ export function emptyRecipeFormValues(): RecipeFormValues {
     sourceUrl: null,
     sourcePdfUrl: null,
     tagsInput: "",
-    visibility: "private",
+    visibility: "public",
     ingredients: [{ qty: "", unit: "", name: "" }],
     steps: [{ text: "", imageUrls: [] }],
     yield: null,

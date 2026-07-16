@@ -28,7 +28,7 @@ export const createRecipeSchema = z.object({
   tags: z.array(z.string()).default([]),
   yield: z.string().trim().min(1).nullable().default(null),
   calories: z.number().int().nonnegative().nullable().default(null),
-  visibility: visibilitySchema.default("private"),
+  visibility: visibilitySchema.default("public"),
 });
 
 export const updateRecipeSchema = z.object({
