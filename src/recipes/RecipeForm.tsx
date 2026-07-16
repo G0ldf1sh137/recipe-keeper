@@ -46,11 +46,13 @@ export function RecipeForm({
   submitLabel,
   onSubmit,
   onPhotoUrlsChange,
+  knownIngredientNames = [],
 }: {
   initialValues: RecipeFormValues;
   submitLabel: string;
   onSubmit: (values: RecipeFormSubmitValues) => Promise<void>;
   onPhotoUrlsChange?: (urls: string[]) => void;
+  knownIngredientNames?: string[];
 }) {
   const [title, setTitle] = useState(initialValues.title);
   const [description, setDescription] = useState(initialValues.description);
@@ -161,6 +163,7 @@ export function RecipeForm({
               placeholder="ingredient"
               value={row.name}
               onChange={(e) => updateIngredient(i, "name", e.target.value)}
+              list="ingredient-names"
             />
             <button
               type="button"
@@ -255,6 +258,12 @@ export function RecipeForm({
       >
         {submitting ? "Saving..." : submitLabel}
       </button>
+
+      <datalist id="ingredient-names">
+        {knownIngredientNames.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
     </form>
   );
 }

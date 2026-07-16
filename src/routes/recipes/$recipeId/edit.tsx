@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { getRecipe, updateRecipe } from "#/recipes/recipes.functions";
+import { getRecipe, getIngredientNames, updateRecipe } from "#/recipes/recipes.functions";
 import { RecipeForm } from "#/recipes/RecipeForm";
 import type { RecipeFormValues } from "#/recipes/RecipeForm";
 import { ProcessPhotos } from "#/transcription/ProcessPhotos";
@@ -9,11 +9,14 @@ import type { TranscribedRecipe } from "#/transcription/transcription.server";
 
 export const Route = createFileRoute("/recipes/$recipeId/edit")({
   loader: async ({ params }) => {
-    const recipe = await getRecipe({ data: { id: params.recipeId } });
+    const [recipe, knownIngredientNames] = await Promise.all([
+      getRecipe({ data: { id: params.recipeId } }),
+      getIngredientNames(),
+    ]);
     if (!recipe.isOwner) {
       throw redirect({ to: "/recipes/$recipeId", params: { recipeId: params.recipeId } });
     }
-    return { recipe };
+    return { recipe, knownIngredientNames };
   },
   component: EditRecipePage,
   notFoundComponent: () => (
@@ -33,7 +36,7 @@ export const Route = createFileRoute("/recipes/$recipeId/edit")({
 });
 
 function EditRecipePage() {
-  const { recipe } = Route.useLoaderData();
+  const { recipe, knownIngredientNames } = Route.useLoaderData();
   const navigate = useNavigate();
   const updateRecipeFn = useServerFn(updateRecipe);
 
@@ -78,6 +81,7 @@ function EditRecipePage() {
         key={formKey}
         initialValues={formValues}
         submitLabel="Save changes"
+        knownIngredientNames={knownIngredientNames}
         onPhotoUrlsChange={(photoUrls) => setFormValues((prev) => ({ ...prev, photoUrls }))}
         onSubmit={async (values) => {
           await updateRecipeFn({ data: { id: recipe.id, ...values } });

@@ -29,6 +29,13 @@
       "when": 1784184466393,
       "tag": "0003_add_username_to_users",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784186517011,
+      "tag": "0004_add_grocery_lists_and_ingredients",
+      "breakpoints": true
     }
   ]
 }

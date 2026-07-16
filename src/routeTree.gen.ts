@@ -13,10 +13,12 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
+import { Route as GroceryIndexRouteImport } from './routes/grocery/index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections/index'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as SharedTokenRouteImport } from './routes/shared/$token'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
+import { Route as GroceryListIdRouteImport } from './routes/grocery/$listId'
 import { Route as CollectionsCollectionIdRouteImport } from './routes/collections/$collectionId'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as RecipesRecipeIdIndexRouteImport } from './routes/recipes/$recipeId/index'
@@ -44,6 +46,11 @@ const RecipesIndexRoute = RecipesIndexRouteImport.update({
   path: '/recipes/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GroceryIndexRoute = GroceryIndexRouteImport.update({
+  id: '/grocery/',
+  path: '/grocery/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
   id: '/collections/',
   path: '/collections/',
@@ -62,6 +69,11 @@ const SharedTokenRoute = SharedTokenRouteImport.update({
 const RecipesNewRoute = RecipesNewRouteImport.update({
   id: '/recipes/new',
   path: '/recipes/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroceryListIdRoute = GroceryListIdRouteImport.update({
+  id: '/grocery/$listId',
+  path: '/grocery/$listId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CollectionsCollectionIdRoute = CollectionsCollectionIdRouteImport.update({
@@ -101,10 +113,12 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
+  '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/shared/$token': typeof SharedTokenRoute
   '/u/$username': typeof UUsernameRoute
   '/collections/': typeof CollectionsIndexRoute
+  '/grocery/': typeof GroceryIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
@@ -117,10 +131,12 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
+  '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/shared/$token': typeof SharedTokenRoute
   '/u/$username': typeof UUsernameRoute
   '/collections': typeof CollectionsIndexRoute
+  '/grocery': typeof GroceryIndexRoute
   '/recipes': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
@@ -134,10 +150,12 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
+  '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/shared/$token': typeof SharedTokenRoute
   '/u/$username': typeof UUsernameRoute
   '/collections/': typeof CollectionsIndexRoute
+  '/grocery/': typeof GroceryIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
@@ -152,10 +170,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/upload'
     | '/collections/$collectionId'
+    | '/grocery/$listId'
     | '/recipes/new'
     | '/shared/$token'
     | '/u/$username'
     | '/collections/'
+    | '/grocery/'
     | '/recipes/'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
@@ -168,10 +188,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/upload'
     | '/collections/$collectionId'
+    | '/grocery/$listId'
     | '/recipes/new'
     | '/shared/$token'
     | '/u/$username'
     | '/collections'
+    | '/grocery'
     | '/recipes'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
@@ -184,10 +206,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/upload'
     | '/collections/$collectionId'
+    | '/grocery/$listId'
     | '/recipes/new'
     | '/shared/$token'
     | '/u/$username'
     | '/collections/'
+    | '/grocery/'
     | '/recipes/'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
@@ -201,10 +225,12 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ApiUploadRoute: typeof ApiUploadRoute
   CollectionsCollectionIdRoute: typeof CollectionsCollectionIdRoute
+  GroceryListIdRoute: typeof GroceryListIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
   SharedTokenRoute: typeof SharedTokenRoute
   UUsernameRoute: typeof UUsernameRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
+  GroceryIndexRoute: typeof GroceryIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
   RecipesRecipeIdEditRoute: typeof RecipesRecipeIdEditRoute
@@ -242,6 +268,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/grocery/': {
+      id: '/grocery/'
+      path: '/grocery'
+      fullPath: '/grocery/'
+      preLoaderRoute: typeof GroceryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/collections/': {
       id: '/collections/'
       path: '/collections'
@@ -268,6 +301,13 @@ declare module '@tanstack/react-router' {
       path: '/recipes/new'
       fullPath: '/recipes/new'
       preLoaderRoute: typeof RecipesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/grocery/$listId': {
+      id: '/grocery/$listId'
+      path: '/grocery/$listId'
+      fullPath: '/grocery/$listId'
+      preLoaderRoute: typeof GroceryListIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/collections/$collectionId': {
@@ -321,10 +361,12 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ApiUploadRoute: ApiUploadRoute,
   CollectionsCollectionIdRoute: CollectionsCollectionIdRoute,
+  GroceryListIdRoute: GroceryListIdRoute,
   RecipesNewRoute: RecipesNewRoute,
   SharedTokenRoute: SharedTokenRoute,
   UUsernameRoute: UUsernameRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
+  GroceryIndexRoute: GroceryIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
   RecipesRecipeIdEditRoute: RecipesRecipeIdEditRoute,

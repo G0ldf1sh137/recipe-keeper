@@ -10,6 +10,8 @@ import { getRatingSummary } from "#/ratings/ratings.functions";
 import { RecipeRating } from "#/ratings/RecipeRating";
 import { getCollectionsForRecipe } from "#/collections/collections.functions";
 import { SaveToList } from "#/collections/SaveToList";
+import { getGroceryListsForRecipe } from "#/grocery/grocery.functions";
+import { AddToGroceryList } from "#/grocery/AddToGroceryList";
 import { ShareControl } from "#/sharing/ShareControl";
 
 const recipeSearchSchema = z.object({ st: z.string().optional() });
@@ -24,10 +26,13 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
       getSessionUser(),
       getRatingSummary({ data: { recipeId: params.recipeId, shareToken: deps.shareToken } }),
     ]);
-    const collections = user
-      ? await getCollectionsForRecipe({ data: { recipeId: params.recipeId } })
-      : [];
-    return { recipe, comments, user, rating, collections };
+    const [collections, groceryLists] = user
+      ? await Promise.all([
+          getCollectionsForRecipe({ data: { recipeId: params.recipeId } }),
+          getGroceryListsForRecipe({ data: { recipeId: params.recipeId } }),
+        ])
+      : [[], []];
+    return { recipe, comments, user, rating, collections, groceryLists };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -47,7 +52,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, comments, user, rating, collections } = Route.useLoaderData();
+  const { recipe, comments, user, rating, collections, groceryLists } = Route.useLoaderData();
   const navigate = useNavigate();
   const router = useRouter();
   const deleteRecipeFn = useServerFn(deleteRecipe);
@@ -200,6 +205,8 @@ function RecipePage() {
       />
 
       <SaveToList recipeId={recipe.id} collections={collections} canSave={!!user} />
+
+      <AddToGroceryList recipeId={recipe.id} groceryLists={groceryLists} canSave={!!user} />
 
       <CommentThread recipeId={recipe.id} comments={comments} canComment={!!user} />
     </div>

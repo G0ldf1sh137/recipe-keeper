@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, jsonb, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, jsonb, primaryKey } from "drizzle-orm/pg-core";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 const id = () =>
@@ -150,3 +150,31 @@ export const ratings = pgTable(
   },
   (table) => [primaryKey({ columns: [table.recipeId, table.userId] })],
 );
+
+export const groceryLists = pgTable("grocery_lists", {
+  id: id(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  ...timestamps,
+});
+
+export const groceryListItems = pgTable("grocery_list_items", {
+  id: id(),
+  listId: text("list_id")
+    .notNull()
+    .references(() => groceryLists.id, { onDelete: "cascade" }),
+  recipeId: text("recipe_id").references(() => recipes.id, { onDelete: "cascade" }),
+  qty: text("qty").notNull(),
+  unit: text("unit").notNull(),
+  name: text("name").notNull(),
+  checked: boolean("checked").notNull().default(false),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const ingredientNames = pgTable("ingredients", {
+  id: id(),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});

@@ -15,6 +15,7 @@ import {
   findRecipes,
   findShareTokenForRecipe,
   insertRecipe,
+  listIngredientNames,
   revokeShareForRecipe,
   updateOwnedRecipe,
 } from "./recipes.server";
@@ -57,6 +58,8 @@ export const revokeRecipeShare = createServerFn({ method: "POST" })
     if (result === undefined) throw notFound();
     return { ok: true };
   });
+
+export const getIngredientNames = createServerFn({ method: "GET" }).handler(async () => listIngredientNames());
 
 export const createRecipe = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])

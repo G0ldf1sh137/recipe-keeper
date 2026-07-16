@@ -124,6 +124,12 @@ function AuthHeader({
               Your lists
             </Link>
             <Link
+              to="/grocery"
+              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+            >
+              Grocery lists
+            </Link>
+            <Link
               to="/settings"
               className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
             >

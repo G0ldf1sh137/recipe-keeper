@@ -1,6 +1,6 @@
 import { and, arrayContains, eq, inArray, ne, or } from "drizzle-orm";
 import { db } from "#/db/index";
-import { recipes, shares, users } from "#/db/schema";
+import { recipes, shares, users, ingredientNames } from "#/db/schema";
 import type {
   createRecipeSchema,
   deleteRecipeSchema,
@@ -75,11 +75,26 @@ export async function filterVisibleRecipeIds(recipeIds: string[], viewerId: stri
   return rows.map((row) => row.id);
 }
 
+export async function upsertIngredientNames(names: string[]) {
+  const unique = Array.from(new Set(names.map((n) => n.trim().toLowerCase()).filter(Boolean)));
+  if (unique.length === 0) return;
+  await db
+    .insert(ingredientNames)
+    .values(unique.map((name) => ({ name })))
+    .onConflictDoNothing({ target: ingredientNames.name });
+}
+
+export async function listIngredientNames() {
+  const rows = await db.query.ingredientNames.findMany({ orderBy: (i, { asc }) => [asc(i.name)] });
+  return rows.map((row) => row.name);
+}
+
 export async function insertRecipe(input: z.infer<typeof createRecipeSchema>, ownerId: string) {
   const [recipe] = await db
     .insert(recipes)
     .values({ ...input, ownerId })
     .returning();
+  await upsertIngredientNames(input.ingredients.map((i) => i.name));
   return recipe;
 }
 
@@ -90,6 +105,7 @@ export async function updateOwnedRecipe(input: z.infer<typeof updateRecipeSchema
     .set(changes)
     .where(and(eq(recipes.id, id), eq(recipes.ownerId, ownerId)))
     .returning();
+  if (changes.ingredients) await upsertIngredientNames(changes.ingredients.map((i) => i.name));
   return rows.at(0);
 }
 

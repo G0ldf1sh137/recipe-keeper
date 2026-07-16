@@ -1,0 +1,216 @@
+import { useState } from "react";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  getGroceryList,
+  renameGroceryList,
+  deleteGroceryList,
+  addGroceryItem,
+  deleteGroceryItem,
+  setGroupChecked,
+} from "#/grocery/grocery.functions";
+
+export const Route = createFileRoute("/grocery/$listId")({
+  loader: async ({ params }) => getGroceryList({ data: { id: params.listId } }),
+  component: GroceryListPage,
+  notFoundComponent: () => (
+    <div className="mx-auto max-w-2xl p-8">
+      <h1 className="font-serif text-2xl font-semibold text-ink">List not found</h1>
+      <p className="mt-2 text-ink/60">
+        This grocery list doesn't exist, or isn't yours.{" "}
+        <Link
+          to="/grocery"
+          className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
+          Back to your grocery lists
+        </Link>
+      </p>
+    </div>
+  ),
+});
+
+function GroceryListPage() {
+  const { list, groups } = Route.useLoaderData();
+  const router = useRouter();
+  const navigate = useNavigate();
+  const renameFn = useServerFn(renameGroceryList);
+  const deleteFn = useServerFn(deleteGroceryList);
+  const addItemFn = useServerFn(addGroceryItem);
+  const deleteItemFn = useServerFn(deleteGroceryItem);
+  const setCheckedFn = useServerFn(setGroupChecked);
+
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(list.name);
+  const [itemQty, setItemQty] = useState("");
+  const [itemUnit, setItemUnit] = useState("");
+  const [itemName, setItemName] = useState("");
+  const [adding, setAdding] = useState(false);
+
+  async function handleRename(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    await renameFn({ data: { id: list.id, name: name.trim() } });
+    setEditing(false);
+    await router.invalidate();
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(`Delete "${list.name}"? This can't be undone.`)) return;
+    await deleteFn({ data: { id: list.id } });
+    await navigate({ to: "/grocery" });
+  }
+
+  async function handleAddItem(e: React.FormEvent) {
+    e.preventDefault();
+    if (!itemName.trim()) return;
+    setAdding(true);
+    try {
+      await addItemFn({ data: { listId: list.id, qty: itemQty, unit: itemUnit, name: itemName } });
+      setItemQty("");
+      setItemUnit("");
+      setItemName("");
+      await router.invalidate();
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  async function handleToggleLine(itemIds: string[], checked: boolean) {
+    await setCheckedFn({ data: { listId: list.id, itemIds, checked: !checked } });
+    await router.invalidate();
+  }
+
+  async function handleClearChecked() {
+    const checkedIds = groups.flatMap((g) => g.lines.filter((l) => l.checked).flatMap((l) => l.itemIds));
+    for (const id of checkedIds) {
+      await deleteItemFn({ data: { listId: list.id, itemId: id } });
+    }
+    await router.invalidate();
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl p-8">
+      <Link
+        to="/grocery"
+        className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+      >
+        ← Your grocery lists
+      </Link>
+
+      <div className="mt-4 flex items-center justify-between">
+        {editing ? (
+          <form onSubmit={handleRename} className="flex flex-1 gap-2">
+            <input
+              className="flex-1 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+                setName(list.name);
+              }}
+              className="text-sm text-ink/50 hover:text-ink"
+            >
+              Cancel
+            </button>
+          </form>
+        ) : (
+          <>
+            <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">{list.name}</h1>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+              >
+                Rename
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="text-sm font-medium text-red-600 hover:text-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <form onSubmit={handleAddItem} className="mt-6 flex gap-2">
+        <input
+          className="w-20 rounded-lg border border-accent-100 px-2 py-1 focus:border-accent-400 focus:outline-none"
+          placeholder="qty"
+          value={itemQty}
+          onChange={(e) => setItemQty(e.target.value)}
+        />
+        <input
+          className="w-24 rounded-lg border border-accent-100 px-2 py-1 focus:border-accent-400 focus:outline-none"
+          placeholder="unit"
+          value={itemUnit}
+          onChange={(e) => setItemUnit(e.target.value)}
+        />
+        <input
+          className="flex-1 rounded-lg border border-accent-100 px-2 py-1 focus:border-accent-400 focus:outline-none"
+          placeholder="item"
+          value={itemName}
+          onChange={(e) => setItemName(e.target.value)}
+        />
+        <button
+          type="submit"
+          disabled={adding || !itemName.trim()}
+          className="rounded-lg bg-accent-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
+        >
+          Add
+        </button>
+      </form>
+
+      {groups.length === 0 ? (
+        <p className="mt-6 text-ink/60">No items yet. Add a recipe or an item above.</p>
+      ) : (
+        <div className="mt-6 flex flex-col gap-4">
+          {groups.map((group) => (
+            <div key={group.name} className="rounded-xl border border-accent-100 bg-surface px-4 py-3 shadow-sm">
+              <span className="font-serif text-lg font-medium capitalize text-ink">{group.name}</span>
+              <ul className="mt-1 flex flex-col gap-1">
+                {group.lines.map((line) => (
+                  <li key={line.itemIds.join(",")} className="flex items-center gap-2">
+                    <label className="flex flex-1 items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={line.checked}
+                        onChange={() => handleToggleLine(line.itemIds, line.checked)}
+                      />
+                      <span className={line.checked ? "text-ink/40 line-through" : "text-ink/80"}>
+                        {[line.qty, line.unit].filter(Boolean).join(" ")}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {groups.some((g) => g.lines.some((l) => l.checked)) && (
+        <button
+          type="button"
+          onClick={handleClearChecked}
+          className="mt-4 text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
+          Clear checked items
+        </button>
+      )}
+    </div>
+  );
+}
