@@ -19,6 +19,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - **Auth**: Google OAuth sign-in, server-side sessions (HttpOnly cookie, session id hashed at rest)
 - **AI**: Claude API (claude-opus-4-8, vision/document input + structured outputs) — transcribes a handwritten recipe from uploaded photos or an uploaded PDF into the recipe record via an owner-only "Process photos"/"Process PDF" button with preview-then-confirm; a web-scraping importer (fetches a recipe's source URL via the `web_fetch` tool and extracts title/ingredients/steps/photos) is built but not yet wired into the UI
 - **Deployment target**: Vercel (via the Nitro Vite plugin) + Neon Postgres; `render.yaml` kept as an alternative. Recipe photos stored in S3.
+- **PDF export**: `@react-pdf/renderer` (pure-JS PDF renderer, no headless browser) generates a downloadable PDF of a recipe on demand, server-side.
 
 ## Core Data Model
 - **User**: id, email, name, username (unique, auto-generated on signup, editable), avatarUrl, createdAt
@@ -40,6 +41,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - `/recipes/new` — Create recipe form
 - `/recipes/$recipeId` — View a recipe (ingredients, steps, photo, author, share button)
 - `/recipes/$recipeId/edit` — Edit recipe (owner only)
+- `/recipes/$recipeId/pdf` — Downloads a generated PDF of the recipe (same visibility rules as the recipe page; not a navigable page)
 - `/collections` — List user's collections ("Your cookbooks" in the UI)
 - `/collections/$collectionId` — View a collection and its recipes (owner controls, plus anonymous/shared viewing)
 - `/calendars` — List user's weekly meal-plan calendars
@@ -73,3 +75,4 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 9. Polish — done: exact tag/visibility filters plus free-text search (title/description) on `/recipes`, with lightweight client-side search on collections and profile pages; responsive layout (mobile nav, wrapping rows, responsive grids/padding) across the app; empty-state messaging on every list view.
 10. Calendars — reusable weekly meal-plan templates (Mon–Sun slots, multiple recipes per day), shareable like collections via public/unlisted/private visibility plus revocable links.
 11. Recipe import — done: transcribe a recipe from an uploaded PDF via the same Claude pipeline used for handwritten photos, with the PDF kept as a persisted, downloadable attachment on the recipe. A `sourceUrl` field records a recipe's origin link (shown on the detail page); a matching web-scraping importer (Claude's `web_fetch` tool) is built but not yet wired into the UI — disabled because many recipe sites (e.g. allrecipes.com) block Claude's fetch requests outright (`url_not_allowed`), so it only works reliably against a minority of sites (Wikibooks-style pages worked in testing). Revisit if/when `web_fetch` gains broader site support.
+12. Recipe export — done: a "Print to PDF" button on the recipe detail page generates a real, downloadable PDF (title, ingredients, steps, photos, source attribution) server-side via `@react-pdf/renderer`, respecting the same public/unlisted/private visibility rules as the page itself.
