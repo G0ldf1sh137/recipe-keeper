@@ -39,13 +39,13 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - `/` — Landing/feed: public recipes + user's own recent recipes if logged in
 - `/login`, `/signup` — Auth
 - `/recipes/new` — Create recipe form
-- `/recipes/$recipeId` — View a recipe (ingredients, steps, photo, author, share button)
+- `/recipes/$recipeId` — View a recipe (ingredients, steps, photo, author, share button); a 0.5x/1x/2x/custom toggle scales the displayed ingredient quantities (display-only, nothing persisted)
 - `/recipes/$recipeId/edit` — Edit recipe (owner only)
 - `/recipes/$recipeId/pdf` — Downloads a generated PDF of the recipe (same visibility rules as the recipe page; not a navigable page)
 - `/collections` — List user's collections ("Your cookbooks" in the UI)
 - `/collections/$collectionId` — View a collection and its recipes (owner controls, plus anonymous/shared viewing)
 - `/calendars` — List user's weekly meal-plan calendars
-- `/calendars/$calendarId` — View a calendar as a 7-day grid, add/remove recipes per day (owner controls, plus anonymous/shared viewing)
+- `/calendars/$calendarId` — View a calendar as a 7-day grid, add/remove recipes per day (owner controls, plus anonymous/shared viewing); any viewer who can see the calendar can bulk-add every scheduled recipe's ingredients into one of their own grocery lists in one click
 - `/u/$username` — Public profile: a user's public recipes and public lists
 - `/settings` — Change your username
 - `/shared/$token` — Resolves a share link and redirects to the canonical recipe/collection/calendar page (no login required)
@@ -77,3 +77,5 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 11. Recipe import — done: transcribe a recipe from an uploaded PDF via the same Claude pipeline used for handwritten photos, with the PDF kept as a persisted, downloadable attachment on the recipe. A `sourceUrl` field records a recipe's origin link (shown on the detail page); a matching web-scraping importer (Claude's `web_fetch` tool) is built but not yet wired into the UI — disabled because many recipe sites (e.g. allrecipes.com) block Claude's fetch requests outright (`url_not_allowed`), so it only works reliably against a minority of sites (Wikibooks-style pages worked in testing). Revisit if/when `web_fetch` gains broader site support.
 12. Recipe export — done: a "Print to PDF" button on the recipe detail page generates a real, downloadable PDF (title, ingredients, steps, photos, source attribution) server-side via `@react-pdf/renderer`, respecting the same public/private visibility rules as the page itself.
 13. Visibility simplification — done: removed the "unlisted" tier, leaving just private/public across recipes, collections, and calendars; new recipes now default to public (collections/calendars still default to private).
+14. Recipe scaling — done: a 0.5x/1x/2x/custom toggle on the recipe detail page scales displayed ingredient quantities on the fly (page-local, not persisted). The fraction-parsing math from milestone 7 was extracted into a shared `src/recipes/quantity.ts` module so both the server-side grocery summing and this client-side scaling reuse the same exact-rational arithmetic; a custom factor field accepts whole numbers, decimals, or fractions (e.g. "3/4"). Non-numeric quantities (e.g. "pinch") are left unchanged at any scale.
+15. Calendar-to-grocery-list bulk add — done: a widget on the calendar page adds every scheduled recipe's ingredients to a chosen (or new) grocery list in one click, available to any viewer who can see the calendar (owner or via share link), not just the owner. Ingredients are added once per scheduled instance (not deduped by recipe), so a recipe planned on 3 different days contributes its ingredients 3 times — the existing quantity-summing logic then correctly totals the week's shopping list. Not idempotent by design: re-clicking adds everything again.
