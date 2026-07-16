@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 import sharp from "sharp";
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -83,6 +83,26 @@ export async function saveImageUpload(file: File): Promise<{ url: string } | { e
 
   const bytes = new Uint8Array(await file.arrayBuffer());
   return uploadImageBytes(bytes);
+}
+
+// Best-effort cleanup: deletes URLs pointing at our own bucket, ignoring
+// anything else and swallowing errors so a cleanup failure never blocks the
+// recipe delete/update it's attached to.
+export async function deleteImageUrls(urls: string[]) {
+  const prefix = `${S3_PUBLIC_URL_BASE}/`;
+  const keys = urls.filter((url) => url.startsWith(prefix)).map((url) => url.slice(prefix.length));
+  if (keys.length === 0) return;
+
+  try {
+    await s3.send(
+      new DeleteObjectsCommand({
+        Bucket: S3_BUCKET,
+        Delete: { Objects: keys.map((Key) => ({ Key })) },
+      }),
+    );
+  } catch (error) {
+    console.error("S3 cleanup failed:", error);
+  }
 }
 
 export async function rotateImageUpload(sourceUrl: string): Promise<{ url: string } | { error: string }> {

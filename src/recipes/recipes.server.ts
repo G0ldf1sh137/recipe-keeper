@@ -1,6 +1,7 @@
 import { and, arrayContains, eq, ilike, inArray, ne, or } from "drizzle-orm";
 import { db } from "#/db/index";
 import { recipes, shares, users, ingredientNames, unitNames } from "#/db/schema";
+import { deleteImageUrls } from "#/uploads/uploads.server";
 import type {
   createRecipeSchema,
   deleteRecipeSchema,
@@ -129,18 +130,61 @@ export async function insertRecipe(input: z.infer<typeof createRecipeSchema>, ow
   return recipe;
 }
 
+// A recipe's images can appear in photoUrls, coverPhotoUrl, or nested inside
+// step.imageUrls — this collects the full set from one recipe row.
+function collectImageUrls(recipe: {
+  photoUrls: string[];
+  coverPhotoUrl: string | null;
+  steps: { imageUrls: string[] }[];
+}): string[] {
+  const urls = new Set<string>(recipe.photoUrls);
+  if (recipe.coverPhotoUrl) urls.add(recipe.coverPhotoUrl);
+  for (const step of recipe.steps) {
+    for (const url of step.imageUrls) urls.add(url);
+  }
+  return Array.from(urls);
+}
+
+// Forking copies a recipe's image URLs verbatim rather than duplicating the
+// underlying files, so multiple recipe rows can point at the same S3 object.
+// Before deleting anything from S3, we need every URL still in use across
+// the whole table, not just the recipe being deleted/edited.
+async function findAllReferencedImageUrls(): Promise<Set<string>> {
+  const rows = await db
+    .select({ photoUrls: recipes.photoUrls, coverPhotoUrl: recipes.coverPhotoUrl, steps: recipes.steps })
+    .from(recipes);
+  const urls = new Set<string>();
+  for (const row of rows) {
+    for (const url of collectImageUrls(row)) urls.add(url);
+  }
+  return urls;
+}
+
 export async function updateOwnedRecipe(input: z.infer<typeof updateRecipeSchema>, ownerId: string) {
   const { id, ...changes } = input;
+  const before = await db.query.recipes.findFirst({
+    where: and(eq(recipes.id, id), eq(recipes.ownerId, ownerId)),
+  });
   const rows = await db
     .update(recipes)
     .set(changes)
     .where(and(eq(recipes.id, id), eq(recipes.ownerId, ownerId)))
     .returning();
+  const updated = rows.at(0);
+  if (before && updated) {
+    const afterUrls = new Set(collectImageUrls(updated));
+    const removedUrls = collectImageUrls(before).filter((url) => !afterUrls.has(url));
+    if (removedUrls.length > 0) {
+      const stillReferenced = await findAllReferencedImageUrls();
+      const orphaned = removedUrls.filter((url) => !stillReferenced.has(url));
+      if (orphaned.length > 0) await deleteImageUrls(orphaned);
+    }
+  }
   if (changes.ingredients) {
     await upsertIngredientNames(changes.ingredients.map((i) => i.name));
     await upsertUnitNames(changes.ingredients.map((i) => i.unit));
   }
-  return rows.at(0);
+  return updated;
 }
 
 export async function deleteOwnedRecipe(input: z.infer<typeof deleteRecipeSchema>, ownerId: string) {
@@ -148,7 +192,16 @@ export async function deleteOwnedRecipe(input: z.infer<typeof deleteRecipeSchema
     .delete(recipes)
     .where(and(eq(recipes.id, input.id), eq(recipes.ownerId, ownerId)))
     .returning();
-  return rows.at(0);
+  const deleted = rows.at(0);
+  if (deleted) {
+    const candidateUrls = collectImageUrls(deleted);
+    if (candidateUrls.length > 0) {
+      const stillReferenced = await findAllReferencedImageUrls();
+      const orphaned = candidateUrls.filter((url) => !stillReferenced.has(url));
+      if (orphaned.length > 0) await deleteImageUrls(orphaned);
+    }
+  }
+  return deleted;
 }
 
 export async function forkRecipe(recipeId: string, ownerId: string, shareToken?: string) {
