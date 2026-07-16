@@ -19,6 +19,8 @@ import { getCollectionsForRecipe } from "#/collections/collections.functions";
 import { SaveToList } from "#/collections/SaveToList";
 import { getGroceryListsForRecipe } from "#/grocery/grocery.functions";
 import { AddToGroceryList } from "#/grocery/AddToGroceryList";
+import { getCalendarsForRecipe } from "#/calendars/calendars.functions";
+import { AddToCalendar } from "#/calendars/AddToCalendar";
 import { ShareControl } from "#/sharing/ShareControl";
 
 const recipeSearchSchema = z.object({ st: z.string().optional() });
@@ -33,13 +35,14 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
       getSessionUser(),
       getRatingSummary({ data: { recipeId: params.recipeId, shareToken: deps.shareToken } }),
     ]);
-    const [collections, groceryLists] = user
+    const [collections, groceryLists, calendars] = user
       ? await Promise.all([
           getCollectionsForRecipe({ data: { recipeId: params.recipeId } }),
           getGroceryListsForRecipe({ data: { recipeId: params.recipeId } }),
+          getCalendarsForRecipe({ data: { recipeId: params.recipeId } }),
         ])
-      : [[], []];
-    return { recipe, comments, user, rating, collections, groceryLists };
+      : [[], [], []];
+    return { recipe, comments, user, rating, collections, groceryLists, calendars };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -59,7 +62,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, comments, user, rating, collections, groceryLists } = Route.useLoaderData();
+  const { recipe, comments, user, rating, collections, groceryLists, calendars } = Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
@@ -252,6 +255,8 @@ function RecipePage() {
       <SaveToList recipeId={recipe.id} collections={collections} canSave={!!user} />
 
       <AddToGroceryList recipeId={recipe.id} groceryLists={groceryLists} canSave={!!user} />
+
+      <AddToCalendar recipeId={recipe.id} calendars={calendars} canSave={!!user} />
 
       {recipe.forks.length > 0 && (
         <section className="mt-8">

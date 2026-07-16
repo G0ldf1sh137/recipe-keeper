@@ -12,9 +12,16 @@ export const Route = createFileRoute("/shared/$token")({
         search: { st: params.token },
       });
     }
+    if (target.type === "collection") {
+      throw redirect({
+        to: "/collections/$collectionId",
+        params: { collectionId: target.id },
+        search: { st: params.token },
+      });
+    }
     throw redirect({
-      to: "/collections/$collectionId",
-      params: { collectionId: target.id },
+      to: "/calendars/$calendarId",
+      params: { calendarId: target.id },
       search: { st: params.token },
     });
   },

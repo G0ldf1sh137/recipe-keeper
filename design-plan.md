@@ -8,7 +8,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - Let a user share a single recipe or a collection via a public link.
 - Let other users discover and save (fork/bookmark) recipes shared with them.
 - Let a user build a grocery list from one or more recipes, with duplicate ingredients combined.
-- Keep the initial scope small: no meal planning or nutrition calculators in v1.
+- Keep the initial scope small: no nutrition calculators in v1.
 
 ## Tech Stack
 - **Framework**: TanStack Start (React + TanStack Router, full-stack, SSR)
@@ -25,7 +25,9 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - **Recipe**: id, ownerId, parentRecipeId (nullable, self-referencing — set when this recipe was forked from another, cleared to null if the original is later deleted), title, description, ingredients (list of {qty, unit, name}), steps (ordered list of strings), photoUrl, tags (list of strings), visibility (private | unlisted | public), createdAt, updatedAt
 - **Collection**: id, ownerId, name, description, visibility
 - **CollectionRecipe**: collectionId, recipeId (join table)
-- **Share**: id, recipeId or collectionId, token (for unlisted link sharing), createdBy, createdAt
+- **Calendar**: id, ownerId, name, visibility, createdAt, updatedAt — a reusable weekly meal-plan template (Mon–Sun slots, not tied to a specific date)
+- **CalendarEntry**: id, calendarId, recipeId, dayOfWeek (mon–sun), createdAt — a recipe assigned to a day; the same recipe can appear on multiple days or twice on one day
+- **Share**: id, recipeId or collectionId or calendarId, token (for unlisted link sharing), createdBy, createdAt
 - **Comment**: id, recipeId, authorId, parentId (nullable, self-referencing — threaded replies), body, createdAt, updatedAt
 - **Rating**: recipeId, userId (composite key — one rating per user per recipe), value (1–5), createdAt, updatedAt
 - **GroceryList**: id, ownerId, name, createdAt, updatedAt
@@ -40,9 +42,11 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - `/recipes/$recipeId/edit` — Edit recipe (owner only)
 - `/collections` — List user's collections
 - `/collections/$collectionId` — View a collection and its recipes (owner controls, plus anonymous/shared viewing)
+- `/calendars` — List user's weekly meal-plan calendars
+- `/calendars/$calendarId` — View a calendar as a 7-day grid, add/remove recipes per day (owner controls, plus anonymous/shared viewing)
 - `/u/$username` — Public profile: a user's public recipes and public lists
 - `/settings` — Change your username
-- `/shared/$token` — Resolves a share link and redirects to the canonical recipe/collection page (no login required)
+- `/shared/$token` — Resolves a share link and redirects to the canonical recipe/collection/calendar page (no login required)
 - `/grocery` — List user's grocery lists
 - `/grocery/$listId` — View a grocery list: recipes' ingredients combined, manual items, check off while shopping
 
@@ -50,12 +54,11 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - **Public**: directly viewable by anyone at its normal URL, listed in `/recipes` browse.
 - **Unlisted**: not listed anywhere; reachable only via a valid share link (`/shared/:token`), which redirects to the normal page with the token attached.
 - **Private**: visible only to the owner; not shareable.
-- Sharing a recipe or collection generates (or reuses) a `Share` record with a random token, one per resource; revoking deletes the row. Visibility is re-checked live on every access, so setting a resource back to private immediately invalidates any existing share link, without needing to explicitly revoke it first.
+- Sharing a recipe, collection, or calendar generates (or reuses) a `Share` record with a random token, one per resource; revoking deletes the row. Visibility is re-checked live on every access, so setting a resource back to private immediately invalidates any existing share link, without needing to explicitly revoke it first.
 - Public profile pages (`/u/$username`) list a user's public recipes and public lists; usernames are auto-generated at signup and editable via `/settings`.
 
 ## Non-Goals (v1)
 - Nutrition facts / calorie calculation
-- Meal planning calendar
 - Recipe scaling/unit conversion
 
 ## Milestones
@@ -68,3 +71,4 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 7. Grocery lists — done: multiple named lists, add/remove a recipe's ingredients with duplicates combined, manual items, check off; ingredient-name and unit autocomplete on the recipe form.
 8. Recipe forking — done: clone any recipe you can see into your own private copy, referencing the original; the original's page lists its forks (visible ones only).
 9. Polish — done: exact tag/visibility filters plus free-text search (title/description) on `/recipes`, with lightweight client-side search on collections and profile pages; responsive layout (mobile nav, wrapping rows, responsive grids/padding) across the app; empty-state messaging on every list view.
+10. Calendars — reusable weekly meal-plan templates (Mon–Sun slots, multiple recipes per day), shareable like collections via public/unlisted/private visibility plus revocable links.

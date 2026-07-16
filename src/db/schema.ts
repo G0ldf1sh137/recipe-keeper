@@ -91,6 +91,31 @@ export const collectionRecipes = pgTable(
   (table) => [primaryKey({ columns: [table.collectionId, table.recipeId] })],
 );
 
+export const dayOfWeekValues = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+export type DayOfWeek = (typeof dayOfWeekValues)[number];
+
+export const calendars = pgTable("calendars", {
+  id: id(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  visibility: text("visibility", { enum: visibilityValues }).notNull().default("private"),
+  ...timestamps,
+});
+
+export const calendarEntries = pgTable("calendar_entries", {
+  id: id(),
+  calendarId: text("calendar_id")
+    .notNull()
+    .references(() => calendars.id, { onDelete: "cascade" }),
+  recipeId: text("recipe_id")
+    .notNull()
+    .references(() => recipes.id, { onDelete: "cascade" }),
+  dayOfWeek: text("day_of_week", { enum: dayOfWeekValues }).notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 export const shares = pgTable("shares", {
   id: id(),
   token: text("token")
@@ -105,6 +130,11 @@ export const shares = pgTable("shares", {
   collectionId: text("collection_id")
     .unique()
     .references(() => collections.id, {
+      onDelete: "cascade",
+    }),
+  calendarId: text("calendar_id")
+    .unique()
+    .references(() => calendars.id, {
       onDelete: "cascade",
     }),
   createdBy: text("created_by")

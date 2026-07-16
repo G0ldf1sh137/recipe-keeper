@@ -15,11 +15,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
 import { Route as GroceryIndexRouteImport } from './routes/grocery/index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections/index'
+import { Route as CalendarsIndexRouteImport } from './routes/calendars/index'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as SharedTokenRouteImport } from './routes/shared/$token'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
 import { Route as GroceryListIdRouteImport } from './routes/grocery/$listId'
 import { Route as CollectionsCollectionIdRouteImport } from './routes/collections/$collectionId'
+import { Route as CalendarsCalendarIdRouteImport } from './routes/calendars/$calendarId'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as RecipesRecipeIdIndexRouteImport } from './routes/recipes/$recipeId/index'
 import { Route as AuthGoogleIndexRouteImport } from './routes/auth/google/index'
@@ -56,6 +58,11 @@ const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
   path: '/collections/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalendarsIndexRoute = CalendarsIndexRouteImport.update({
+  id: '/calendars/',
+  path: '/calendars/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -79,6 +86,11 @@ const GroceryListIdRoute = GroceryListIdRouteImport.update({
 const CollectionsCollectionIdRoute = CollectionsCollectionIdRouteImport.update({
   id: '/collections/$collectionId',
   path: '/collections/$collectionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalendarsCalendarIdRoute = CalendarsCalendarIdRouteImport.update({
+  id: '/calendars/$calendarId',
+  path: '/calendars/$calendarId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiUploadRoute = ApiUploadRouteImport.update({
@@ -112,11 +124,13 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/api/upload': typeof ApiUploadRoute
+  '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/shared/$token': typeof SharedTokenRoute
   '/u/$username': typeof UUsernameRoute
+  '/calendars/': typeof CalendarsIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/grocery/': typeof GroceryIndexRoute
   '/recipes/': typeof RecipesIndexRoute
@@ -130,11 +144,13 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/api/upload': typeof ApiUploadRoute
+  '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/shared/$token': typeof SharedTokenRoute
   '/u/$username': typeof UUsernameRoute
+  '/calendars': typeof CalendarsIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/grocery': typeof GroceryIndexRoute
   '/recipes': typeof RecipesIndexRoute
@@ -149,11 +165,13 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/api/upload': typeof ApiUploadRoute
+  '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/shared/$token': typeof SharedTokenRoute
   '/u/$username': typeof UUsernameRoute
+  '/calendars/': typeof CalendarsIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/grocery/': typeof GroceryIndexRoute
   '/recipes/': typeof RecipesIndexRoute
@@ -169,11 +187,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/settings'
     | '/api/upload'
+    | '/calendars/$calendarId'
     | '/collections/$collectionId'
     | '/grocery/$listId'
     | '/recipes/new'
     | '/shared/$token'
     | '/u/$username'
+    | '/calendars/'
     | '/collections/'
     | '/grocery/'
     | '/recipes/'
@@ -187,11 +207,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/settings'
     | '/api/upload'
+    | '/calendars/$calendarId'
     | '/collections/$collectionId'
     | '/grocery/$listId'
     | '/recipes/new'
     | '/shared/$token'
     | '/u/$username'
+    | '/calendars'
     | '/collections'
     | '/grocery'
     | '/recipes'
@@ -205,11 +227,13 @@ export interface FileRouteTypes {
     | '/login'
     | '/settings'
     | '/api/upload'
+    | '/calendars/$calendarId'
     | '/collections/$collectionId'
     | '/grocery/$listId'
     | '/recipes/new'
     | '/shared/$token'
     | '/u/$username'
+    | '/calendars/'
     | '/collections/'
     | '/grocery/'
     | '/recipes/'
@@ -224,11 +248,13 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SettingsRoute: typeof SettingsRoute
   ApiUploadRoute: typeof ApiUploadRoute
+  CalendarsCalendarIdRoute: typeof CalendarsCalendarIdRoute
   CollectionsCollectionIdRoute: typeof CollectionsCollectionIdRoute
   GroceryListIdRoute: typeof GroceryListIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
   SharedTokenRoute: typeof SharedTokenRoute
   UUsernameRoute: typeof UUsernameRoute
+  CalendarsIndexRoute: typeof CalendarsIndexRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
   GroceryIndexRoute: typeof GroceryIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
@@ -282,6 +308,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CollectionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calendars/': {
+      id: '/calendars/'
+      path: '/calendars'
+      fullPath: '/calendars/'
+      preLoaderRoute: typeof CalendarsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/u/$username': {
       id: '/u/$username'
       path: '/u/$username'
@@ -315,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/collections/$collectionId'
       fullPath: '/collections/$collectionId'
       preLoaderRoute: typeof CollectionsCollectionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calendars/$calendarId': {
+      id: '/calendars/$calendarId'
+      path: '/calendars/$calendarId'
+      fullPath: '/calendars/$calendarId'
+      preLoaderRoute: typeof CalendarsCalendarIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/upload': {
@@ -360,11 +400,13 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SettingsRoute: SettingsRoute,
   ApiUploadRoute: ApiUploadRoute,
+  CalendarsCalendarIdRoute: CalendarsCalendarIdRoute,
   CollectionsCollectionIdRoute: CollectionsCollectionIdRoute,
   GroceryListIdRoute: GroceryListIdRoute,
   RecipesNewRoute: RecipesNewRoute,
   SharedTokenRoute: SharedTokenRoute,
   UUsernameRoute: UUsernameRoute,
+  CalendarsIndexRoute: CalendarsIndexRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
   GroceryIndexRoute: GroceryIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,

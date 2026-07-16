@@ -64,6 +64,20 @@
       "when": 1784211295163,
       "tag": "0008_add_recipe_cover_photo",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1784213233551,
+      "tag": "0009_add_calendars",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784213249169,
+      "tag": "0010_shares_check_one_target_incl_calendar",
+      "breakpoints": true
     }
   ]
 }

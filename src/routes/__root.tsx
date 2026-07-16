@@ -128,6 +128,13 @@ function AuthHeader({
           Grocery lists
         </Link>
         <Link
+          to="/calendars"
+          onClick={() => setMenuOpen(false)}
+          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
+          Calendars
+        </Link>
+        <Link
           to="/settings"
           onClick={() => setMenuOpen(false)}
           className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
