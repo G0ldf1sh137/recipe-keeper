@@ -16,6 +16,12 @@ export const Route = createFileRoute("/auth/google/callback")({
         const attempt = readOAuthCookie();
 
         if (!code || !state || !attempt || attempt.state !== state) {
+          console.error("Google OAuth callback: missing or mismatched state/verifier cookie", {
+            hasCode: !!code,
+            hasState: !!state,
+            hasAttempt: !!attempt,
+            stateMatches: attempt ? attempt.state === state : null,
+          });
           const headers = new Headers(FAILED_LOGIN_REDIRECT);
           headers.append("Set-Cookie", buildClearedOAuthCookie());
           return new Response(null, { status: 302, headers });
@@ -35,7 +41,8 @@ export const Route = createFileRoute("/auth/google/callback")({
           headers.append("Set-Cookie", buildSessionCookie(token, expiresAt));
           headers.append("Set-Cookie", buildClearedOAuthCookie());
           return new Response(null, { status: 302, headers });
-        } catch {
+        } catch (error) {
+          console.error("Google OAuth callback failed:", error);
           const headers = new Headers(FAILED_LOGIN_REDIRECT);
           headers.append("Set-Cookie", buildClearedOAuthCookie());
           return new Response(null, { status: 302, headers });
