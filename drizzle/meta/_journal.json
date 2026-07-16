@@ -22,6 +22,13 @@
       "when": 1784182326935,
       "tag": "0002_shares_check_one_target",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784184466393,
+      "tag": "0003_add_username_to_users",
+      "breakpoints": true
     }
   ]
 }

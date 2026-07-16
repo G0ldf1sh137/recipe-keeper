@@ -9,10 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections/index'
+import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as SharedTokenRouteImport } from './routes/shared/$token'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
 import { Route as CollectionsCollectionIdRouteImport } from './routes/collections/$collectionId'
@@ -22,6 +24,11 @@ import { Route as AuthGoogleIndexRouteImport } from './routes/auth/google/index'
 import { Route as RecipesRecipeIdEditRouteImport } from './routes/recipes/$recipeId/edit'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth/google/callback'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -40,6 +47,11 @@ const RecipesIndexRoute = RecipesIndexRouteImport.update({
 const CollectionsIndexRoute = CollectionsIndexRouteImport.update({
   id: '/collections/',
   path: '/collections/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UUsernameRoute = UUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SharedTokenRoute = SharedTokenRouteImport.update({
@@ -86,10 +98,12 @@ const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/settings': typeof SettingsRoute
   '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/shared/$token': typeof SharedTokenRoute
+  '/u/$username': typeof UUsernameRoute
   '/collections/': typeof CollectionsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -100,10 +114,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/settings': typeof SettingsRoute
   '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/shared/$token': typeof SharedTokenRoute
+  '/u/$username': typeof UUsernameRoute
   '/collections': typeof CollectionsIndexRoute
   '/recipes': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -115,10 +131,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/settings': typeof SettingsRoute
   '/api/upload': typeof ApiUploadRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/shared/$token': typeof SharedTokenRoute
+  '/u/$username': typeof UUsernameRoute
   '/collections/': typeof CollectionsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -131,10 +149,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/settings'
     | '/api/upload'
     | '/collections/$collectionId'
     | '/recipes/new'
     | '/shared/$token'
+    | '/u/$username'
     | '/collections/'
     | '/recipes/'
     | '/auth/google/callback'
@@ -145,10 +165,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/settings'
     | '/api/upload'
     | '/collections/$collectionId'
     | '/recipes/new'
     | '/shared/$token'
+    | '/u/$username'
     | '/collections'
     | '/recipes'
     | '/auth/google/callback'
@@ -159,10 +181,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/login'
+    | '/settings'
     | '/api/upload'
     | '/collections/$collectionId'
     | '/recipes/new'
     | '/shared/$token'
+    | '/u/$username'
     | '/collections/'
     | '/recipes/'
     | '/auth/google/callback'
@@ -174,10 +198,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  SettingsRoute: typeof SettingsRoute
   ApiUploadRoute: typeof ApiUploadRoute
   CollectionsCollectionIdRoute: typeof CollectionsCollectionIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
   SharedTokenRoute: typeof SharedTokenRoute
+  UUsernameRoute: typeof UUsernameRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
@@ -188,6 +214,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -214,6 +247,13 @@ declare module '@tanstack/react-router' {
       path: '/collections'
       fullPath: '/collections/'
       preLoaderRoute: typeof CollectionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$username': {
+      id: '/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shared/$token': {
@@ -278,10 +318,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  SettingsRoute: SettingsRoute,
   ApiUploadRoute: ApiUploadRoute,
   CollectionsCollectionIdRoute: CollectionsCollectionIdRoute,
   RecipesNewRoute: RecipesNewRoute,
   SharedTokenRoute: SharedTokenRoute,
+  UUsernameRoute: UUsernameRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,

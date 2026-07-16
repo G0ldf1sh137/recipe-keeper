@@ -123,6 +123,12 @@ function AuthHeader({
             >
               Your lists
             </Link>
+            <Link
+              to="/settings"
+              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+            >
+              Settings
+            </Link>
             {user.avatarUrl && (
               <img
                 src={user.avatarUrl}
@@ -130,7 +136,13 @@ function AuthHeader({
                 className="h-7 w-7 rounded-full ring-2 ring-accent-100"
               />
             )}
-            <span className="text-sm text-ink/80">{user.name}</span>
+            {user.username ? (
+              <Link to="/u/$username" params={{ username: user.username }} className="text-sm text-ink/80">
+                {user.name}
+              </Link>
+            ) : (
+              <span className="text-sm text-ink/80">{user.name}</span>
+            )}
             <button
               type="button"
               onClick={handleLogout}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { createComment } from "./comments.functions";
 import type { CommentNode } from "./comments.server";
@@ -83,7 +83,17 @@ function CommentItem({
         {comment.author.avatarUrl && (
           <img src={comment.author.avatarUrl} alt="" className="h-6 w-6 rounded-full" />
         )}
-        <span className="font-medium text-ink">{comment.author.name}</span>
+        {comment.author.username ? (
+          <Link
+            to="/u/$username"
+            params={{ username: comment.author.username }}
+            className="font-medium text-ink hover:text-accent-600 dark:hover:text-accent-400"
+          >
+            {comment.author.name}
+          </Link>
+        ) : (
+          <span className="font-medium text-ink">{comment.author.name}</span>
+        )}
         <span className="text-xs text-ink/40">{formatRelativeTime(comment.createdAt)}</span>
       </div>
       <p className="mt-1 whitespace-pre-wrap text-ink/80">{comment.body}</p>

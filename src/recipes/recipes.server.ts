@@ -1,6 +1,6 @@
 import { and, arrayContains, eq, inArray, ne, or } from "drizzle-orm";
 import { db } from "#/db/index";
-import { recipes, shares } from "#/db/schema";
+import { recipes, shares, users } from "#/db/schema";
 import type {
   createRecipeSchema,
   deleteRecipeSchema,
@@ -18,10 +18,28 @@ function visibleToViewer(viewerId: string | undefined) {
     : eq(recipes.visibility, "public");
 }
 
+const recipeWithOwnerColumns = {
+  id: recipes.id,
+  ownerId: recipes.ownerId,
+  title: recipes.title,
+  description: recipes.description,
+  ingredients: recipes.ingredients,
+  steps: recipes.steps,
+  photoUrls: recipes.photoUrls,
+  tags: recipes.tags,
+  visibility: recipes.visibility,
+  createdAt: recipes.createdAt,
+  updatedAt: recipes.updatedAt,
+  owner: { name: users.name, avatarUrl: users.avatarUrl, username: users.username },
+};
+
 export async function findRecipeById(id: string, viewerId: string | undefined, shareToken?: string) {
-  const recipe = await db.query.recipes.findFirst({
-    where: and(eq(recipes.id, id), visibleToViewer(viewerId)),
-  });
+  const rows = await db
+    .select(recipeWithOwnerColumns)
+    .from(recipes)
+    .innerJoin(users, eq(recipes.ownerId, users.id))
+    .where(and(eq(recipes.id, id), visibleToViewer(viewerId)));
+  const recipe = rows.at(0);
   if (recipe) return recipe;
   if (!shareToken) return undefined;
 
@@ -29,9 +47,12 @@ export async function findRecipeById(id: string, viewerId: string | undefined, s
     where: and(eq(shares.token, shareToken), eq(shares.recipeId, id)),
   });
   if (!share) return undefined;
-  return db.query.recipes.findFirst({
-    where: and(eq(recipes.id, id), ne(recipes.visibility, "private")),
-  });
+  const sharedRows = await db
+    .select(recipeWithOwnerColumns)
+    .from(recipes)
+    .innerJoin(users, eq(recipes.ownerId, users.id))
+    .where(and(eq(recipes.id, id), ne(recipes.visibility, "private")));
+  return sharedRows.at(0);
 }
 
 export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, viewerId: string | undefined) {

@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { listRecipes } from "#/recipes/recipes.functions";
 import { getRatingSummaries } from "#/ratings/ratings.functions";
-import { Stars } from "#/ratings/RecipeRating";
+import { RecipeCard } from "#/recipes/RecipeCard";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
@@ -107,45 +107,11 @@ function RecipesListPage() {
         </p>
       ) : (
         <ul className="mt-6 flex flex-col gap-3">
-          {recipes.map((recipe) => {
-            const rating = ratingsById.get(recipe.id);
-            return (
-              <li key={recipe.id}>
-                <Link
-                  to="/recipes/$recipeId"
-                  params={{ recipeId: recipe.id }}
-                  className="block rounded-xl border border-accent-100 bg-surface px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-serif text-lg font-medium text-ink">{recipe.title}</span>
-                    <span className="text-xs font-medium uppercase tracking-wide text-ink/40">
-                      {recipe.visibility}
-                    </span>
-                  </div>
-                  {rating && (
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <Stars value={rating.average} size={14} />
-                      <span className="text-xs text-ink/50">
-                        {rating.average.toFixed(1)} ({rating.count})
-                      </span>
-                    </div>
-                  )}
-                  {recipe.tags.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {recipe.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-accent-50 px-2 py-0.5 text-xs text-ink/70"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
+          {recipes.map((recipe) => (
+            <li key={recipe.id}>
+              <RecipeCard recipe={recipe} rating={ratingsById.get(recipe.id)} />
+            </li>
+          ))}
         </ul>
       )}
     </div>

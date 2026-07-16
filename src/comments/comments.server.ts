@@ -10,7 +10,7 @@ export type CommentNode = {
   parentId: string | null;
   body: string;
   createdAt: Date;
-  author: { id: string; name: string; avatarUrl: string | null };
+  author: { id: string; name: string; avatarUrl: string | null; username: string | null };
   replies: CommentNode[];
 };
 
@@ -22,7 +22,7 @@ export async function findCommentTreeForRecipe(recipeId: string): Promise<Commen
       parentId: comments.parentId,
       body: comments.body,
       createdAt: comments.createdAt,
-      author: { id: users.id, name: users.name, avatarUrl: users.avatarUrl },
+      author: { id: users.id, name: users.name, avatarUrl: users.avatarUrl, username: users.username },
     })
     .from(comments)
     .innerJoin(users, eq(comments.authorId, users.id))

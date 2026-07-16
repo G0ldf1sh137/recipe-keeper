@@ -119,6 +119,17 @@ function RecipePage() {
         </div>
       )}
       <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">{recipe.title}</h1>
+      {recipe.owner.username ? (
+        <Link
+          to="/u/$username"
+          params={{ username: recipe.owner.username }}
+          className="mt-1 inline-block text-sm text-ink/60 hover:text-accent-600 dark:hover:text-accent-400"
+        >
+          by {recipe.owner.name}
+        </Link>
+      ) : (
+        <p className="mt-1 text-sm text-ink/60">by {recipe.owner.name}</p>
+      )}
       {recipe.description && <p className="mt-2 text-ink/70">{recipe.description}</p>}
 
       {recipe.photoUrls.length > 0 && (

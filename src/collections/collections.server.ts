@@ -18,6 +18,21 @@ export async function findCollectionsByOwner(ownerId: string) {
     .orderBy(collections.createdAt);
 }
 
+export async function findPublicCollectionsByOwner(ownerId: string) {
+  return db
+    .select({
+      id: collections.id,
+      name: collections.name,
+      createdAt: collections.createdAt,
+      recipeCount: sql<number>`count(${collectionRecipes.recipeId})::int`,
+    })
+    .from(collections)
+    .leftJoin(collectionRecipes, eq(collectionRecipes.collectionId, collections.id))
+    .where(and(eq(collections.ownerId, ownerId), eq(collections.visibility, "public")))
+    .groupBy(collections.id)
+    .orderBy(collections.createdAt);
+}
+
 export async function findCollectionById(id: string, ownerId: string) {
   return db.query.collections.findFirst({
     where: and(eq(collections.id, id), eq(collections.ownerId, ownerId)),
