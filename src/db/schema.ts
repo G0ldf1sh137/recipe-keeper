@@ -112,20 +112,6 @@ export const shares = pgTable("shares", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const savedRecipes = pgTable(
-  "saved_recipes",
-  {
-    userId: text("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    recipeId: text("recipe_id")
-      .notNull()
-      .references(() => recipes.id, { onDelete: "cascade" }),
-    savedAt: timestamp("saved_at", { mode: "date" }).notNull().defaultNow(),
-  },
-  (table) => [primaryKey({ columns: [table.userId, table.recipeId] })],
-);
-
 export const comments = pgTable("comments", {
   id: id(),
   recipeId: text("recipe_id")
