@@ -67,6 +67,8 @@ function EditRecipePage() {
         ? transcribed.steps.map((step) => ({ text: step.text, imageUrls: [] }))
         : prev.steps,
       tagsInput: transcribed.tags.length ? transcribed.tags.join(", ") : prev.tagsInput,
+      ...(transcribed.yield.trim() ? { yield: transcribed.yield.trim() } : {}),
+      ...(transcribed.calories !== null ? { calories: transcribed.calories } : {}),
     }));
     setFormKey((k) => k + 1);
   }

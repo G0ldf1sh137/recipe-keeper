@@ -83,6 +83,16 @@ export function ProcessPhotos({
           {result.recipe.description.trim() && (
             <p className="mt-1 text-sm text-ink/70">{result.recipe.description}</p>
           )}
+          {(result.recipe.yield.trim() || result.recipe.calories !== null) && (
+            <p className="mt-1 text-sm text-ink/60">
+              {[
+                result.recipe.yield.trim() || null,
+                result.recipe.calories !== null ? `${result.recipe.calories} cal/serving` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          )}
 
           {result.recipe.ingredients.length > 0 && (
             <div className="mt-3">

@@ -25,6 +25,19 @@ const transcriptionOutputSchema = z.object({
         ),
         steps: z.array(z.object({ text: z.string() })).describe("The preparation steps, in order"),
         tags: z.array(z.string()).describe("2-4 lowercase tags such as 'dessert' or 'soup'"),
+        yield: z
+          .string()
+          .describe(
+            "The recipe's yield, e.g. '4 servings' or 'Makes 12 muffins'. Transcribe as written if stated; otherwise estimate a reasonable yield from the ingredient quantities. Empty string only if there's not enough information to even estimate one.",
+          ),
+        calories: z
+          .number()
+          .int()
+          .nonnegative()
+          .nullable()
+          .describe(
+            "Calories per serving. Use the recipe's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+          ),
       }),
       z.null(),
     ])
@@ -48,6 +61,7 @@ If they do show a handwritten or typed recipe:
 - Split the method into ordered steps. If the writing is one continuous paragraph, break it at natural sentence boundaries.
 - If a word is truly illegible, transcribe your best reading followed by "(?)".
 - Suggest 2-4 lowercase tags.
+- Determine the yield (servings) and calories per serving: transcribe them as written if the recipe states them; if not, estimate both from the ingredient list and quantities using your general nutrition knowledge. Only leave them blank (empty string / null) if there's not enough information to make any reasonable estimate.
 
 If they do not, say so and briefly explain what the photos appear to show instead.`;
 
