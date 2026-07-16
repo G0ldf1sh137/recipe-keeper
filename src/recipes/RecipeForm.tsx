@@ -45,14 +45,21 @@ export function RecipeForm({
   initialValues,
   submitLabel,
   onSubmit,
+  onPhotoUrlsChange,
 }: {
   initialValues: RecipeFormValues;
   submitLabel: string;
   onSubmit: (values: RecipeFormSubmitValues) => Promise<void>;
+  onPhotoUrlsChange?: (urls: string[]) => void;
 }) {
   const [title, setTitle] = useState(initialValues.title);
   const [description, setDescription] = useState(initialValues.description);
   const [photoUrls, setPhotoUrls] = useState<string[]>(initialValues.photoUrls);
+
+  function updatePhotoUrls(urls: string[]) {
+    setPhotoUrls(urls);
+    onPhotoUrlsChange?.(urls);
+  }
   const [tagsInput, setTagsInput] = useState(initialValues.tagsInput);
   const [visibility, setVisibility] = useState<Visibility>(initialValues.visibility);
   const [ingredients, setIngredients] = useState<IngredientRow[]>(initialValues.ingredients);
@@ -128,7 +135,7 @@ export function RecipeForm({
         <span className="font-medium text-ink/70">Photos</span>
         <MultiImageUpload
           imageUrls={photoUrls}
-          onChange={setPhotoUrls}
+          onChange={updatePhotoUrls}
           previewClassName="h-32 w-48 rounded-lg object-cover"
         />
       </div>

@@ -68,9 +68,9 @@ function EditRecipePage() {
     <div className="mx-auto max-w-2xl p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Edit recipe</h1>
 
-      {recipe.photoUrls.length > 0 && (
+      {formValues.photoUrls.length > 0 && (
         <div className="mt-6">
-          <ProcessPhotos recipeId={recipe.id} onApply={applyTranscription} />
+          <ProcessPhotos photoUrls={formValues.photoUrls} onApply={applyTranscription} />
         </div>
       )}
 
@@ -78,6 +78,7 @@ function EditRecipePage() {
         key={formKey}
         initialValues={formValues}
         submitLabel="Save changes"
+        onPhotoUrlsChange={(photoUrls) => setFormValues((prev) => ({ ...prev, photoUrls }))}
         onSubmit={async (values) => {
           await updateRecipeFn({ data: { id: recipe.id, ...values } });
           await navigate({ to: "/recipes/$recipeId", params: { recipeId: recipe.id } });

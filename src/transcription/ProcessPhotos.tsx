@@ -4,10 +4,10 @@ import { processRecipePhotos } from "./transcription.functions";
 import type { TranscriptionResult, TranscribedRecipe } from "./transcription.server";
 
 export function ProcessPhotos({
-  recipeId,
+  photoUrls,
   onApply,
 }: {
-  recipeId: string;
+  photoUrls: string[];
   onApply: (recipe: TranscribedRecipe) => void;
 }) {
   const processFn = useServerFn(processRecipePhotos);
@@ -18,7 +18,7 @@ export function ProcessPhotos({
     setScanning(true);
     setResult(null);
     try {
-      setResult(await processFn({ data: { recipeId } }));
+      setResult(await processFn({ data: { photoUrls } }));
     } catch {
       setResult({ status: "error", message: "Scanning failed. Please try again." });
     } finally {
@@ -44,7 +44,7 @@ export function ProcessPhotos({
         </button>
         {!scanning && !result && (
           <span className="text-xs text-ink/50">
-            Uses Claude to transcribe a handwritten recipe from this recipe's saved photos.
+            Uses Claude to transcribe a handwritten recipe from the photos above.
           </span>
         )}
         {scanning && (
