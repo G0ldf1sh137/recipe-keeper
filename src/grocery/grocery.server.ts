@@ -4,7 +4,65 @@ import { groceryLists, groceryListItems } from "#/db/schema";
 import { findRecipeById } from "#/recipes/recipes.server";
 import { findCalendarForViewer, findEntriesForCalendar } from "#/calendars/calendars.server";
 
-const NUMERIC_QTY = /^\d+(\.\d+)?$/;
+type Fraction = { num: bigint; den: bigint };
+
+function gcd(a: bigint, b: bigint): bigint {
+  a = a < 0n ? -a : a;
+  b = b < 0n ? -b : b;
+  while (b) [a, b] = [b, a % b];
+  return a === 0n ? 1n : a;
+}
+
+function reduceFraction(f: Fraction): Fraction {
+  const divisor = gcd(f.num, f.den);
+  return { num: f.num / divisor, den: f.den / divisor };
+}
+
+// Parses whole numbers ("2"), decimals ("1.5"), simple fractions ("3/4"), and
+// mixed numbers ("1 1/2"). Anything else (e.g. "pinch", "to taste") is not
+// summable and returns undefined.
+function parseQuantity(raw: string): Fraction | undefined {
+  const qty = raw.trim();
+  if (qty === "") return undefined;
+
+  const mixedMatch = /^(\d+)\s+(\d+)\/(\d+)$/.exec(qty);
+  if (mixedMatch) {
+    const den = BigInt(mixedMatch[3]);
+    if (den === 0n) return undefined;
+    const whole = BigInt(mixedMatch[1]);
+    const num = BigInt(mixedMatch[2]);
+    return reduceFraction({ num: whole * den + num, den });
+  }
+
+  const fractionMatch = /^(\d+)\/(\d+)$/.exec(qty);
+  if (fractionMatch) {
+    const den = BigInt(fractionMatch[2]);
+    if (den === 0n) return undefined;
+    return reduceFraction({ num: BigInt(fractionMatch[1]), den });
+  }
+
+  if (/^\d+(\.\d+)?$/.test(qty)) {
+    const [wholePart, fractionPart = ""] = qty.split(".");
+    const den = 10n ** BigInt(fractionPart.length);
+    const num = BigInt(wholePart + fractionPart);
+    return reduceFraction({ num, den });
+  }
+
+  return undefined;
+}
+
+function addFractions(a: Fraction, b: Fraction): Fraction {
+  return reduceFraction({ num: a.num * b.den + b.num * a.den, den: a.den * b.den });
+}
+
+function formatFraction(f: Fraction): string {
+  const { num, den } = reduceFraction(f);
+  if (den === 1n) return num.toString();
+  const whole = num / den;
+  const remainder = num % den;
+  if (whole === 0n) return `${remainder}/${den}`;
+  return `${whole} ${remainder}/${den}`;
+}
 
 export async function findGroceryListsByOwner(ownerId: string) {
   return db
@@ -199,12 +257,13 @@ export async function getGroceryListWithGroups(id: string, ownerId: string) {
     }
 
     const lines: GroceryLine[] = Array.from(byUnit.values()).flatMap((unitGroup) => {
-      const allNumeric = unitGroup.every((item) => NUMERIC_QTY.test(item.qty.trim()));
+      const parsedQtys = unitGroup.map((item) => parseQuantity(item.qty));
+      const allNumeric = parsedQtys.every((qty) => qty !== undefined);
       if (allNumeric && unitGroup.length > 1) {
-        const sum = unitGroup.reduce((total, item) => total + Number(item.qty.trim()), 0);
+        const sum = parsedQtys.reduce<Fraction>((total, qty) => addFractions(total, qty), { num: 0n, den: 1n });
         return [
           {
-            qty: String(sum),
+            qty: formatFraction(sum),
             unit: unitGroup[0].unit,
             checked: unitGroup.every((item) => item.checked),
             itemIds: unitGroup.map((item) => item.id),
