@@ -29,6 +29,11 @@ function CollectionsPage() {
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [query, setQuery] = useState("");
+
+  const filteredCollections = collections.filter((collection) =>
+    collection.name.toLowerCase().includes(query.trim().toLowerCase()),
+  );
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -81,11 +86,22 @@ function CollectionsPage() {
         </button>
       </form>
 
+      {collections.length > 0 && (
+        <input
+          className="mt-6 w-full rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search your lists"
+        />
+      )}
+
       {collections.length === 0 ? (
         <p className="mt-6 text-ink/60">No lists yet. Create one to start bookmarking recipes.</p>
+      ) : filteredCollections.length === 0 ? (
+        <p className="mt-6 text-ink/60">No lists match "{query}".</p>
       ) : (
         <ul className="mt-6 flex flex-col gap-3">
-          {collections.map((collection) => (
+          {filteredCollections.map((collection) => (
             <li
               key={collection.id}
               className="flex items-center justify-between rounded-xl border border-accent-100 bg-surface px-4 py-3 shadow-sm"

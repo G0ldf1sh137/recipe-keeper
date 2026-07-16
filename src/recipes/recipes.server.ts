@@ -1,4 +1,4 @@
-import { and, arrayContains, eq, inArray, ne, or } from "drizzle-orm";
+import { and, arrayContains, eq, ilike, inArray, ne, or } from "drizzle-orm";
 import { db } from "#/db/index";
 import { recipes, shares, users, ingredientNames, unitNames } from "#/db/schema";
 import type {
@@ -61,6 +61,9 @@ export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, vi
   if (filters.ownerId) conditions.push(eq(recipes.ownerId, filters.ownerId));
   if (filters.visibility) conditions.push(eq(recipes.visibility, filters.visibility));
   if (filters.tag) conditions.push(arrayContains(recipes.tags, [filters.tag]));
+  if (filters.q) {
+    conditions.push(or(ilike(recipes.title, `%${filters.q}%`), ilike(recipes.description, `%${filters.q}%`)));
+  }
   return db.query.recipes.findMany({
     where: and(...conditions),
     orderBy: (r, { desc }) => [desc(r.createdAt)],

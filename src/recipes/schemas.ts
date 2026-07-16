@@ -59,4 +59,5 @@ export const listRecipesSchema = z.object({
   ownerId: z.string().min(1).optional(),
   tag: z.string().min(1).optional(),
   visibility: visibilitySchema.optional(),
+  q: z.string().min(1).optional(),
 });

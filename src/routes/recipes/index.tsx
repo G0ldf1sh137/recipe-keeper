@@ -10,6 +10,7 @@ import type { Visibility } from "#/db/schema";
 const recipesSearchSchema = z.object({
   tag: z.string().min(1).optional(),
   visibility: z.enum(visibilityValues).optional(),
+  q: z.string().min(1).optional(),
 });
 
 export const Route = createFileRoute("/recipes/")({
@@ -32,9 +33,14 @@ function RecipesListPage() {
   const [tagInput, setTagInput] = useState(search.tag ?? "");
   useEffect(() => setTagInput(search.tag ?? ""), [search.tag]);
 
+  const [qInput, setQInput] = useState(search.q ?? "");
+  useEffect(() => setQInput(search.q ?? ""), [search.q]);
+
   function handleFilterSubmit(e: React.FormEvent) {
     e.preventDefault();
-    navigate({ search: (prev) => ({ ...prev, tag: tagInput.trim() || undefined }) });
+    navigate({
+      search: (prev) => ({ ...prev, tag: tagInput.trim() || undefined, q: qInput.trim() || undefined }),
+    });
   }
 
   function handleVisibilityChange(value: string) {
@@ -43,7 +49,7 @@ function RecipesListPage() {
     });
   }
 
-  const hasFilters = Boolean(search.tag || search.visibility);
+  const hasFilters = Boolean(search.tag || search.visibility || search.q);
 
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
@@ -58,6 +64,16 @@ function RecipesListPage() {
       </div>
 
       <form onSubmit={handleFilterSubmit} className="mt-6 flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-ink/70">Search</span>
+          <input
+            className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
+            value={qInput}
+            onChange={(e) => setQInput(e.target.value)}
+            placeholder="waffles"
+          />
+        </label>
+
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-ink/70">Tag</span>
           <input
