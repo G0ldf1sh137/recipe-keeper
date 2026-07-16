@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import sharp from "sharp";
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
 
@@ -51,11 +52,10 @@ function sniffImageMime(bytes: Uint8Array): string | null {
   return null;
 }
 
-export async function saveImageUpload(file: File): Promise<{ url: string } | { error: string }> {
-  if (file.size === 0) return { error: "Empty file." };
-  if (file.size > MAX_UPLOAD_BYTES) return { error: "Image is too large (max 5 MB)." };
+async function uploadImageBytes(bytes: Uint8Array): Promise<{ url: string } | { error: string }> {
+  if (bytes.length === 0) return { error: "Empty file." };
+  if (bytes.length > MAX_UPLOAD_BYTES) return { error: "Image is too large (max 5 MB)." };
 
-  const bytes = new Uint8Array(await file.arrayBuffer());
   const mime = sniffImageMime(bytes);
   if (!mime) return { error: "Unsupported image type. Use JPEG, PNG, WebP, or GIF." };
 
@@ -75,4 +75,32 @@ export async function saveImageUpload(file: File): Promise<{ url: string } | { e
     return { error: "Could not upload the image. Please try again." };
   }
   return { url: `${S3_PUBLIC_URL_BASE}/${name}` };
+}
+
+export async function saveImageUpload(file: File): Promise<{ url: string } | { error: string }> {
+  if (file.size === 0) return { error: "Empty file." };
+  if (file.size > MAX_UPLOAD_BYTES) return { error: "Image is too large (max 5 MB)." };
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  return uploadImageBytes(bytes);
+}
+
+export async function rotateImageUpload(sourceUrl: string): Promise<{ url: string } | { error: string }> {
+  let response: Response;
+  try {
+    response = await fetch(sourceUrl);
+  } catch {
+    return { error: "Could not fetch the image to rotate." };
+  }
+  if (!response.ok) return { error: "Could not fetch the image to rotate." };
+
+  const original = new Uint8Array(await response.arrayBuffer());
+  let rotated: Buffer;
+  try {
+    rotated = await sharp(original).rotate(90).toBuffer();
+  } catch (error) {
+    console.error("Image rotation failed:", error);
+    return { error: "Could not rotate this image." };
+  }
+  return uploadImageBytes(rotated);
 }

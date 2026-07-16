@@ -23,6 +23,7 @@ import { Route as GroceryListIdRouteImport } from './routes/grocery/$listId'
 import { Route as CollectionsCollectionIdRouteImport } from './routes/collections/$collectionId'
 import { Route as CalendarsCalendarIdRouteImport } from './routes/calendars/$calendarId'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
+import { Route as ApiRotateImageRouteImport } from './routes/api/rotate-image'
 import { Route as RecipesRecipeIdIndexRouteImport } from './routes/recipes/$recipeId/index'
 import { Route as AuthGoogleIndexRouteImport } from './routes/auth/google/index'
 import { Route as RecipesRecipeIdEditRouteImport } from './routes/recipes/$recipeId/edit'
@@ -98,6 +99,11 @@ const ApiUploadRoute = ApiUploadRouteImport.update({
   path: '/api/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRotateImageRoute = ApiRotateImageRouteImport.update({
+  id: '/api/rotate-image',
+  path: '/api/rotate-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipesRecipeIdIndexRoute = RecipesRecipeIdIndexRouteImport.update({
   id: '/recipes/$recipeId/',
   path: '/recipes/$recipeId/',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
+  '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
+  '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
+  '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/settings'
+    | '/api/rotate-image'
     | '/api/upload'
     | '/calendars/$calendarId'
     | '/collections/$collectionId'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/settings'
+    | '/api/rotate-image'
     | '/api/upload'
     | '/calendars/$calendarId'
     | '/collections/$collectionId'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/settings'
+    | '/api/rotate-image'
     | '/api/upload'
     | '/calendars/$calendarId'
     | '/collections/$collectionId'
@@ -247,6 +259,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   SettingsRoute: typeof SettingsRoute
+  ApiRotateImageRoute: typeof ApiRotateImageRoute
   ApiUploadRoute: typeof ApiUploadRoute
   CalendarsCalendarIdRoute: typeof CalendarsCalendarIdRoute
   CollectionsCollectionIdRoute: typeof CollectionsCollectionIdRoute
@@ -364,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rotate-image': {
+      id: '/api/rotate-image'
+      path: '/api/rotate-image'
+      fullPath: '/api/rotate-image'
+      preLoaderRoute: typeof ApiRotateImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipes/$recipeId/': {
       id: '/recipes/$recipeId/'
       path: '/recipes/$recipeId'
@@ -399,6 +419,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   SettingsRoute: SettingsRoute,
+  ApiRotateImageRoute: ApiRotateImageRoute,
   ApiUploadRoute: ApiUploadRoute,
   CalendarsCalendarIdRoute: CalendarsCalendarIdRoute,
   CollectionsCollectionIdRoute: CollectionsCollectionIdRoute,

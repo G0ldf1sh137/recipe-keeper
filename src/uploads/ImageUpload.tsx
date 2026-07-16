@@ -17,6 +17,7 @@ export function MultiImageUpload({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [rotating, setRotating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function uploadOne(file: File): Promise<string> {
@@ -26,6 +27,27 @@ export function MultiImageUpload({
     const json: { url?: string; error?: string } = await response.json();
     if (!response.ok || !json.url) throw new Error(json.error ?? "Upload failed.");
     return json.url;
+  }
+
+  async function handleRotate(url: string) {
+    setRotating(url);
+    setError(null);
+    try {
+      const response = await fetch("/api/rotate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const json: { url?: string; error?: string } = await response.json();
+      if (!response.ok || !json.url) throw new Error(json.error ?? "Rotation failed.");
+      const newUrl = json.url;
+      onChange(imageUrls.map((u) => (u === url ? newUrl : u)));
+      if (onSetCover && coverUrl === url) onSetCover(newUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Rotation failed. Please try again.");
+    } finally {
+      setRotating(null);
+    }
   }
 
   async function handleFiles(files: File[]) {
@@ -69,6 +91,15 @@ export function MultiImageUpload({
                 alt=""
                 className={`${previewClassName} ${url === coverUrl ? "ring-2 ring-accent-500 ring-offset-1" : ""}`}
               />
+              <button
+                type="button"
+                onClick={() => handleRotate(url)}
+                disabled={rotating === url}
+                aria-label="Rotate photo"
+                className="absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-xs text-white hover:bg-black/70 disabled:opacity-50"
+              >
+                {rotating === url ? "…" : "⟳"}
+              </button>
               {onSetCover && imageUrls.length > 1 && (
                 <button
                   type="button"
