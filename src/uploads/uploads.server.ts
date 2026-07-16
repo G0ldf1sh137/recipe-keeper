@@ -97,7 +97,7 @@ export async function rotateImageUpload(sourceUrl: string): Promise<{ url: strin
   const original = new Uint8Array(await response.arrayBuffer());
   let rotated: Buffer;
   try {
-    rotated = await sharp(original).rotate(90).toBuffer();
+    rotated = await sharp(original).rotate(-90).toBuffer();
   } catch (error) {
     console.error("Image rotation failed:", error);
     return { error: "Could not rotate this image." };

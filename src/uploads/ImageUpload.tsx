@@ -98,7 +98,7 @@ export function MultiImageUpload({
                 aria-label="Rotate photo"
                 className="absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-xs text-white hover:bg-black/70 disabled:opacity-50"
               >
-                {rotating === url ? "…" : "⟳"}
+                {rotating === url ? "…" : "↺"}
               </button>
               {onSetCover && imageUrls.length > 1 && (
                 <button
