@@ -2,6 +2,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "#/db/index";
 import { groceryLists, groceryListItems } from "#/db/schema";
 import { findRecipeById } from "#/recipes/recipes.server";
+import { findCalendarForViewer, findEntriesForCalendar } from "#/calendars/calendars.server";
 
 const NUMERIC_QTY = /^\d+(\.\d+)?$/;
 
@@ -73,6 +74,19 @@ export async function deleteOwnedGroceryList(id: string, ownerId: string) {
   return rows.at(0);
 }
 
+async function insertIngredientsForRecipe(listId: string, recipe: Awaited<ReturnType<typeof findRecipeById>>) {
+  if (!recipe || recipe.ingredients.length === 0) return;
+  await db.insert(groceryListItems).values(
+    recipe.ingredients.map((ingredient) => ({
+      listId,
+      recipeId: recipe.id,
+      qty: ingredient.qty,
+      unit: ingredient.unit,
+      name: ingredient.name,
+    })),
+  );
+}
+
 export async function toggleRecipeInGroceryList(listId: string, recipeId: string, ownerId: string) {
   const list = await findGroceryListById(listId, ownerId);
   if (!list) return undefined;
@@ -90,18 +104,35 @@ export async function toggleRecipeInGroceryList(listId: string, recipeId: string
 
   const recipe = await findRecipeById(recipeId, ownerId);
   if (!recipe) return undefined;
-  if (recipe.ingredients.length > 0) {
-    await db.insert(groceryListItems).values(
-      recipe.ingredients.map((ingredient) => ({
-        listId,
-        recipeId,
-        qty: ingredient.qty,
-        unit: ingredient.unit,
-        name: ingredient.name,
-      })),
-    );
-  }
+  await insertIngredientsForRecipe(listId, recipe);
   return { inList: true };
+}
+
+export async function addCalendarIngredientsToGroceryList(
+  calendarId: string,
+  listId: string,
+  viewerId: string,
+  shareToken?: string,
+) {
+  const calendar = await findCalendarForViewer(calendarId, viewerId, shareToken);
+  if (!calendar) return undefined;
+  const list = await findGroceryListById(listId, viewerId);
+  if (!list) return undefined;
+
+  const entries = await findEntriesForCalendar(calendarId);
+  const recipeCache = new Map<string, Awaited<ReturnType<typeof findRecipeById>>>();
+
+  let addedEntryCount = 0;
+  for (const entry of entries) {
+    if (!recipeCache.has(entry.recipeId)) {
+      recipeCache.set(entry.recipeId, await findRecipeById(entry.recipeId, viewerId));
+    }
+    const recipe = recipeCache.get(entry.recipeId);
+    if (!recipe) continue; // viewer can't see this recipe, skip it
+    await insertIngredientsForRecipe(listId, recipe);
+    addedEntryCount++;
+  }
+  return { addedEntryCount, totalEntries: entries.length };
 }
 
 export async function addManualItem(

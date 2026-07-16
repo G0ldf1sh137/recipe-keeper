@@ -10,6 +10,7 @@ import {
   addGroceryItemSchema,
   deleteGroceryItemSchema,
   setGroupCheckedSchema,
+  addCalendarToGroceryListSchema,
 } from "./schemas";
 import {
   findGroceryListsByOwner,
@@ -22,6 +23,7 @@ import {
   deleteGroceryItem as deleteGroceryItemDb,
   setItemsChecked,
   getGroceryListWithGroups,
+  addCalendarIngredientsToGroceryList,
 } from "./grocery.server";
 import { requireAuthMiddleware } from "#/auth/auth-middleware";
 
@@ -102,6 +104,20 @@ export const setGroupChecked = createServerFn({ method: "POST" })
   .validator(setGroupCheckedSchema)
   .handler(async ({ data, context }) => {
     const result = await setItemsChecked(data.listId, data.itemIds, context.user.id, data.checked);
+    if (!result) throw notFound();
+    return result;
+  });
+
+export const addCalendarToGroceryList = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .validator(addCalendarToGroceryListSchema)
+  .handler(async ({ data, context }) => {
+    const result = await addCalendarIngredientsToGroceryList(
+      data.calendarId,
+      data.listId,
+      context.user.id,
+      data.shareToken,
+    );
     if (!result) throw notFound();
     return result;
   });

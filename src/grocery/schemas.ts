@@ -26,6 +26,12 @@ export const toggleRecipeInGroceryListSchema = z.object({
   recipeId: z.string().min(1),
 });
 
+export const addCalendarToGroceryListSchema = z.object({
+  calendarId: z.string().min(1),
+  listId: z.string().min(1),
+  shareToken: z.string().min(1).optional(),
+});
+
 export const addGroceryItemSchema = z.object({
   listId: z.string().min(1),
   qty: z.string().trim().default(""),

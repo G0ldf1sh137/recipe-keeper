@@ -12,6 +12,9 @@ import {
   updateCalendarVisibility,
 } from "#/calendars/calendars.functions";
 import { ShareControl } from "#/sharing/ShareControl";
+import { getSessionUser } from "#/auth/auth.functions";
+import { listMyGroceryLists } from "#/grocery/grocery.functions";
+import { AddCalendarToGroceryList } from "#/grocery/AddCalendarToGroceryList";
 import { visibilityValues, dayOfWeekValues } from "#/db/schema";
 import type { Visibility, DayOfWeek } from "#/db/schema";
 
@@ -30,8 +33,14 @@ const calendarSearchSchema = z.object({ st: z.string().optional() });
 export const Route = createFileRoute("/calendars/$calendarId")({
   validateSearch: calendarSearchSchema,
   loaderDeps: ({ search }) => ({ shareToken: search.st }),
-  loader: async ({ params, deps }) =>
-    getCalendar({ data: { id: params.calendarId, shareToken: deps.shareToken } }),
+  loader: async ({ params, deps }) => {
+    const [{ calendar, entriesByDay }, user] = await Promise.all([
+      getCalendar({ data: { id: params.calendarId, shareToken: deps.shareToken } }),
+      getSessionUser(),
+    ]);
+    const groceryLists = user ? await listMyGroceryLists() : [];
+    return { calendar, entriesByDay, user, groceryLists };
+  },
   component: CalendarPage,
   notFoundComponent: () => (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
@@ -50,7 +59,8 @@ export const Route = createFileRoute("/calendars/$calendarId")({
 });
 
 function CalendarPage() {
-  const { calendar, entriesByDay } = Route.useLoaderData();
+  const { calendar, entriesByDay, user, groceryLists } = Route.useLoaderData();
+  const { st: shareToken } = Route.useSearch();
   const router = useRouter();
   const navigate = useNavigate();
   const renameFn = useServerFn(renameCalendar);
@@ -220,6 +230,13 @@ function CalendarPage() {
           </div>
         ))}
       </div>
+
+      <AddCalendarToGroceryList
+        calendarId={calendar.id}
+        shareToken={shareToken}
+        groceryLists={groceryLists}
+        canSave={!!user}
+      />
     </div>
   );
 }
