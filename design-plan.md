@@ -20,7 +20,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - **Deployment target**: Vercel (via the Nitro Vite plugin) + Neon Postgres; `render.yaml` kept as an alternative. Recipe photos stored in S3.
 
 ## Core Data Model
-- **User**: id, email, name, avatarUrl, createdAt
+- **User**: id, email, name, username (unique, auto-generated on signup, editable), avatarUrl, createdAt
 - **Recipe**: id, ownerId, title, description, ingredients (list of {qty, unit, name}), steps (ordered list of strings), photoUrl, tags (list of strings), visibility (private | unlisted | public), createdAt, updatedAt
 - **Collection**: id, ownerId, name, description, visibility
 - **CollectionRecipe**: collectionId, recipeId (join table)
@@ -37,7 +37,8 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - `/recipes/$recipeId/edit` — Edit recipe (owner only)
 - `/collections` — List user's collections
 - `/collections/$collectionId` — View a collection and its recipes (owner controls, plus anonymous/shared viewing)
-- `/u/$username` — Public profile: a user's public recipes (not yet built)
+- `/u/$username` — Public profile: a user's public recipes and public lists
+- `/settings` — Change your username
 - `/shared/$token` — Resolves a share link and redirects to the canonical recipe/collection page (no login required)
 
 ## Sharing Model (v1) — done
@@ -45,7 +46,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - **Unlisted**: not listed anywhere; reachable only via a valid share link (`/shared/:token`), which redirects to the normal page with the token attached.
 - **Private**: visible only to the owner; not shareable.
 - Sharing a recipe or collection generates (or reuses) a `Share` record with a random token, one per resource; revoking deletes the row. Visibility is re-checked live on every access, so setting a resource back to private immediately invalidates any existing share link, without needing to explicitly revoke it first.
-- Public profile pages (`/u/$username`) are not part of this — still open, see Milestones.
+- Public profile pages (`/u/$username`) list a user's public recipes and public lists; usernames are auto-generated at signup and editable via `/settings`.
 
 ## Non-Goals (v1)
 - Nutrition facts / calorie calculation
@@ -59,5 +60,5 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 3. Recipe CRUD UI (create/view/edit/delete)
 4. Auth (signup/login/session)
 5. Collections (create, add/remove recipes)
-6. Sharing — done: revocable public/unlisted links for recipes and collections. Public profile page (`/u/$username`) still open.
+6. Sharing — done: revocable public/unlisted links for recipes and collections, plus public profile pages (`/u/$username`).
 7. Polish: search/filter by tag, responsive styling, empty states
