@@ -2,7 +2,14 @@ import { useState } from "react";
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getRecipe, deleteRecipe, createRecipeShare, revokeRecipeShare } from "#/recipes/recipes.functions";
+import {
+  getRecipe,
+  deleteRecipe,
+  createRecipeShare,
+  revokeRecipeShare,
+  forkRecipe,
+} from "#/recipes/recipes.functions";
+import { RecipeCard } from "#/recipes/RecipeCard";
 import { listComments } from "#/comments/comments.functions";
 import { getSessionUser } from "#/auth/auth.functions";
 import { CommentThread } from "#/comments/CommentThread";
@@ -53,12 +60,25 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 
 function RecipePage() {
   const { recipe, comments, user, rating, collections, groceryLists } = Route.useLoaderData();
+  const { st: shareToken } = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
   const deleteRecipeFn = useServerFn(deleteRecipe);
   const createShareFn = useServerFn(createRecipeShare);
   const revokeShareFn = useServerFn(revokeRecipeShare);
+  const forkRecipeFn = useServerFn(forkRecipe);
   const [deleting, setDeleting] = useState(false);
+  const [forking, setForking] = useState(false);
+
+  async function handleFork() {
+    setForking(true);
+    try {
+      const fork = await forkRecipeFn({ data: { recipeId: recipe.id, shareToken } });
+      await navigate({ to: "/recipes/$recipeId", params: { recipeId: fork.id } });
+    } finally {
+      setForking(false);
+    }
+  }
 
   async function handleShare() {
     await createShareFn({ data: { recipeId: recipe.id } });
@@ -90,25 +110,37 @@ function RecipePage() {
         >
           ← Back home
         </Link>
-        {recipe.isOwner && (
-          <div className="flex gap-3">
-            <Link
-              to="/recipes/$recipeId/edit"
-              params={{ recipeId: recipe.id }}
-              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-            >
-              Edit
-            </Link>
+        <div className="flex gap-3">
+          {!!user && (
             <button
               type="button"
-              onClick={handleDelete}
-              disabled={deleting}
-              className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+              onClick={handleFork}
+              disabled={forking}
+              className="text-sm font-medium text-accent-600 hover:text-accent-700 disabled:opacity-50 dark:hover:text-accent-400"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {forking ? "Forking..." : "Fork"}
             </button>
-          </div>
-        )}
+          )}
+          {recipe.isOwner && (
+            <>
+              <Link
+                to="/recipes/$recipeId/edit"
+                params={{ recipeId: recipe.id }}
+                className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+              >
+                Edit
+              </Link>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </>
+          )}
+        </div>
       </div>
       <span className="mt-4 block text-xs font-medium uppercase tracking-wide text-accent-600">
         {recipe.visibility}
@@ -134,6 +166,19 @@ function RecipePage() {
         </Link>
       ) : (
         <p className="mt-1 text-sm text-ink/60">by {recipe.owner.name}</p>
+      )}
+      {recipe.forkedFrom && (
+        <p className="mt-1 text-sm text-ink/60">
+          Forked from{" "}
+          <Link
+            to="/recipes/$recipeId"
+            params={{ recipeId: recipe.forkedFrom.id }}
+            className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
+            {recipe.forkedFrom.title}
+          </Link>{" "}
+          by {recipe.forkedFrom.owner.name}
+        </p>
       )}
       {recipe.description && <p className="mt-2 text-ink/70">{recipe.description}</p>}
 
@@ -207,6 +252,21 @@ function RecipePage() {
       <SaveToList recipeId={recipe.id} collections={collections} canSave={!!user} />
 
       <AddToGroceryList recipeId={recipe.id} groceryLists={groceryLists} canSave={!!user} />
+
+      {recipe.forks.length > 0 && (
+        <section className="mt-8">
+          <h2 className="font-serif text-xl font-semibold text-ink">
+            Forked {recipe.forks.length} time{recipe.forks.length === 1 ? "" : "s"}
+          </h2>
+          <ul className="mt-3 flex flex-col gap-3">
+            {recipe.forks.map((fork) => (
+              <li key={fork.id}>
+                <RecipeCard recipe={fork} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <CommentThread recipeId={recipe.id} comments={comments} canComment={!!user} />
     </div>

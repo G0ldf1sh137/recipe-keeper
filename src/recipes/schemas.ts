@@ -50,6 +50,11 @@ export const recipeShareSchema = z.object({
   recipeId: z.string().min(1),
 });
 
+export const forkRecipeSchema = z.object({
+  recipeId: z.string().min(1),
+  shareToken: z.string().min(1).optional(),
+});
+
 export const listRecipesSchema = z.object({
   ownerId: z.string().min(1).optional(),
   tag: z.string().min(1).optional(),

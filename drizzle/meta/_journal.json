@@ -43,6 +43,13 @@
       "when": 1784187630967,
       "tag": "0005_add_unit_names",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784188750323,
+      "tag": "0006_add_recipe_parent",
+      "breakpoints": true
     }
   ]
 }

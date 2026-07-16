@@ -3,6 +3,7 @@ import { notFound } from "@tanstack/react-router";
 import {
   createRecipeSchema,
   deleteRecipeSchema,
+  forkRecipeSchema,
   getRecipeSchema,
   listRecipesSchema,
   recipeShareSchema,
@@ -11,9 +12,11 @@ import {
 import {
   createShareForRecipe,
   deleteOwnedRecipe,
+  findForksOfRecipe,
   findRecipeById,
   findRecipes,
   findShareTokenForRecipe,
+  forkRecipe as forkRecipeDb,
   insertRecipe,
   listIngredientNames,
   listUnitNames,
@@ -35,10 +38,16 @@ export const getRecipe = createServerFn({ method: "GET" })
     if (!recipe) throw notFound();
     const isOwner = recipe.ownerId === context.user?.id;
     const shareToken = isOwner ? await findShareTokenForRecipe(recipe.id, context.user!.id) : null;
+    const forkedFrom = recipe.parentRecipeId
+      ? (await findRecipeById(recipe.parentRecipeId, context.user?.id)) ?? null
+      : null;
+    const forks = await findForksOfRecipe(recipe.id, context.user?.id);
     return {
       ...recipe,
       isOwner,
       shareUrl: shareToken ? `/shared/${shareToken}` : null,
+      forkedFrom,
+      forks,
     };
   });
 
@@ -58,6 +67,15 @@ export const revokeRecipeShare = createServerFn({ method: "POST" })
     const result = await revokeShareForRecipe(data.recipeId, context.user.id);
     if (result === undefined) throw notFound();
     return { ok: true };
+  });
+
+export const forkRecipe = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .validator(forkRecipeSchema)
+  .handler(async ({ data, context }) => {
+    const forked = await forkRecipeDb(data.recipeId, context.user.id, data.shareToken);
+    if (!forked) throw notFound();
+    return forked;
   });
 
 export const getIngredientNames = createServerFn({ method: "GET" }).handler(async () => listIngredientNames());

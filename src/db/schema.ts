@@ -52,6 +52,9 @@ export const recipes = pgTable("recipes", {
   ownerId: text("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  parentRecipeId: text("parent_recipe_id").references((): AnyPgColumn => recipes.id, {
+    onDelete: "set null",
+  }),
   title: text("title").notNull(),
   description: text("description"),
   ingredients: jsonb("ingredients").notNull().$type<Ingredient[]>().default([]),

@@ -21,6 +21,7 @@ function visibleToViewer(viewerId: string | undefined) {
 const recipeWithOwnerColumns = {
   id: recipes.id,
   ownerId: recipes.ownerId,
+  parentRecipeId: recipes.parentRecipeId,
   title: recipes.title,
   description: recipes.description,
   ingredients: recipes.ingredients,
@@ -64,6 +65,15 @@ export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, vi
     where: and(...conditions),
     orderBy: (r, { desc }) => [desc(r.createdAt)],
   });
+}
+
+export async function findForksOfRecipe(recipeId: string, viewerId: string | undefined) {
+  return db
+    .select(recipeWithOwnerColumns)
+    .from(recipes)
+    .innerJoin(users, eq(recipes.ownerId, users.id))
+    .where(and(eq(recipes.parentRecipeId, recipeId), visibleToViewer(viewerId)))
+    .orderBy(recipes.createdAt);
 }
 
 export async function filterVisibleRecipeIds(recipeIds: string[], viewerId: string | undefined) {
@@ -133,6 +143,27 @@ export async function deleteOwnedRecipe(input: z.infer<typeof deleteRecipeSchema
     .where(and(eq(recipes.id, input.id), eq(recipes.ownerId, ownerId)))
     .returning();
   return rows.at(0);
+}
+
+export async function forkRecipe(recipeId: string, ownerId: string, shareToken?: string) {
+  const original = await findRecipeById(recipeId, ownerId, shareToken);
+  if (!original) return undefined;
+
+  const [forked] = await db
+    .insert(recipes)
+    .values({
+      ownerId,
+      parentRecipeId: original.id,
+      title: original.title,
+      description: original.description,
+      ingredients: original.ingredients,
+      steps: original.steps,
+      photoUrls: original.photoUrls,
+      tags: original.tags,
+      visibility: "private",
+    })
+    .returning();
+  return forked;
 }
 
 export async function findShareTokenForRecipe(recipeId: string, ownerId: string) {
