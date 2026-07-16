@@ -122,6 +122,12 @@ function RecipePage() {
           ← Back home
         </Link>
         <div className="flex gap-3">
+          <a
+            href={`/recipes/${recipe.id}/pdf${shareToken ? `?st=${shareToken}` : ""}`}
+            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
+            Print to PDF
+          </a>
           {!!user && (
             <button
               type="button"

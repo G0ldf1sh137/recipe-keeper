@@ -27,6 +27,7 @@ import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as ApiRotateImageRouteImport } from './routes/api/rotate-image'
 import { Route as RecipesRecipeIdIndexRouteImport } from './routes/recipes/$recipeId/index'
 import { Route as AuthGoogleIndexRouteImport } from './routes/auth/google/index'
+import { Route as RecipesRecipeIdPdfRouteImport } from './routes/recipes/$recipeId/pdf'
 import { Route as RecipesRecipeIdEditRouteImport } from './routes/recipes/$recipeId/edit'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth/google/callback'
 
@@ -120,6 +121,11 @@ const AuthGoogleIndexRoute = AuthGoogleIndexRouteImport.update({
   path: '/auth/google/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecipesRecipeIdPdfRoute = RecipesRecipeIdPdfRouteImport.update({
+  id: '/recipes/$recipeId/pdf',
+  path: '/recipes/$recipeId/pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipesRecipeIdEditRoute = RecipesRecipeIdEditRouteImport.update({
   id: '/recipes/$recipeId/edit',
   path: '/recipes/$recipeId/edit',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
+  '/recipes/$recipeId/pdf': typeof RecipesRecipeIdPdfRoute
   '/auth/google/': typeof AuthGoogleIndexRoute
   '/recipes/$recipeId/': typeof RecipesRecipeIdIndexRoute
 }
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/recipes': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
+  '/recipes/$recipeId/pdf': typeof RecipesRecipeIdPdfRoute
   '/auth/google': typeof AuthGoogleIndexRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdIndexRoute
 }
@@ -195,6 +203,7 @@ export interface FileRoutesById {
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
+  '/recipes/$recipeId/pdf': typeof RecipesRecipeIdPdfRoute
   '/auth/google/': typeof AuthGoogleIndexRoute
   '/recipes/$recipeId/': typeof RecipesRecipeIdIndexRoute
 }
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/recipes/'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
+    | '/recipes/$recipeId/pdf'
     | '/auth/google/'
     | '/recipes/$recipeId/'
   fileRoutesByTo: FileRoutesByTo
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/recipes'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
+    | '/recipes/$recipeId/pdf'
     | '/auth/google'
     | '/recipes/$recipeId'
   id:
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/recipes/'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
+    | '/recipes/$recipeId/pdf'
     | '/auth/google/'
     | '/recipes/$recipeId/'
   fileRoutesById: FileRoutesById
@@ -286,6 +298,7 @@ export interface RootRouteChildren {
   RecipesIndexRoute: typeof RecipesIndexRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
   RecipesRecipeIdEditRoute: typeof RecipesRecipeIdEditRoute
+  RecipesRecipeIdPdfRoute: typeof RecipesRecipeIdPdfRoute
   AuthGoogleIndexRoute: typeof AuthGoogleIndexRoute
   RecipesRecipeIdIndexRoute: typeof RecipesRecipeIdIndexRoute
 }
@@ -418,6 +431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthGoogleIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recipes/$recipeId/pdf': {
+      id: '/recipes/$recipeId/pdf'
+      path: '/recipes/$recipeId/pdf'
+      fullPath: '/recipes/$recipeId/pdf'
+      preLoaderRoute: typeof RecipesRecipeIdPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipes/$recipeId/edit': {
       id: '/recipes/$recipeId/edit'
       path: '/recipes/$recipeId/edit'
@@ -454,6 +474,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecipesIndexRoute: RecipesIndexRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
   RecipesRecipeIdEditRoute: RecipesRecipeIdEditRoute,
+  RecipesRecipeIdPdfRoute: RecipesRecipeIdPdfRoute,
   AuthGoogleIndexRoute: AuthGoogleIndexRoute,
   RecipesRecipeIdIndexRoute: RecipesRecipeIdIndexRoute,
 }
