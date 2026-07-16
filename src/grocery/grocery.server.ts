@@ -3,66 +3,8 @@ import { db } from "#/db/index";
 import { groceryLists, groceryListItems } from "#/db/schema";
 import { findRecipeById } from "#/recipes/recipes.server";
 import { findCalendarForViewer, findEntriesForCalendar } from "#/calendars/calendars.server";
-
-type Fraction = { num: bigint; den: bigint };
-
-function gcd(a: bigint, b: bigint): bigint {
-  a = a < 0n ? -a : a;
-  b = b < 0n ? -b : b;
-  while (b) [a, b] = [b, a % b];
-  return a === 0n ? 1n : a;
-}
-
-function reduceFraction(f: Fraction): Fraction {
-  const divisor = gcd(f.num, f.den);
-  return { num: f.num / divisor, den: f.den / divisor };
-}
-
-// Parses whole numbers ("2"), decimals ("1.5"), simple fractions ("3/4"), and
-// mixed numbers ("1 1/2"). Anything else (e.g. "pinch", "to taste") is not
-// summable and returns undefined.
-function parseQuantity(raw: string): Fraction | undefined {
-  const qty = raw.trim();
-  if (qty === "") return undefined;
-
-  const mixedMatch = /^(\d+)\s+(\d+)\/(\d+)$/.exec(qty);
-  if (mixedMatch) {
-    const den = BigInt(mixedMatch[3]);
-    if (den === 0n) return undefined;
-    const whole = BigInt(mixedMatch[1]);
-    const num = BigInt(mixedMatch[2]);
-    return reduceFraction({ num: whole * den + num, den });
-  }
-
-  const fractionMatch = /^(\d+)\/(\d+)$/.exec(qty);
-  if (fractionMatch) {
-    const den = BigInt(fractionMatch[2]);
-    if (den === 0n) return undefined;
-    return reduceFraction({ num: BigInt(fractionMatch[1]), den });
-  }
-
-  if (/^\d+(\.\d+)?$/.test(qty)) {
-    const [wholePart, fractionPart = ""] = qty.split(".");
-    const den = 10n ** BigInt(fractionPart.length);
-    const num = BigInt(wholePart + fractionPart);
-    return reduceFraction({ num, den });
-  }
-
-  return undefined;
-}
-
-function addFractions(a: Fraction, b: Fraction): Fraction {
-  return reduceFraction({ num: a.num * b.den + b.num * a.den, den: a.den * b.den });
-}
-
-function formatFraction(f: Fraction): string {
-  const { num, den } = reduceFraction(f);
-  if (den === 1n) return num.toString();
-  const whole = num / den;
-  const remainder = num % den;
-  if (whole === 0n) return `${remainder}/${den}`;
-  return `${whole} ${remainder}/${den}`;
-}
+import { parseQuantity, addFractions, formatFraction } from "#/recipes/quantity";
+import type { Fraction } from "#/recipes/quantity";
 
 export async function findGroceryListsByOwner(ownerId: string) {
   return db
