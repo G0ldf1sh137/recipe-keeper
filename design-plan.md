@@ -1,7 +1,7 @@
 # Recipe Keeper — Design Plan
 
 ## Overview
-Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users can write up recipes with ingredients and steps, organize them into collections, and share them publicly or with specific people via a link.
+Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users can write up recipes with ingredients and steps, organize them into collections (presented to users as "cookbooks"), and share them publicly or with specific people via a link.
 
 ## Goals
 - Let a user quickly capture a recipe (title, ingredients, steps, photo, tags).
@@ -17,12 +17,12 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - **Data fetching/mutations**: TanStack Query + Start server functions
 - **Database**: Postgres (via Drizzle ORM); local dev via `docker-compose.yml`, prod via managed Render Postgres
 - **Auth**: Google OAuth sign-in, server-side sessions (HttpOnly cookie, session id hashed at rest)
-- **AI**: Claude API (claude-opus-4-8, vision + structured outputs) — transcribes handwritten recipe photos into the recipe record via an owner-only "Process photos" button with preview-then-confirm
+- **AI**: Claude API (claude-opus-4-8, vision/document input + structured outputs) — transcribes a handwritten recipe from uploaded photos or an uploaded PDF into the recipe record via an owner-only "Process photos"/"Process PDF" button with preview-then-confirm; a web-scraping importer (fetches a recipe's source URL via the `web_fetch` tool and extracts title/ingredients/steps/photos) is built but not yet wired into the UI
 - **Deployment target**: Vercel (via the Nitro Vite plugin) + Neon Postgres; `render.yaml` kept as an alternative. Recipe photos stored in S3.
 
 ## Core Data Model
 - **User**: id, email, name, username (unique, auto-generated on signup, editable), avatarUrl, createdAt
-- **Recipe**: id, ownerId, parentRecipeId (nullable, self-referencing — set when this recipe was forked from another, cleared to null if the original is later deleted), title, description, ingredients (list of {qty, unit, name}), steps (ordered list of strings), photoUrl, tags (list of strings), yield (free text, e.g. "4 servings", nullable), calories (per serving, integer, nullable), visibility (private | unlisted | public), createdAt, updatedAt
+- **Recipe**: id, ownerId, parentRecipeId (nullable, self-referencing — set when this recipe was forked from another, cleared to null if the original is later deleted), title, description, ingredients (list of {qty, unit, name}), steps (ordered list of {text, imageUrls}), photoUrls (list of strings), coverPhotoUrl (nullable, must be one of photoUrls, shown on recipe cards), sourceUrl (nullable, link to the recipe's original source), sourcePdfUrl (nullable, S3-hosted PDF the recipe was imported from — kept as a persisted attachment, shown as a download link on the detail page), tags (list of strings), yield (free text, e.g. "4 servings", nullable), calories (per serving, integer, nullable), visibility (private | unlisted | public), createdAt, updatedAt
 - **Collection**: id, ownerId, name, description, visibility
 - **CollectionRecipe**: collectionId, recipeId (join table)
 - **Calendar**: id, ownerId, name, visibility, createdAt, updatedAt — a reusable weekly meal-plan template (Mon–Sun slots, not tied to a specific date)
@@ -40,7 +40,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - `/recipes/new` — Create recipe form
 - `/recipes/$recipeId` — View a recipe (ingredients, steps, photo, author, share button)
 - `/recipes/$recipeId/edit` — Edit recipe (owner only)
-- `/collections` — List user's collections
+- `/collections` — List user's collections ("Your cookbooks" in the UI)
 - `/collections/$collectionId` — View a collection and its recipes (owner controls, plus anonymous/shared viewing)
 - `/calendars` — List user's weekly meal-plan calendars
 - `/calendars/$calendarId` — View a calendar as a 7-day grid, add/remove recipes per day (owner controls, plus anonymous/shared viewing)
@@ -72,3 +72,4 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 8. Recipe forking — done: clone any recipe you can see into your own private copy, referencing the original; the original's page lists its forks (visible ones only).
 9. Polish — done: exact tag/visibility filters plus free-text search (title/description) on `/recipes`, with lightweight client-side search on collections and profile pages; responsive layout (mobile nav, wrapping rows, responsive grids/padding) across the app; empty-state messaging on every list view.
 10. Calendars — reusable weekly meal-plan templates (Mon–Sun slots, multiple recipes per day), shareable like collections via public/unlisted/private visibility plus revocable links.
+11. Recipe import — done: transcribe a recipe from an uploaded PDF via the same Claude pipeline used for handwritten photos, with the PDF kept as a persisted, downloadable attachment on the recipe. A `sourceUrl` field records a recipe's origin link (shown on the detail page); a matching web-scraping importer (Claude's `web_fetch` tool) is built but not yet wired into the UI.
