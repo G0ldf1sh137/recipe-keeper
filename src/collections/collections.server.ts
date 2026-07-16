@@ -8,7 +8,7 @@ export async function findCollectionsByOwner(ownerId: string) {
       id: collections.id,
       name: collections.name,
       createdAt: collections.createdAt,
-      recipeCount: sql<number>`count(${collectionRecipes.recipeId})`,
+      recipeCount: sql<number>`count(${collectionRecipes.recipeId})::int`,
     })
     .from(collections)
     .leftJoin(collectionRecipes, eq(collectionRecipes.collectionId, collections.id))

@@ -17,8 +17,8 @@ export async function upsertRating(recipeId: string, userId: string, value: numb
 export async function findRatingSummary(recipeId: string, viewerId: string | undefined) {
   const [aggregate] = await db
     .select({
-      average: sql<number | null>`avg(${ratings.value})`,
-      count: sql<number>`count(*)`,
+      average: sql<number | null>`avg(${ratings.value})::float8`,
+      count: sql<number>`count(*)::int`,
     })
     .from(ratings)
     .where(eq(ratings.recipeId, recipeId));
@@ -44,8 +44,8 @@ export async function findRatingSummariesForRecipes(
   const rows = await db
     .select({
       recipeId: ratings.recipeId,
-      average: sql<number>`avg(${ratings.value})`,
-      count: sql<number>`count(*)`,
+      average: sql<number>`avg(${ratings.value})::float8`,
+      count: sql<number>`count(*)::int`,
     })
     .from(ratings)
     .where(inArray(ratings.recipeId, recipeIds))

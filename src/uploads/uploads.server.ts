@@ -4,7 +4,7 @@ import path from "node:path";
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
 
-const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+const UPLOADS_DIR = process.env.UPLOADS_DIR ?? path.join(process.cwd(), "uploads");
 
 // Extension is derived from the verified MIME type, never from the client filename.
 const EXTENSION_BY_MIME: Record<string, string> = {

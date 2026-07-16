@@ -1,4 +1,4 @@
-import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { and, arrayContains, eq, inArray, or } from "drizzle-orm";
 import { db } from "#/db/index";
 import { recipes } from "#/db/schema";
 import type {
@@ -26,8 +26,7 @@ export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, vi
   const conditions = [visibleToViewer(viewerId)];
   if (filters.ownerId) conditions.push(eq(recipes.ownerId, filters.ownerId));
   if (filters.visibility) conditions.push(eq(recipes.visibility, filters.visibility));
-  // Tags are stored as a JSON array string; match the quoted value as a substring.
-  if (filters.tag) conditions.push(sql`${recipes.tags} LIKE ${`%"${filters.tag}"%`}`);
+  if (filters.tag) conditions.push(arrayContains(recipes.tags, [filters.tag]));
   return db.query.recipes.findMany({
     where: and(...conditions),
     orderBy: (r, { desc }) => [desc(r.createdAt)],

@@ -1,6 +1,5 @@
-import { sql } from "drizzle-orm";
-import { sqliteTable, text, integer, primaryKey } from "drizzle-orm/sqlite-core";
-import type { AnySQLiteColumn } from "drizzle-orm/sqlite-core";
+import { pgTable, text, integer, timestamp, jsonb, primaryKey } from "drizzle-orm/pg-core";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 const id = () =>
   text("id")
@@ -8,12 +7,10 @@ const id = () =>
     .$defaultFn(() => crypto.randomUUID());
 
 const timestamps = {
-  createdAt: integer("created_at", { mode: "timestamp" })
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()
-    .default(sql`(unixepoch())`),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`)
+    .defaultNow()
     .$onUpdate(() => new Date()),
 };
 
@@ -31,71 +28,51 @@ export type Step = {
   imageUrls: string[];
 };
 
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   id: id(),
   googleId: text("google_id").notNull().unique(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   avatarUrl: text("avatar_url"),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const sessions = sqliteTable("sessions", {
+export const sessions = pgTable("sessions", {
   id: text("id").primaryKey(), // sha256 hash of the session token held by the client
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
+  expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const recipes = sqliteTable("recipes", {
+export const recipes = pgTable("recipes", {
   id: id(),
   ownerId: text("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
-  ingredients: text("ingredients", { mode: "json" })
-    .notNull()
-    .$type<Ingredient[]>()
-    .default(sql`'[]'`),
-  steps: text("steps", { mode: "json" })
-    .notNull()
-    .$type<Step[]>()
-    .default(sql`'[]'`),
-  photoUrls: text("photo_urls", { mode: "json" })
-    .notNull()
-    .$type<string[]>()
-    .default(sql`'[]'`),
-  tags: text("tags", { mode: "json" })
-    .notNull()
-    .$type<string[]>()
-    .default(sql`'[]'`),
-  visibility: text("visibility", { enum: visibilityValues })
-    .notNull()
-    .default("private"),
+  ingredients: jsonb("ingredients").notNull().$type<Ingredient[]>().default([]),
+  steps: jsonb("steps").notNull().$type<Step[]>().default([]),
+  photoUrls: text("photo_urls").array().notNull().default([]),
+  tags: text("tags").array().notNull().default([]),
+  visibility: text("visibility", { enum: visibilityValues }).notNull().default("private"),
   ...timestamps,
 });
 
-export const collections = sqliteTable("collections", {
+export const collections = pgTable("collections", {
   id: id(),
   ownerId: text("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
-  visibility: text("visibility", { enum: visibilityValues })
-    .notNull()
-    .default("private"),
+  visibility: text("visibility", { enum: visibilityValues }).notNull().default("private"),
   ...timestamps,
 });
 
-export const collectionRecipes = sqliteTable(
+export const collectionRecipes = pgTable(
   "collection_recipes",
   {
     collectionId: text("collection_id")
@@ -104,14 +81,12 @@ export const collectionRecipes = sqliteTable(
     recipeId: text("recipe_id")
       .notNull()
       .references(() => recipes.id, { onDelete: "cascade" }),
-    addedAt: integer("added_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
+    addedAt: timestamp("added_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [primaryKey({ columns: [table.collectionId, table.recipeId] })],
 );
 
-export const shares = sqliteTable("shares", {
+export const shares = pgTable("shares", {
   id: id(),
   token: text("token")
     .notNull()
@@ -126,12 +101,10 @@ export const shares = sqliteTable("shares", {
   createdBy: text("created_by")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const savedRecipes = sqliteTable(
+export const savedRecipes = pgTable(
   "saved_recipes",
   {
     userId: text("user_id")
@@ -140,14 +113,12 @@ export const savedRecipes = sqliteTable(
     recipeId: text("recipe_id")
       .notNull()
       .references(() => recipes.id, { onDelete: "cascade" }),
-    savedAt: integer("saved_at", { mode: "timestamp" })
-      .notNull()
-      .default(sql`(unixepoch())`),
+    savedAt: timestamp("saved_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.recipeId] })],
 );
 
-export const comments = sqliteTable("comments", {
+export const comments = pgTable("comments", {
   id: id(),
   recipeId: text("recipe_id")
     .notNull()
@@ -155,12 +126,12 @@ export const comments = sqliteTable("comments", {
   authorId: text("author_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  parentId: text("parent_id").references((): AnySQLiteColumn => comments.id, { onDelete: "cascade" }),
+  parentId: text("parent_id").references((): AnyPgColumn => comments.id, { onDelete: "cascade" }),
   body: text("body").notNull(),
   ...timestamps,
 });
 
-export const ratings = sqliteTable(
+export const ratings = pgTable(
   "ratings",
   {
     recipeId: text("recipe_id")

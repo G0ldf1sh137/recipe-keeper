@@ -1,1 +1,0 @@
-ALTER TABLE `recipes` ADD `photo_urls` text DEFAULT '[]' NOT NULL;

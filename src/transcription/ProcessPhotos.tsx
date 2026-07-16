@@ -54,7 +54,7 @@ export function ProcessPhotos({
 
       {result?.status === "not_handwritten" && (
         <div className="mt-3 flex items-start justify-between gap-3 rounded-lg bg-accent-50 px-4 py-3 text-sm text-ink/80">
-          <p>No handwritten recipe found: {result.reason}</p>
+          <p>No recipe found: {result.reason}</p>
           <button type="button" onClick={() => setResult(null)} className="text-ink/50 hover:text-ink">
             ✕
           </button>
