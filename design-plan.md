@@ -22,11 +22,13 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 
 ## Core Data Model
 - **User**: id, email, name, username (unique, auto-generated on signup, editable), avatarUrl, createdAt
-- **Recipe**: id, ownerId, title, description, ingredients (list of {qty, unit, name}), steps (ordered list of strings), photoUrl, tags (list of strings), visibility (private | unlisted | public), createdAt, updatedAt
+- **Recipe**: id, ownerId, parentRecipeId (nullable, self-referencing — set when this recipe was forked from another, cleared to null if the original is later deleted), title, description, ingredients (list of {qty, unit, name}), steps (ordered list of strings), photoUrl, tags (list of strings), visibility (private | unlisted | public), createdAt, updatedAt
 - **Collection**: id, ownerId, name, description, visibility
 - **CollectionRecipe**: collectionId, recipeId (join table)
 - **Share**: id, recipeId or collectionId, token (for unlisted link sharing), createdBy, createdAt
-- **SavedRecipe**: userId, recipeId, savedAt (bookmark/fork tracking)
+- **SavedRecipe**: userId, recipeId, savedAt — unused; bookmarking ended up
+  built as Collections, and forking as `Recipe.parentRecipeId` above, so this
+  table has no code referencing it
 - **Comment**: id, recipeId, authorId, parentId (nullable, self-referencing — threaded replies), body, createdAt, updatedAt
 - **Rating**: recipeId, userId (composite key — one rating per user per recipe), value (1–5), createdAt, updatedAt
 - **GroceryList**: id, ownerId, name, createdAt, updatedAt
@@ -67,4 +69,5 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 5. Collections (create, add/remove recipes)
 6. Sharing — done: revocable public/unlisted links for recipes and collections, plus public profile pages (`/u/$username`).
 7. Grocery lists — done: multiple named lists, add/remove a recipe's ingredients with duplicates combined, manual items, check off; ingredient-name and unit autocomplete on the recipe form.
-8. Polish: search/filter by tag, responsive styling, empty states
+8. Recipe forking — done: clone any recipe you can see into your own private copy, referencing the original; the original's page lists its forks (visible ones only).
+9. Polish: search/filter by tag, responsive styling, empty states
