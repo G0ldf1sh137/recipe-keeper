@@ -89,10 +89,31 @@ reads on uploaded objects:
 
 ## Deployment
 
+### Vercel (current)
+
+TanStack Start deploys to Vercel via the [Nitro](https://nitro.build) Vite
+plugin (already wired up in `vite.config.ts`) — Vercel auto-detects it and
+builds with zero extra config.
+
+1. [vercel.com/new](https://vercel.com/new) → import the GitHub repo.
+2. Add a Postgres database: project → **Storage** tab → **Neon** (free plan)
+   — this wires up `DATABASE_URL` automatically.
+3. Project → **Settings → Environment Variables** → add `GOOGLE_CLIENT_ID`,
+   `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `ANTHROPIC_API_KEY`,
+   `S3_BUCKET`, `S3_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (see
+   `.env.example` and the S3 setup section above).
+4. Update `GOOGLE_REDIRECT_URI` to match the assigned `*.vercel.app` domain
+   (or your custom domain), and add the same URI to the Google Cloud Console
+   OAuth client's Authorized redirect URIs.
+5. Run migrations against the deployed database once: `DATABASE_URL=<from Vercel> npm run db:migrate`.
+
+### Render (alternative)
+
 `render.yaml` defines a [Render](https://render.com) Blueprint: a Node web
 service and a managed Postgres database (recipe photos live in S3, not on a
-disk). See the comments in that file for one-time setup steps (setting
-secrets, updating the OAuth redirect URI).
+disk). See the comments in that file for one-time setup steps. Note: Render's
+paid plans require a payment method on the account before resources can be
+created, even at their lowest tier.
 
 ## Project structure
 

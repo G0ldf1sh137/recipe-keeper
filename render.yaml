@@ -36,7 +36,7 @@ services:
           name: recipe-keeper-db
           property: connectionString
       - key: S3_BUCKET
-        value: recipe-keeper
+        value: recipe-keeper-103930329104-us-east-2-an
       - key: S3_REGION
         value: us-east-2
       - key: GOOGLE_REDIRECT_URI
