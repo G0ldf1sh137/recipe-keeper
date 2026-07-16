@@ -185,6 +185,14 @@ function RecipePage() {
       )}
       {recipe.description && <p className="mt-2 text-ink/70">{recipe.description}</p>}
 
+      {(recipe.yield || recipe.calories) && (
+        <p className="mt-2 text-sm text-ink/60">
+          {[recipe.yield, recipe.calories ? `${recipe.calories} cal/serving` : null]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      )}
+
       {recipe.photoUrls.length > 0 && (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {recipe.photoUrls.map((url, i) => (

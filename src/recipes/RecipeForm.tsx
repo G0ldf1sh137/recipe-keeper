@@ -15,6 +15,8 @@ export type RecipeFormValues = {
   visibility: Visibility;
   ingredients: IngredientRow[];
   steps: StepRow[];
+  yield: string | null;
+  calories: number | null;
 };
 
 export type RecipeFormSubmitValues = {
@@ -26,6 +28,8 @@ export type RecipeFormSubmitValues = {
   ingredients: IngredientRow[];
   steps: StepRow[];
   tags: string[];
+  yield: string | null;
+  calories: number | null;
 };
 
 export function emptyRecipeFormValues(): RecipeFormValues {
@@ -38,6 +42,8 @@ export function emptyRecipeFormValues(): RecipeFormValues {
     visibility: "private",
     ingredients: [{ qty: "", unit: "", name: "" }],
     steps: [{ text: "", imageUrls: [] }],
+    yield: null,
+    calories: null,
   };
 }
 
@@ -70,6 +76,8 @@ export function RecipeForm({
     setCoverPhotoUrl((cover) => (cover && !urls.includes(cover) ? (urls[0] ?? null) : cover));
   }
   const [tagsInput, setTagsInput] = useState(initialValues.tagsInput);
+  const [yieldInput, setYieldInput] = useState(initialValues.yield ?? "");
+  const [caloriesInput, setCaloriesInput] = useState(initialValues.calories?.toString() ?? "");
   const [visibility, setVisibility] = useState<Visibility>(initialValues.visibility);
   const [ingredients, setIngredients] = useState<IngredientRow[]>(initialValues.ingredients);
   const [steps, setSteps] = useState<StepRow[]>(initialValues.steps);
@@ -100,6 +108,8 @@ export function RecipeForm({
         description: description.trim() || undefined,
         photoUrls,
         coverPhotoUrl,
+        yield: yieldInput.trim() || null,
+        calories: caloriesInput.trim() ? Number(caloriesInput.trim()) : null,
         visibility,
         ingredients: ingredients
           .filter((row) => row.name.trim())
@@ -140,6 +150,30 @@ export function RecipeForm({
           rows={3}
         />
       </label>
+
+      <div className="flex flex-wrap gap-4">
+        <label className="flex flex-1 flex-col gap-1">
+          <span className="font-medium text-ink/70">Yield</span>
+          <input
+            className={inputClass}
+            value={yieldInput}
+            onChange={(e) => setYieldInput(e.target.value)}
+            placeholder="4 servings"
+          />
+        </label>
+
+        <label className="flex flex-1 flex-col gap-1">
+          <span className="font-medium text-ink/70">Calories (per serving)</span>
+          <input
+            type="number"
+            min="0"
+            className={inputClass}
+            value={caloriesInput}
+            onChange={(e) => setCaloriesInput(e.target.value)}
+            placeholder="320"
+          />
+        </label>
+      </div>
 
       <div className="flex flex-col gap-2">
         <span className="font-medium text-ink/70">Photos</span>

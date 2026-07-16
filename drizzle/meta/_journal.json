@@ -78,6 +78,13 @@
       "when": 1784213249169,
       "tag": "0010_shares_check_one_target_incl_calendar",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1784218315253,
+      "tag": "0011_add_recipe_yield_calories",
+      "breakpoints": true
     }
   ]
 }

@@ -22,7 +22,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 
 ## Core Data Model
 - **User**: id, email, name, username (unique, auto-generated on signup, editable), avatarUrl, createdAt
-- **Recipe**: id, ownerId, parentRecipeId (nullable, self-referencing — set when this recipe was forked from another, cleared to null if the original is later deleted), title, description, ingredients (list of {qty, unit, name}), steps (ordered list of strings), photoUrl, tags (list of strings), visibility (private | unlisted | public), createdAt, updatedAt
+- **Recipe**: id, ownerId, parentRecipeId (nullable, self-referencing — set when this recipe was forked from another, cleared to null if the original is later deleted), title, description, ingredients (list of {qty, unit, name}), steps (ordered list of strings), photoUrl, tags (list of strings), yield (free text, e.g. "4 servings", nullable), calories (per serving, integer, nullable), visibility (private | unlisted | public), createdAt, updatedAt
 - **Collection**: id, ownerId, name, description, visibility
 - **CollectionRecipe**: collectionId, recipeId (join table)
 - **Calendar**: id, ownerId, name, visibility, createdAt, updatedAt — a reusable weekly meal-plan template (Mon–Sun slots, not tied to a specific date)
@@ -58,7 +58,7 @@ Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users 
 - Public profile pages (`/u/$username`) list a user's public recipes and public lists; usernames are auto-generated at signup and editable via `/settings`.
 
 ## Non-Goals (v1)
-- Nutrition facts / calorie calculation
+- Automatic nutrition calculation from ingredients (a recipe can optionally store a manually-entered yield and calorie count, but nothing is derived from ingredient data)
 - Recipe scaling/unit conversion
 
 ## Milestones

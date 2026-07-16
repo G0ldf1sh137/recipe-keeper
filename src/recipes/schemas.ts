@@ -24,6 +24,8 @@ export const createRecipeSchema = z.object({
   photoUrls: z.array(imageUrlSchema).default([]),
   coverPhotoUrl: imageUrlSchema.nullable().default(null),
   tags: z.array(z.string()).default([]),
+  yield: z.string().trim().min(1).nullable().default(null),
+  calories: z.number().int().nonnegative().nullable().default(null),
   visibility: visibilitySchema.default("private"),
 });
 
@@ -36,6 +38,8 @@ export const updateRecipeSchema = z.object({
   photoUrls: z.array(imageUrlSchema).optional(),
   coverPhotoUrl: imageUrlSchema.nullable().optional(),
   tags: z.array(z.string()).optional(),
+  yield: z.string().trim().min(1).nullable().optional(),
+  calories: z.number().int().nonnegative().nullable().optional(),
   visibility: visibilitySchema.optional(),
 });
 

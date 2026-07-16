@@ -29,6 +29,8 @@ const recipeWithOwnerColumns = {
   photoUrls: recipes.photoUrls,
   coverPhotoUrl: recipes.coverPhotoUrl,
   tags: recipes.tags,
+  yield: recipes.yield,
+  calories: recipes.calories,
   visibility: recipes.visibility,
   createdAt: recipes.createdAt,
   updatedAt: recipes.updatedAt,
@@ -165,6 +167,8 @@ export async function forkRecipe(recipeId: string, ownerId: string, shareToken?:
       photoUrls: original.photoUrls,
       coverPhotoUrl: original.coverPhotoUrl,
       tags: original.tags,
+      yield: original.yield,
+      calories: original.calories,
       visibility: "private",
     })
     .returning();

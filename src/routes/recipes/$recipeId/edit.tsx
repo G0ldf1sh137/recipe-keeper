@@ -47,6 +47,8 @@ function EditRecipePage() {
     photoUrls: recipe.photoUrls,
     coverPhotoUrl: recipe.coverPhotoUrl,
     tagsInput: recipe.tags.join(", "),
+    yield: recipe.yield,
+    calories: recipe.calories,
     visibility: recipe.visibility,
     ingredients: recipe.ingredients.length ? recipe.ingredients : [{ qty: "", unit: "", name: "" }],
     steps: recipe.steps.length ? recipe.steps : [{ text: "", imageUrls: [] }],
