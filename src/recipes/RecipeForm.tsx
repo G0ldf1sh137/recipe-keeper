@@ -10,6 +10,7 @@ export type RecipeFormValues = {
   title: string;
   description: string;
   photoUrls: string[];
+  coverPhotoUrl: string | null;
   tagsInput: string;
   visibility: Visibility;
   ingredients: IngredientRow[];
@@ -20,6 +21,7 @@ export type RecipeFormSubmitValues = {
   title: string;
   description?: string;
   photoUrls: string[];
+  coverPhotoUrl: string | null;
   visibility: Visibility;
   ingredients: IngredientRow[];
   steps: StepRow[];
@@ -31,6 +33,7 @@ export function emptyRecipeFormValues(): RecipeFormValues {
     title: "",
     description: "",
     photoUrls: [],
+    coverPhotoUrl: null,
     tagsInput: "",
     visibility: "private",
     ingredients: [{ qty: "", unit: "", name: "" }],
@@ -59,10 +62,12 @@ export function RecipeForm({
   const [title, setTitle] = useState(initialValues.title);
   const [description, setDescription] = useState(initialValues.description);
   const [photoUrls, setPhotoUrls] = useState<string[]>(initialValues.photoUrls);
+  const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(initialValues.coverPhotoUrl);
 
   function updatePhotoUrls(urls: string[]) {
     setPhotoUrls(urls);
     onPhotoUrlsChange?.(urls);
+    setCoverPhotoUrl((cover) => (cover && !urls.includes(cover) ? (urls[0] ?? null) : cover));
   }
   const [tagsInput, setTagsInput] = useState(initialValues.tagsInput);
   const [visibility, setVisibility] = useState<Visibility>(initialValues.visibility);
@@ -94,6 +99,7 @@ export function RecipeForm({
         title: title.trim(),
         description: description.trim() || undefined,
         photoUrls,
+        coverPhotoUrl,
         visibility,
         ingredients: ingredients
           .filter((row) => row.name.trim())
@@ -141,7 +147,12 @@ export function RecipeForm({
           imageUrls={photoUrls}
           onChange={updatePhotoUrls}
           previewClassName="h-32 w-48 rounded-lg object-cover"
+          coverUrl={coverPhotoUrl}
+          onSetCover={setCoverPhotoUrl}
         />
+        {photoUrls.length > 1 && (
+          <p className="text-xs text-ink/50">Click ☆ on a photo to use it as the cover shown in recipe lists.</p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">

@@ -57,6 +57,13 @@
       "when": 1784205935526,
       "tag": "0007_drop_saved_recipes",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784211295163,
+      "tag": "0008_add_recipe_cover_photo",
+      "breakpoints": true
     }
   ]
 }

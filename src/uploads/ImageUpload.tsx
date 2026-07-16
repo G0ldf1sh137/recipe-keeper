@@ -5,11 +5,15 @@ export function MultiImageUpload({
   onChange,
   label = "Add photos",
   previewClassName = "h-24 w-24 rounded-lg object-cover",
+  coverUrl,
+  onSetCover,
 }: {
   imageUrls: string[];
   onChange: (urls: string[]) => void;
   label?: string;
   previewClassName?: string;
+  coverUrl?: string | null;
+  onSetCover?: (url: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -60,7 +64,23 @@ export function MultiImageUpload({
         <div className="flex flex-wrap gap-2">
           {imageUrls.map((url, i) => (
             <div key={url} className="relative">
-              <img src={url} alt="" className={previewClassName} />
+              <img
+                src={url}
+                alt=""
+                className={`${previewClassName} ${url === coverUrl ? "ring-2 ring-accent-500 ring-offset-1" : ""}`}
+              />
+              {onSetCover && imageUrls.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => onSetCover(url)}
+                  aria-pressed={url === coverUrl}
+                  className={`absolute bottom-1 left-1 rounded-full px-1.5 py-0.5 text-xs font-medium ${
+                    url === coverUrl ? "bg-accent-600 text-white" : "bg-black/50 text-white hover:bg-black/70"
+                  }`}
+                >
+                  {url === coverUrl ? "★ Cover" : "☆ Set as cover"}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => onChange(imageUrls.filter((_, idx) => idx !== i))}

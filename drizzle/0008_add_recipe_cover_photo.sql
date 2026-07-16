@@ -1,0 +1,1 @@
+ALTER TABLE "recipes" ADD COLUMN "cover_photo_url" text;

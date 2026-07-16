@@ -60,6 +60,7 @@ export const recipes = pgTable("recipes", {
   ingredients: jsonb("ingredients").notNull().$type<Ingredient[]>().default([]),
   steps: jsonb("steps").notNull().$type<Step[]>().default([]),
   photoUrls: text("photo_urls").array().notNull().default([]),
+  coverPhotoUrl: text("cover_photo_url"),
   tags: text("tags").array().notNull().default([]),
   visibility: text("visibility", { enum: visibilityValues }).notNull().default("private"),
   ...timestamps,

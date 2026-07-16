@@ -22,6 +22,7 @@ export const createRecipeSchema = z.object({
   ingredients: z.array(ingredientSchema).default([]),
   steps: z.array(stepSchema).default([]),
   photoUrls: z.array(imageUrlSchema).default([]),
+  coverPhotoUrl: imageUrlSchema.nullable().default(null),
   tags: z.array(z.string()).default([]),
   visibility: visibilitySchema.default("private"),
 });
@@ -33,6 +34,7 @@ export const updateRecipeSchema = z.object({
   ingredients: z.array(ingredientSchema).optional(),
   steps: z.array(stepSchema).optional(),
   photoUrls: z.array(imageUrlSchema).optional(),
+  coverPhotoUrl: imageUrlSchema.nullable().optional(),
   tags: z.array(z.string()).optional(),
   visibility: visibilitySchema.optional(),
 });
