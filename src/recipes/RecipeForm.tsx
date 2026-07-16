@@ -2,6 +2,7 @@ import { useState } from "react";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 import { MultiImageUpload } from "#/uploads/ImageUpload";
+import { PdfUpload } from "#/uploads/PdfUpload";
 
 export type IngredientRow = { qty: string; unit: string; name: string };
 export type StepRow = { text: string; imageUrls: string[] };
@@ -11,6 +12,8 @@ export type RecipeFormValues = {
   description: string;
   photoUrls: string[];
   coverPhotoUrl: string | null;
+  sourceUrl: string | null;
+  sourcePdfUrl: string | null;
   tagsInput: string;
   visibility: Visibility;
   ingredients: IngredientRow[];
@@ -24,6 +27,8 @@ export type RecipeFormSubmitValues = {
   description?: string;
   photoUrls: string[];
   coverPhotoUrl: string | null;
+  sourceUrl: string | null;
+  sourcePdfUrl: string | null;
   visibility: Visibility;
   ingredients: IngredientRow[];
   steps: StepRow[];
@@ -38,6 +43,8 @@ export function emptyRecipeFormValues(): RecipeFormValues {
     description: "",
     photoUrls: [],
     coverPhotoUrl: null,
+    sourceUrl: null,
+    sourcePdfUrl: null,
     tagsInput: "",
     visibility: "private",
     ingredients: [{ qty: "", unit: "", name: "" }],
@@ -55,6 +62,8 @@ export function RecipeForm({
   submitLabel,
   onSubmit,
   onPhotoUrlsChange,
+  onSourceUrlChange,
+  onSourcePdfUrlChange,
   knownIngredientNames = [],
   knownUnitNames = [],
 }: {
@@ -62,6 +71,8 @@ export function RecipeForm({
   submitLabel: string;
   onSubmit: (values: RecipeFormSubmitValues) => Promise<void>;
   onPhotoUrlsChange?: (urls: string[]) => void;
+  onSourceUrlChange?: (url: string | null) => void;
+  onSourcePdfUrlChange?: (url: string | null) => void;
   knownIngredientNames?: string[];
   knownUnitNames?: string[];
 }) {
@@ -69,6 +80,18 @@ export function RecipeForm({
   const [description, setDescription] = useState(initialValues.description);
   const [photoUrls, setPhotoUrls] = useState<string[]>(initialValues.photoUrls);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(initialValues.coverPhotoUrl);
+  const [sourceUrlInput, setSourceUrlInput] = useState(initialValues.sourceUrl ?? "");
+  const [sourcePdfUrl, setSourcePdfUrl] = useState<string | null>(initialValues.sourcePdfUrl);
+
+  function updateSourceUrl(value: string) {
+    setSourceUrlInput(value);
+    onSourceUrlChange?.(value.trim() || null);
+  }
+
+  function updateSourcePdfUrl(url: string | null) {
+    setSourcePdfUrl(url);
+    onSourcePdfUrlChange?.(url);
+  }
 
   function updatePhotoUrls(urls: string[]) {
     setPhotoUrls(urls);
@@ -108,6 +131,8 @@ export function RecipeForm({
         description: description.trim() || undefined,
         photoUrls,
         coverPhotoUrl,
+        sourceUrl: sourceUrlInput.trim() || null,
+        sourcePdfUrl,
         yield: yieldInput.trim() || null,
         calories: caloriesInput.trim() ? Number(caloriesInput.trim()) : null,
         visibility,
@@ -151,6 +176,17 @@ export function RecipeForm({
         />
       </label>
 
+      <label className="flex flex-col gap-1">
+        <span className="font-medium text-ink/70">Source URL</span>
+        <input
+          type="url"
+          className={inputClass}
+          value={sourceUrlInput}
+          onChange={(e) => updateSourceUrl(e.target.value)}
+          placeholder="https://example.com/grandmas-pancakes"
+        />
+      </label>
+
       <div className="flex flex-wrap gap-4">
         <label className="flex flex-1 flex-col gap-1">
           <span className="font-medium text-ink/70">Yield</span>
@@ -187,6 +223,11 @@ export function RecipeForm({
         {photoUrls.length > 1 && (
           <p className="text-xs text-ink/50">Click ☆ on a photo to use it as the cover shown in recipe lists.</p>
         )}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="font-medium text-ink/70">Recipe PDF</span>
+        <PdfUpload url={sourcePdfUrl} onChange={updateSourcePdfUrl} />
       </div>
 
       <div className="flex flex-col gap-2">

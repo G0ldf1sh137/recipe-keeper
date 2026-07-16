@@ -22,6 +22,7 @@ import { Route as RecipesNewRouteImport } from './routes/recipes/new'
 import { Route as GroceryListIdRouteImport } from './routes/grocery/$listId'
 import { Route as CollectionsCollectionIdRouteImport } from './routes/collections/$collectionId'
 import { Route as CalendarsCalendarIdRouteImport } from './routes/calendars/$calendarId'
+import { Route as ApiUploadPdfRouteImport } from './routes/api/upload-pdf'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as ApiRotateImageRouteImport } from './routes/api/rotate-image'
 import { Route as RecipesRecipeIdIndexRouteImport } from './routes/recipes/$recipeId/index'
@@ -94,6 +95,11 @@ const CalendarsCalendarIdRoute = CalendarsCalendarIdRouteImport.update({
   path: '/calendars/$calendarId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUploadPdfRoute = ApiUploadPdfRouteImport.update({
+  id: '/api/upload-pdf',
+  path: '/api/upload-pdf',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUploadRoute = ApiUploadRouteImport.update({
   id: '/api/upload',
   path: '/api/upload',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
+  '/api/upload-pdf': typeof ApiUploadPdfRoute
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/grocery/$listId': typeof GroceryListIdRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
+  '/api/upload-pdf': typeof ApiUploadPdfRoute
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/grocery/$listId': typeof GroceryListIdRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
+  '/api/upload-pdf': typeof ApiUploadPdfRoute
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdRoute
   '/grocery/$listId': typeof GroceryListIdRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/rotate-image'
     | '/api/upload'
+    | '/api/upload-pdf'
     | '/calendars/$calendarId'
     | '/collections/$collectionId'
     | '/grocery/$listId'
@@ -218,6 +228,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/rotate-image'
     | '/api/upload'
+    | '/api/upload-pdf'
     | '/calendars/$calendarId'
     | '/collections/$collectionId'
     | '/grocery/$listId'
@@ -239,6 +250,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/api/rotate-image'
     | '/api/upload'
+    | '/api/upload-pdf'
     | '/calendars/$calendarId'
     | '/collections/$collectionId'
     | '/grocery/$listId'
@@ -261,6 +273,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   ApiRotateImageRoute: typeof ApiRotateImageRoute
   ApiUploadRoute: typeof ApiUploadRoute
+  ApiUploadPdfRoute: typeof ApiUploadPdfRoute
   CalendarsCalendarIdRoute: typeof CalendarsCalendarIdRoute
   CollectionsCollectionIdRoute: typeof CollectionsCollectionIdRoute
   GroceryListIdRoute: typeof GroceryListIdRoute
@@ -370,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalendarsCalendarIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/upload-pdf': {
+      id: '/api/upload-pdf'
+      path: '/api/upload-pdf'
+      fullPath: '/api/upload-pdf'
+      preLoaderRoute: typeof ApiUploadPdfRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/upload': {
       id: '/api/upload'
       path: '/api/upload'
@@ -421,6 +441,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   ApiRotateImageRoute: ApiRotateImageRoute,
   ApiUploadRoute: ApiUploadRoute,
+  ApiUploadPdfRoute: ApiUploadPdfRoute,
   CalendarsCalendarIdRoute: CalendarsCalendarIdRoute,
   CollectionsCollectionIdRoute: CollectionsCollectionIdRoute,
   GroceryListIdRoute: GroceryListIdRoute,

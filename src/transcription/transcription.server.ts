@@ -69,6 +69,76 @@ function buildImageBlocks(photoUrls: string[]): Anthropic.ImageBlockParam[] {
   return photoUrls.map((url) => ({ type: "image", source: { type: "url", url } }));
 }
 
+const PDF_PROMPT = `This PDF is attached to one recipe record in a recipe-keeping app. The owner pressed a button asking to transcribe it.
+
+First decide whether the PDF shows a handwritten, typed, or printed recipe: a recipe card, notebook page, letter, printed page, or similar. Photos of food or cooking do not count.
+
+If it does show a recipe:
+- Transcribe it faithfully, preserving the author's wording. If several pages show parts of the same recipe (front/back of a card, multiple pages), combine them into one recipe in the right order.
+- Normalize each ingredient line into qty/unit/name (e.g. "2 cups flour" -> qty "2", unit "cups", name "flour"). Leave qty or unit empty when the writing doesn't specify them.
+- Split the method into ordered steps. If the writing is one continuous paragraph, break it at natural sentence boundaries.
+- If a word is truly illegible, transcribe your best reading followed by "(?)".
+- Suggest 2-4 lowercase tags.
+- Determine the yield (servings) and calories per serving: transcribe them as written if the recipe states them; if not, estimate both from the ingredient list and quantities using your general nutrition knowledge. Only leave them blank (empty string / null) if there's not enough information to make any reasonable estimate.
+
+If it does not, say so and briefly explain what the PDF appears to show instead.`;
+
+export async function transcribeRecipePdf(pdfUrl: string): Promise<TranscriptionResult> {
+  let response: Response;
+  try {
+    response = await fetch(pdfUrl);
+  } catch {
+    return { status: "error", message: "Could not fetch the PDF to read." };
+  }
+  if (!response.ok) return { status: "error", message: "Could not fetch the PDF to read." };
+
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  const data = Buffer.from(bytes).toString("base64");
+
+  const client = new Anthropic();
+
+  let apiResponse;
+  try {
+    apiResponse = await client.messages.parse({
+      model: "claude-opus-4-8",
+      max_tokens: 16000,
+      thinking: { type: "adaptive" },
+      output_config: { format: zodOutputFormat(transcriptionOutputSchema) },
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "document", source: { type: "base64", media_type: "application/pdf", data } },
+            { type: "text", text: PDF_PROMPT },
+          ],
+        },
+      ],
+    });
+  } catch (error) {
+    if (error instanceof Anthropic.AuthenticationError) {
+      return { status: "error", message: "The Claude API key is missing or invalid." };
+    }
+    if (error instanceof Anthropic.RateLimitError) {
+      return { status: "error", message: "The Claude API is rate limited right now. Try again in a minute." };
+    }
+    if (error instanceof Anthropic.APIError) {
+      console.error("PDF transcription API error:", error.status, error.message);
+      return { status: "error", message: "Scanning failed. Please try again." };
+    }
+    throw error;
+  }
+
+  if (apiResponse.stop_reason === "refusal" || !apiResponse.parsed_output) {
+    return { status: "error", message: "Claude couldn't produce a transcription for this PDF." };
+  }
+
+  const output = apiResponse.parsed_output;
+  if (!output.isHandwrittenRecipe || !output.recipe) {
+    return { status: "not_handwritten", reason: output.reason };
+  }
+  return { status: "transcribed", recipe: output.recipe };
+}
+
 export async function transcribeRecipePhotos(photoUrls: string[]): Promise<TranscriptionResult> {
   const images = buildImageBlocks(photoUrls);
   if (images.length === 0) {

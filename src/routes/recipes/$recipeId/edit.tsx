@@ -5,6 +5,7 @@ import { getRecipe, getIngredientNames, getUnitNames, updateRecipe } from "#/rec
 import { RecipeForm } from "#/recipes/RecipeForm";
 import type { RecipeFormValues } from "#/recipes/RecipeForm";
 import { ProcessPhotos } from "#/transcription/ProcessPhotos";
+import { ProcessPdf } from "#/transcription/ProcessPdf";
 import type { TranscribedRecipe } from "#/transcription/transcription.server";
 
 export const Route = createFileRoute("/recipes/$recipeId/edit")({
@@ -46,6 +47,8 @@ function EditRecipePage() {
     description: recipe.description ?? "",
     photoUrls: recipe.photoUrls,
     coverPhotoUrl: recipe.coverPhotoUrl,
+    sourceUrl: recipe.sourceUrl,
+    sourcePdfUrl: recipe.sourcePdfUrl,
     tagsInput: recipe.tags.join(", "),
     yield: recipe.yield,
     calories: recipe.calories,
@@ -83,6 +86,12 @@ function EditRecipePage() {
         </div>
       )}
 
+      {formValues.sourcePdfUrl && (
+        <div className="mt-6">
+          <ProcessPdf pdfUrl={formValues.sourcePdfUrl} onApply={applyTranscription} />
+        </div>
+      )}
+
       <RecipeForm
         key={formKey}
         initialValues={formValues}
@@ -90,6 +99,8 @@ function EditRecipePage() {
         knownIngredientNames={knownIngredientNames}
         knownUnitNames={knownUnitNames}
         onPhotoUrlsChange={(photoUrls) => setFormValues((prev) => ({ ...prev, photoUrls }))}
+        onSourceUrlChange={(sourceUrl) => setFormValues((prev) => ({ ...prev, sourceUrl }))}
+        onSourcePdfUrlChange={(sourcePdfUrl) => setFormValues((prev) => ({ ...prev, sourcePdfUrl }))}
         onSubmit={async (values) => {
           await updateRecipeFn({ data: { id: recipe.id, ...values } });
           await navigate({ to: "/recipes/$recipeId", params: { recipeId: recipe.id } });

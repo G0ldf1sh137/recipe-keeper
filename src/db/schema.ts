@@ -61,6 +61,8 @@ export const recipes = pgTable("recipes", {
   steps: jsonb("steps").notNull().$type<Step[]>().default([]),
   photoUrls: text("photo_urls").array().notNull().default([]),
   coverPhotoUrl: text("cover_photo_url"),
+  sourceUrl: text("source_url"),
+  sourcePdfUrl: text("source_pdf_url"),
   tags: text("tags").array().notNull().default([]),
   yield: text("yield"),
   calories: integer("calories"),

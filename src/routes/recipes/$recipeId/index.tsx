@@ -25,6 +25,14 @@ import { ShareControl } from "#/sharing/ShareControl";
 
 const recipeSearchSchema = z.object({ st: z.string().optional() });
 
+function sourceUrlHostname(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+
 export const Route = createFileRoute("/recipes/$recipeId/")({
   validateSearch: recipeSearchSchema,
   loaderDeps: ({ search }) => ({ shareToken: search.st }),
@@ -190,6 +198,33 @@ function RecipePage() {
           {[recipe.yield, recipe.calories ? `${recipe.calories} cal/serving` : null]
             .filter(Boolean)
             .join(" · ")}
+        </p>
+      )}
+
+      {recipe.sourceUrl && (
+        <p className="mt-2 text-sm text-ink/60">
+          Originally from{" "}
+          <a
+            href={recipe.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
+            {sourceUrlHostname(recipe.sourceUrl)} ↗
+          </a>
+        </p>
+      )}
+
+      {recipe.sourcePdfUrl && (
+        <p className="mt-2 text-sm text-ink/60">
+          <a
+            href={recipe.sourcePdfUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
+            📄 View recipe PDF ↗
+          </a>
         </p>
       )}
 

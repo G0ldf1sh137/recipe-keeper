@@ -6,6 +6,7 @@ import { getSessionUser } from "#/auth/auth.functions";
 import { RecipeForm, emptyRecipeFormValues } from "#/recipes/RecipeForm";
 import type { RecipeFormValues } from "#/recipes/RecipeForm";
 import { ProcessPhotos } from "#/transcription/ProcessPhotos";
+import { ProcessPdf } from "#/transcription/ProcessPdf";
 import type { TranscribedRecipe } from "#/transcription/transcription.server";
 
 export const Route = createFileRoute("/recipes/new")({
@@ -56,6 +57,12 @@ function NewRecipePage() {
         </div>
       )}
 
+      {formValues.sourcePdfUrl && (
+        <div className="mt-6">
+          <ProcessPdf pdfUrl={formValues.sourcePdfUrl} onApply={applyTranscription} />
+        </div>
+      )}
+
       <RecipeForm
         key={formKey}
         initialValues={formValues}
@@ -63,6 +70,8 @@ function NewRecipePage() {
         knownIngredientNames={knownIngredientNames}
         knownUnitNames={knownUnitNames}
         onPhotoUrlsChange={(photoUrls) => setFormValues((prev) => ({ ...prev, photoUrls }))}
+        onSourceUrlChange={(sourceUrl) => setFormValues((prev) => ({ ...prev, sourceUrl }))}
+        onSourcePdfUrlChange={(sourcePdfUrl) => setFormValues((prev) => ({ ...prev, sourcePdfUrl }))}
         onSubmit={async (values) => {
           const recipe = await createRecipeFn({ data: values });
           await navigate({ to: "/recipes/$recipeId", params: { recipeId: recipe.id } });

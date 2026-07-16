@@ -29,6 +29,8 @@ const recipeWithOwnerColumns = {
   steps: recipes.steps,
   photoUrls: recipes.photoUrls,
   coverPhotoUrl: recipes.coverPhotoUrl,
+  sourceUrl: recipes.sourceUrl,
+  sourcePdfUrl: recipes.sourcePdfUrl,
   tags: recipes.tags,
   yield: recipes.yield,
   calories: recipes.calories,
@@ -135,10 +137,12 @@ export async function insertRecipe(input: z.infer<typeof createRecipeSchema>, ow
 function collectImageUrls(recipe: {
   photoUrls: string[];
   coverPhotoUrl: string | null;
+  sourcePdfUrl: string | null;
   steps: { imageUrls: string[] }[];
 }): string[] {
   const urls = new Set<string>(recipe.photoUrls);
   if (recipe.coverPhotoUrl) urls.add(recipe.coverPhotoUrl);
+  if (recipe.sourcePdfUrl) urls.add(recipe.sourcePdfUrl);
   for (const step of recipe.steps) {
     for (const url of step.imageUrls) urls.add(url);
   }
@@ -151,7 +155,12 @@ function collectImageUrls(recipe: {
 // the whole table, not just the recipe being deleted/edited.
 async function findAllReferencedImageUrls(): Promise<Set<string>> {
   const rows = await db
-    .select({ photoUrls: recipes.photoUrls, coverPhotoUrl: recipes.coverPhotoUrl, steps: recipes.steps })
+    .select({
+      photoUrls: recipes.photoUrls,
+      coverPhotoUrl: recipes.coverPhotoUrl,
+      sourcePdfUrl: recipes.sourcePdfUrl,
+      steps: recipes.steps,
+    })
     .from(recipes);
   const urls = new Set<string>();
   for (const row of rows) {
@@ -219,6 +228,8 @@ export async function forkRecipe(recipeId: string, ownerId: string, shareToken?:
       steps: original.steps,
       photoUrls: original.photoUrls,
       coverPhotoUrl: original.coverPhotoUrl,
+      sourceUrl: original.sourceUrl,
+      sourcePdfUrl: original.sourcePdfUrl,
       tags: original.tags,
       yield: original.yield,
       calories: original.calories,

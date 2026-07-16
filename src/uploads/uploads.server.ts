@@ -3,6 +3,7 @@ import { S3Client, PutObjectCommand, DeleteObjectsCommand } from "@aws-sdk/clien
 import sharp from "sharp";
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
+export const MAX_PDF_BYTES = 10 * 1024 * 1024; // 10 MB
 
 const S3_BUCKET = process.env.S3_BUCKET;
 const S3_REGION = process.env.S3_REGION ?? "us-east-2";
@@ -52,7 +53,43 @@ function sniffImageMime(bytes: Uint8Array): string | null {
   return null;
 }
 
-async function uploadImageBytes(bytes: Uint8Array): Promise<{ url: string } | { error: string }> {
+function sniffPdf(bytes: Uint8Array): boolean {
+  return (
+    bytes.length >= 5 &&
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46 &&
+    bytes[4] === 0x2d
+  );
+}
+
+export async function savePdfUpload(file: File): Promise<{ url: string } | { error: string }> {
+  if (file.size === 0) return { error: "Empty file." };
+  if (file.size > MAX_PDF_BYTES) return { error: "PDF is too large (max 10 MB)." };
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!sniffPdf(bytes)) return { error: "Unsupported file type. Upload a PDF." };
+
+  const name = `${randomBytes(16).toString("hex")}.pdf`;
+  try {
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: S3_BUCKET,
+        Key: name,
+        Body: bytes,
+        ContentType: "application/pdf",
+        CacheControl: "public, max-age=31536000, immutable",
+      }),
+    );
+  } catch (error) {
+    console.error("S3 upload failed:", error);
+    return { error: "Could not upload the PDF. Please try again." };
+  }
+  return { url: `${S3_PUBLIC_URL_BASE}/${name}` };
+}
+
+export async function uploadImageBytes(bytes: Uint8Array): Promise<{ url: string } | { error: string }> {
   if (bytes.length === 0) return { error: "Empty file." };
   if (bytes.length > MAX_UPLOAD_BYTES) return { error: "Image is too large (max 5 MB)." };
 
