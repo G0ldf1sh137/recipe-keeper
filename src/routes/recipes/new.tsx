@@ -11,6 +11,7 @@ import { ProcessText } from "#/transcription/ProcessText";
 import type { TranscribedRecipe } from "#/transcription/transcription.server";
 import { MultiImageUpload } from "#/uploads/ImageUpload";
 import { PdfUpload } from "#/uploads/PdfUpload";
+import { ProcessUrl, isValidHttpUrl } from "#/scraping/ProcessUrl";
 
 export const Route = createFileRoute("/recipes/new")({
   beforeLoad: async () => {
@@ -30,7 +31,7 @@ export const Route = createFileRoute("/recipes/new")({
   component: NewRecipePage,
 });
 
-type ImportMode = "choose" | "photo" | "pdf" | "text" | "form";
+type ImportMode = "choose" | "photo" | "pdf" | "text" | "url" | "form";
 
 function NewRecipePage() {
   const { knownIngredientNames, knownUnitNames, knownTagNames, canTranscribe } = Route.useLoaderData();
@@ -39,11 +40,12 @@ function NewRecipePage() {
 
   const [mode, setMode] = useState<ImportMode>("choose");
   const [formValues, setFormValues] = useState<RecipeFormValues>(emptyRecipeFormValues());
+  const [scrapeUrl, setScrapeUrl] = useState("");
   // Bumped to force RecipeForm to re-initialize its internal state from formValues
   // after a transcription is applied (RecipeForm otherwise only reads initialValues once).
   const [formKey, setFormKey] = useState(0);
 
-  function applyTranscription(transcribed: TranscribedRecipe) {
+  function applyTranscription(transcribed: TranscribedRecipe & { photoUrls?: string[] }) {
     setFormValues((prev) => ({
       ...prev,
       ...(transcribed.title.trim() ? { title: transcribed.title.trim() } : {}),
@@ -59,6 +61,12 @@ function NewRecipePage() {
       ...(transcribed.carbs !== null ? { carbs: transcribed.carbs } : {}),
       ...(transcribed.fat !== null ? { fat: transcribed.fat } : {}),
       ...(transcribed.sourceUrl.trim() ? { sourceUrl: transcribed.sourceUrl.trim() } : {}),
+      ...(transcribed.photoUrls && transcribed.photoUrls.length > 0
+        ? {
+            photoUrls: [...prev.photoUrls, ...transcribed.photoUrls],
+            coverPhotoUrl: prev.coverPhotoUrl || transcribed.photoUrls[0],
+          }
+        : {}),
     }));
     setFormKey((k) => k + 1);
     setMode("form");
@@ -104,6 +112,15 @@ function NewRecipePage() {
           </button>
           <button
             type="button"
+            onClick={() => setMode("url")}
+            disabled={!canTranscribe}
+            className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
+          >
+            <span className="font-serif text-lg font-medium text-ink">🔗 Import from URL</span>
+            <p className="mt-1 text-sm text-ink/60">Paste a link to a recipe page, and we'll pull it in.</p>
+          </button>
+          <button
+            type="button"
             onClick={() => setMode("form")}
             className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
           >
@@ -115,7 +132,7 @@ function NewRecipePage() {
     );
   }
 
-  if (mode === "photo" || mode === "pdf" || mode === "text") {
+  if (mode === "photo" || mode === "pdf" || mode === "text" || mode === "url") {
     return (
       <div className="mx-auto max-w-2xl p-4 sm:p-8">
         <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">New recipe</h1>
@@ -183,6 +200,31 @@ function NewRecipePage() {
               knownUnitNames={knownUnitNames}
               canUse={canTranscribe}
             />
+          </div>
+        )}
+
+        {mode === "url" && (
+          <div className="mt-6 flex flex-col gap-4">
+            <label className="flex flex-col gap-1">
+              <span className="font-medium text-ink/70">Recipe URL</span>
+              <input
+                type="url"
+                className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none disabled:opacity-50"
+                value={scrapeUrl}
+                onChange={(e) => setScrapeUrl(e.target.value)}
+                placeholder="https://example.com/a-great-recipe"
+                disabled={!canTranscribe}
+              />
+            </label>
+            {isValidHttpUrl(scrapeUrl) && (
+              <ProcessUrl
+                url={scrapeUrl}
+                onApply={applyTranscription}
+                knownIngredientNames={knownIngredientNames}
+                knownUnitNames={knownUnitNames}
+                canUse={canTranscribe}
+              />
+            )}
           </div>
         )}
       </div>

@@ -15,9 +15,15 @@ export function isValidHttpUrl(value: string): boolean {
 export function ProcessUrl({
   url,
   onApply,
+  knownIngredientNames = [],
+  knownUnitNames = [],
+  canUse = true,
 }: {
   url: string;
   onApply: (recipe: ScrapedRecipe) => void;
+  knownIngredientNames?: string[];
+  knownUnitNames?: string[];
+  canUse?: boolean;
 }) {
   const scrapeFn = useServerFn(scrapeRecipeUrl);
   const [scanning, setScanning] = useState(false);
@@ -27,7 +33,7 @@ export function ProcessUrl({
     setScanning(true);
     setResult(null);
     try {
-      setResult(await scrapeFn({ data: { url } }));
+      setResult(await scrapeFn({ data: { url, knownIngredientNames, knownUnitNames } }));
     } catch {
       setResult({ status: "error", message: "Scraping failed. Please try again." });
     } finally {
@@ -46,15 +52,18 @@ export function ProcessUrl({
         <button
           type="button"
           onClick={handleProcess}
-          disabled={scanning}
+          disabled={scanning || !canUse}
           className="rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50 disabled:opacity-50"
         >
           {scanning ? "Scraping page…" : "Process URL"}
         </button>
-        {!scanning && !result && (
-          <span className="text-xs text-ink/50">Uses Claude to pull a recipe from the linked page.</span>
+        {!canUse && (
+          <span className="text-xs text-ink/50">AI transcription has been disabled for your account by an admin.</span>
         )}
-        {scanning && <span className="text-xs text-ink/50">Reading the page with Claude — this can take a minute.</span>}
+        {canUse && !scanning && !result && (
+          <span className="text-xs text-ink/50">Pulls a recipe from the linked page's structured data.</span>
+        )}
+        {canUse && scanning && <span className="text-xs text-ink/50">Reading the page — this can take a minute.</span>}
       </div>
 
       {result?.status === "not_found" && (
@@ -97,6 +106,20 @@ export function ProcessUrl({
                 .filter(Boolean)
                 .join(" · ")}
             </p>
+          )}
+          {(result.recipe.protein !== null || result.recipe.carbs !== null || result.recipe.fat !== null) && (
+            <p className="mt-1 text-sm text-ink/60">
+              {[
+                result.recipe.protein !== null ? `${result.recipe.protein}g protein` : null,
+                result.recipe.carbs !== null ? `${result.recipe.carbs}g carbs` : null,
+                result.recipe.fat !== null ? `${result.recipe.fat}g fat` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          )}
+          {result.recipe.sourceUrl.trim() && (
+            <p className="mt-1 text-xs text-ink/50">Source: {result.recipe.sourceUrl.trim()}</p>
           )}
 
           {result.recipe.photoUrls.length > 0 && (

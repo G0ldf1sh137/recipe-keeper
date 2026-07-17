@@ -1,108 +1,153 @@
-import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { z } from "zod";
+import * as cheerio from "cheerio";
 import { uploadImageBytes } from "#/uploads/uploads.server";
+import { transcribeRecipeText } from "#/transcription/transcription.server";
+import type { TranscribedRecipe } from "#/transcription/transcription.server";
 
-const scrapedRecipeOutputSchema = z.object({
-  foundRecipe: z.boolean().describe("True only if the page shows a recipe (ingredients + method for preparing a dish)"),
-  reason: z
-    .string()
-    .describe("One-sentence explanation of the determination, phrased for the recipe's owner"),
-  recipe: z
-    .union([
-      z.object({
-        title: z.string().describe("The recipe's title; empty string if the page doesn't name one"),
-        description: z
-          .string()
-          .describe("Any headnote or intro blurb for the recipe; empty string if none"),
-        ingredients: z.array(
-          z.object({
-            qty: z.string().describe("Quantity as written, e.g. '2' or '1/2'; empty if unstated"),
-            unit: z.string().describe("Unit as written, e.g. 'cup'; empty if unstated"),
-            name: z.string().describe("The ingredient itself"),
-          }),
-        ),
-        steps: z.array(
-          z.object({
-            text: z.string(),
-            imageUrls: z
-              .array(z.string().url())
-              .describe(
-                "Absolute URLs of any images on the page that specifically illustrate this step; empty array if none",
-              ),
-          }),
-        ).describe("The preparation steps, in order"),
-        tags: z.array(z.string()).describe("2-4 lowercase tags such as 'dessert' or 'soup'"),
-        yield: z
-          .string()
-          .describe(
-            "The recipe's yield, e.g. '4 servings' or 'Makes 12 muffins'. Transcribe as written if stated; otherwise estimate a reasonable yield from the ingredient quantities. Empty string only if there's not enough information to even estimate one.",
-          ),
-        calories: z
-          .number()
-          .int()
-          .nonnegative()
-          .nullable()
-          .describe(
-            "Calories per serving. Use the page's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
-          ),
-        protein: z
-          .number()
-          .int()
-          .nonnegative()
-          .nullable()
-          .describe(
-            "Grams of protein per serving. Use the page's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
-          ),
-        carbs: z
-          .number()
-          .int()
-          .nonnegative()
-          .nullable()
-          .describe(
-            "Grams of carbohydrates per serving. Use the page's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
-          ),
-        fat: z
-          .number()
-          .int()
-          .nonnegative()
-          .nullable()
-          .describe(
-            "Grams of fat per serving. Use the page's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
-          ),
-        photoUrls: z
-          .array(z.string().url())
-          .describe(
-            "Absolute URLs of photos of the finished dish found on the page (the hero/main recipe photo and similar). Do not include unrelated site images (ads, logos, author headshots, other recipes).",
-          ),
-      }),
-      z.null(),
-    ])
-    .describe("The scraped recipe, or null when foundRecipe is false"),
-});
-
-export type ScrapedRecipe = NonNullable<z.infer<typeof scrapedRecipeOutputSchema>["recipe"]>;
+export type ScrapedRecipe = TranscribedRecipe & { photoUrls: string[] };
 
 export type ScrapeResult =
   | { status: "scraped"; recipe: ScrapedRecipe }
   | { status: "not_found"; reason: string }
   | { status: "error"; message: string };
 
-const PROMPT_PREFIX = `A user of a recipe-keeping app pasted a link to a page they believe contains a recipe, and pressed a button asking to scrape it. Fetch the page at the URL below.
+const USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
-First decide whether it shows a recipe: ingredients plus a method for preparing a dish. General articles, listicles linking to other recipes, or unrelated pages do not count.
+function isRecipeType(type: unknown): boolean {
+  if (typeof type === "string") return type === "Recipe";
+  if (Array.isArray(type)) return type.includes("Recipe");
+  return false;
+}
 
-If it does show a recipe:
-- Extract it faithfully, preserving the author's wording for title/description/steps.
-- Normalize each ingredient line into qty/unit/name (e.g. "2 cups flour" -> qty "2", unit "cups", name "flour"). Leave qty or unit empty when unstated.
-- Split the method into ordered steps as the page presents them.
-- Find absolute image URLs on the page: the main/finished-dish photo(s) go in the recipe-level photoUrls; any image clearly illustrating one specific step goes in that step's imageUrls. Only include real photo URLs actually present on the fetched page — never invent one. Skip ads, logos, author photos, and images for unrelated recipes.
-- Suggest 2-4 lowercase tags.
-- Determine the yield (servings) and nutrition per serving (calories, protein, carbs, fat): use the page's stated values if present; otherwise estimate them from the ingredient list and quantities using your general nutrition knowledge. Only leave a figure blank (empty string / null) if there's not enough information to make any reasonable estimate.
+function findRecipeNode(node: unknown): Record<string, unknown> | null {
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = findRecipeNode(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (node === null || typeof node !== "object") return null;
+  const obj = node as Record<string, unknown>;
+  if (isRecipeType(obj["@type"])) return obj;
+  if (obj["@graph"]) return findRecipeNode(obj["@graph"]);
+  if (obj.mainEntity) return findRecipeNode(obj.mainEntity);
+  return null;
+}
 
-If it does not show a recipe, say so and briefly explain what the page appears to show instead (including if the page could not be fetched at all).
+function extractRecipeJsonLd(html: string): Record<string, unknown> | null {
+  const $ = cheerio.load(html);
+  const scripts = $('script[type="application/ld+json"]').toArray();
+  for (const el of scripts) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse($(el).contents().text());
+    } catch {
+      continue;
+    }
+    const found = findRecipeNode(parsed);
+    if (found) return found;
+  }
+  return null;
+}
 
-URL: `;
+function toArray(value: unknown): unknown[] {
+  if (value === undefined || value === null) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function extractImageUrls(image: unknown): string[] {
+  return toArray(image)
+    .map((img) => {
+      if (typeof img === "string") return img;
+      if (img && typeof img === "object") return (img as Record<string, unknown>).url;
+      return undefined;
+    })
+    .filter((url): url is string => typeof url === "string" && url.length > 0);
+}
+
+function flattenInstructions(instructions: unknown): string[] {
+  if (typeof instructions === "string") {
+    return instructions
+      .split(/\r?\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }
+  return toArray(instructions).flatMap((item): string[] => {
+    if (typeof item === "string") return [item];
+    if (item && typeof item === "object") {
+      const obj = item as Record<string, unknown>;
+      if (Array.isArray(obj.itemListElement)) return flattenInstructions(obj.itemListElement);
+      if (typeof obj.text === "string") return [obj.text];
+      if (typeof obj.name === "string") return [obj.name];
+    }
+    return [];
+  });
+}
+
+function extractNumber(value: unknown): number | null {
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const match = /[\d.]+/.exec(value);
+    return match ? parseFloat(match[0]) : null;
+  }
+  return null;
+}
+
+function extractNutritionLine(nutrition: unknown): string | null {
+  if (!nutrition || typeof nutrition !== "object") return null;
+  const obj = nutrition as Record<string, unknown>;
+  const parts: string[] = [];
+  const calories = extractNumber(obj.calories);
+  if (calories !== null) parts.push(`${calories} calories`);
+  const protein = extractNumber(obj.proteinContent);
+  if (protein !== null) parts.push(`${protein}g protein`);
+  const carbs = extractNumber(obj.carbohydrateContent);
+  if (carbs !== null) parts.push(`${carbs}g carbs`);
+  const fat = extractNumber(obj.fatContent);
+  if (fat !== null) parts.push(`${fat}g fat`);
+  return parts.length > 0 ? parts.join(", ") : null;
+}
+
+function extractYield(recipeYield: unknown): string {
+  const values = toArray(recipeYield).map((v) => String(v));
+  const withDigits = values.find((v) => /\d/.test(v));
+  if (withDigits) return withDigits;
+  return values.length > 0 ? values[0] : "";
+}
+
+function extractKeywords(keywords: unknown): string {
+  if (typeof keywords === "string") return keywords;
+  return toArray(keywords)
+    .filter((k): k is string => typeof k === "string")
+    .join(", ");
+}
+
+function buildRecipeTextBlob(node: Record<string, unknown>): string {
+  const title = typeof node.name === "string" ? node.name : "";
+  const description = typeof node.description === "string" ? node.description : "";
+  const ingredients = toArray(node.recipeIngredient).filter((i): i is string => typeof i === "string");
+  const instructions = flattenInstructions(node.recipeInstructions);
+  const yieldText = extractYield(node.recipeYield);
+  const nutritionLine = extractNutritionLine(node.nutrition);
+  const keywords = extractKeywords(node.keywords);
+
+  const lines: string[] = [];
+  if (title) lines.push(`Title: ${title}`);
+  if (description) lines.push(`Description: ${description}`);
+  if (yieldText) lines.push(`Yield: ${yieldText}`);
+  if (ingredients.length > 0) {
+    lines.push("Ingredients:");
+    for (const ingredient of ingredients) lines.push(`- ${ingredient}`);
+  }
+  if (instructions.length > 0) {
+    lines.push("Instructions:");
+    instructions.forEach((step, i) => lines.push(`${i + 1}. ${step}`));
+  }
+  if (nutritionLine) lines.push(`Nutrition per serving (as stated on the page): ${nutritionLine}`);
+  if (keywords) lines.push(`Keywords: ${keywords}`);
+  return lines.join("\n");
+}
 
 async function rehostImage(url: string): Promise<string | null> {
   let response: Response;
@@ -123,52 +168,40 @@ async function rehostAll(urls: string[]): Promise<string[]> {
   return rehosted.filter((url): url is string => url !== null);
 }
 
-async function rehostRecipeImages(recipe: ScrapedRecipe): Promise<ScrapedRecipe> {
-  const [photoUrls, steps] = await Promise.all([
-    rehostAll(recipe.photoUrls),
-    Promise.all(
-      recipe.steps.map(async (step) => ({ ...step, imageUrls: await rehostAll(step.imageUrls) })),
-    ),
-  ]);
-  return { ...recipe, photoUrls, steps };
-}
-
-export async function scrapeRecipeFromUrl(url: string): Promise<ScrapeResult> {
-  const client = new Anthropic();
-
-  let response;
+export async function scrapeRecipeFromUrl(
+  url: string,
+  knownIngredientNames: string[] = [],
+  knownUnitNames: string[] = [],
+): Promise<ScrapeResult> {
+  let html: string;
   try {
-    response = await client.messages.parse({
-      model: "claude-opus-4-8",
-      max_tokens: 16000,
-      thinking: { type: "adaptive" },
-      tools: [{ type: "web_fetch_20260209", name: "web_fetch", max_uses: 1 }],
-      output_config: { format: zodOutputFormat(scrapedRecipeOutputSchema) },
-      messages: [{ role: "user", content: `${PROMPT_PREFIX}${url}` }],
+    const response = await fetch(url, {
+      headers: { "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(15000),
     });
-  } catch (error) {
-    if (error instanceof Anthropic.AuthenticationError) {
-      return { status: "error", message: "The Claude API key is missing or invalid." };
+    if (!response.ok) {
+      return { status: "error", message: `Could not fetch this page (HTTP ${response.status}).` };
     }
-    if (error instanceof Anthropic.RateLimitError) {
-      return { status: "error", message: "The Claude API is rate limited right now. Try again in a minute." };
-    }
-    if (error instanceof Anthropic.APIError) {
-      console.error("Scraping API error:", error.status, error.message);
-      return { status: "error", message: "Scraping failed. Please try again." };
-    }
-    throw error;
+    html = await response.text();
+  } catch {
+    return {
+      status: "error",
+      message: "Could not fetch this page — it may be unreachable or blocking automated requests.",
+    };
   }
 
-  if (response.stop_reason === "refusal" || !response.parsed_output) {
-    return { status: "error", message: "Claude couldn't produce a recipe from this page." };
+  const recipeNode = extractRecipeJsonLd(html);
+  if (!recipeNode) {
+    return { status: "not_found", reason: "No structured recipe data (schema.org Recipe) was found on this page." };
   }
 
-  const output = response.parsed_output;
-  if (!output.foundRecipe || !output.recipe) {
-    return { status: "not_found", reason: output.reason };
-  }
+  const textBlob = buildRecipeTextBlob(recipeNode);
+  const imageUrls = extractImageUrls(recipeNode.image).slice(0, 4);
 
-  const recipe = await rehostRecipeImages(output.recipe);
-  return { status: "scraped", recipe };
+  const result = await transcribeRecipeText(textBlob, knownIngredientNames, knownUnitNames);
+  if (result.status === "error") return result;
+  if (result.status === "not_handwritten") return { status: "not_found", reason: result.reason };
+
+  const photoUrls = await rehostAll(imageUrls);
+  return { status: "scraped", recipe: { ...result.recipe, sourceUrl: url, photoUrls } };
 }
