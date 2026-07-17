@@ -207,6 +207,12 @@ function AuthHeader({
           Recipe Keeper
         </Link>
         <div className="flex items-center gap-4">
+          <Link
+            to="/about"
+            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
+            About
+          </Link>
           <ThemeToggle initialTheme={theme} />
           {user ? (
             <>
