@@ -5,7 +5,9 @@ import { z } from "zod";
 const transcriptionOutputSchema = z.object({
   isHandwrittenRecipe: z
     .boolean()
-    .describe("True only if the photos show a handwritten or typed recipe (card, notebook page, letter, etc.)"),
+    .describe(
+      "True only if the input actually shows or describes a recipe (ingredients and/or preparation steps) — whether that's a photo of a handwritten/typed recipe card, a PDF, or pasted text.",
+    ),
   reason: z
     .string()
     .describe("One-sentence explanation of the determination, phrased for the recipe's owner"),
@@ -82,6 +84,56 @@ If it does show a recipe:
 - Determine the yield (servings) and calories per serving: transcribe them as written if the recipe states them; if not, estimate both from the ingredient list and quantities using your general nutrition knowledge. Only leave them blank (empty string / null) if there's not enough information to make any reasonable estimate.
 
 If it does not, say so and briefly explain what the PDF appears to show instead.`;
+
+const TEXT_PROMPT = `This text was pasted by the owner of a recipe-keeping app into a "paste recipe text" import box. They pressed a button asking to import it as a recipe.
+
+First decide whether the text actually describes a recipe (ingredients and/or a method for preparing a dish), as opposed to something unrelated.
+
+If it does describe a recipe:
+- Transcribe it faithfully, preserving the author's wording.
+- Normalize each ingredient line into qty/unit/name (e.g. "2 cups flour" -> qty "2", unit "cups", name "flour"). Leave qty or unit empty when the text doesn't specify them.
+- Split the method into ordered steps. If the method is one continuous paragraph, break it at natural sentence boundaries.
+- Suggest 2-4 lowercase tags.
+- Determine the yield (servings) and calories per serving: use the text's own stated figure if present; if not, estimate both from the ingredient list and quantities using your general nutrition knowledge. Only leave them blank (empty string / null) if there's not enough information to make any reasonable estimate.
+
+If it does not describe a recipe, say so and briefly explain what the text appears to be instead.`;
+
+export async function transcribeRecipeText(recipeText: string): Promise<TranscriptionResult> {
+  const client = new Anthropic();
+
+  let response;
+  try {
+    response = await client.messages.parse({
+      model: "claude-opus-4-8",
+      max_tokens: 16000,
+      thinking: { type: "adaptive" },
+      output_config: { format: zodOutputFormat(transcriptionOutputSchema) },
+      messages: [{ role: "user", content: [{ type: "text", text: recipeText }, { type: "text", text: TEXT_PROMPT }] }],
+    });
+  } catch (error) {
+    if (error instanceof Anthropic.AuthenticationError) {
+      return { status: "error", message: "The Claude API key is missing or invalid." };
+    }
+    if (error instanceof Anthropic.RateLimitError) {
+      return { status: "error", message: "The Claude API is rate limited right now. Try again in a minute." };
+    }
+    if (error instanceof Anthropic.APIError) {
+      console.error("Text transcription API error:", error.status, error.message);
+      return { status: "error", message: "Reading failed. Please try again." };
+    }
+    throw error;
+  }
+
+  if (response.stop_reason === "refusal" || !response.parsed_output) {
+    return { status: "error", message: "Claude couldn't produce a transcription for this text." };
+  }
+
+  const output = response.parsed_output;
+  if (!output.isHandwrittenRecipe || !output.recipe) {
+    return { status: "not_handwritten", reason: output.reason };
+  }
+  return { status: "transcribed", recipe: output.recipe };
+}
 
 export async function transcribeRecipePdf(pdfUrl: string): Promise<TranscriptionResult> {
   let response: Response;

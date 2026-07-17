@@ -5,7 +5,6 @@ import { getRecipe, getIngredientNames, getUnitNames, updateRecipe } from "#/rec
 import { RecipeForm } from "#/recipes/RecipeForm";
 import type { RecipeFormValues } from "#/recipes/RecipeForm";
 import { ProcessPhotos } from "#/transcription/ProcessPhotos";
-import { ProcessPdf } from "#/transcription/ProcessPdf";
 import type { TranscribedRecipe } from "#/transcription/transcription.server";
 
 export const Route = createFileRoute("/recipes/$recipeId/edit")({
@@ -83,12 +82,6 @@ function EditRecipePage() {
       {formValues.photoUrls.length > 0 && (
         <div className="mt-6">
           <ProcessPhotos photoUrls={formValues.photoUrls} onApply={applyTranscription} />
-        </div>
-      )}
-
-      {formValues.sourcePdfUrl && (
-        <div className="mt-6">
-          <ProcessPdf pdfUrl={formValues.sourcePdfUrl} onApply={applyTranscription} />
         </div>
       )}
 
