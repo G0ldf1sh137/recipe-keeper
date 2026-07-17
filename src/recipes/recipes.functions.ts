@@ -20,6 +20,8 @@ import {
   insertRecipe,
   listIngredientNames,
   listUnitNames,
+  listTagNames,
+  findTagCounts,
   revokeShareForRecipe,
   updateOwnedRecipe,
 } from "./recipes.server";
@@ -91,6 +93,12 @@ export const forkRecipe = createServerFn({ method: "POST" })
 export const getIngredientNames = createServerFn({ method: "GET" }).handler(async () => listIngredientNames());
 
 export const getUnitNames = createServerFn({ method: "GET" }).handler(async () => listUnitNames());
+
+export const getTagNames = createServerFn({ method: "GET" }).handler(async () => listTagNames());
+
+export const getTagCounts = createServerFn({ method: "GET" })
+  .middleware([sessionMiddleware])
+  .handler(async ({ context }) => findTagCounts(context.user?.id));
 
 export const createRecipe = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])

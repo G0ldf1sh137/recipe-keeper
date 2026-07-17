@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { listRecipes, getIngredientNames } from "#/recipes/recipes.functions";
+import { listRecipes, getIngredientNames, getTagNames } from "#/recipes/recipes.functions";
 import { getRatingSummaries } from "#/ratings/ratings.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
+import { TagInput } from "#/recipes/TagInput";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
 const recipesSearchSchema = z.object({
-  tag: z.string().min(1).optional(),
+  tags: z.string().min(1).optional(),
   visibility: z.enum(visibilityValues).optional(),
   q: z.string().min(1).optional(),
   ingredient: z.string().min(1).optional(),
@@ -18,24 +19,25 @@ export const Route = createFileRoute("/recipes/")({
   validateSearch: recipesSearchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    const [recipes, knownIngredientNames] = await Promise.all([
-      listRecipes({ data: deps }),
+    const [recipes, knownIngredientNames, knownTagNames] = await Promise.all([
+      listRecipes({ data: { ...deps, tags: deps.tags?.split(",").filter(Boolean) } }),
       getIngredientNames(),
+      getTagNames(),
     ]);
     const ratings = await getRatingSummaries({ data: { recipeIds: recipes.map((r) => r.id) } });
-    return { recipes, ratings, knownIngredientNames };
+    return { recipes, ratings, knownIngredientNames, knownTagNames };
   },
   component: RecipesListPage,
 });
 
 function RecipesListPage() {
-  const { recipes, ratings, knownIngredientNames } = Route.useLoaderData();
+  const { recipes, ratings, knownIngredientNames, knownTagNames } = Route.useLoaderData();
   const ratingsById = new Map(Object.entries(ratings));
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const [tagInput, setTagInput] = useState(search.tag ?? "");
-  useEffect(() => setTagInput(search.tag ?? ""), [search.tag]);
+  const [tagsFilter, setTagsFilter] = useState<string[]>(search.tags?.split(",").filter(Boolean) ?? []);
+  useEffect(() => setTagsFilter(search.tags?.split(",").filter(Boolean) ?? []), [search.tags]);
 
   const [qInput, setQInput] = useState(search.q ?? "");
   useEffect(() => setQInput(search.q ?? ""), [search.q]);
@@ -48,7 +50,7 @@ function RecipesListPage() {
     navigate({
       search: (prev) => ({
         ...prev,
-        tag: tagInput.trim() || undefined,
+        tags: tagsFilter.length > 0 ? tagsFilter.join(",") : undefined,
         q: qInput.trim() || undefined,
         ingredient: ingredientInput.trim() || undefined,
       }),
@@ -61,7 +63,7 @@ function RecipesListPage() {
     });
   }
 
-  const hasFilters = Boolean(search.tag || search.visibility || search.q || search.ingredient);
+  const hasFilters = Boolean(search.tags || search.visibility || search.q || search.ingredient);
 
   function handleRandom() {
     const recipe = recipes[Math.floor(Math.random() * recipes.length)];
@@ -91,6 +93,13 @@ function RecipesListPage() {
         </div>
       </div>
 
+      <Link
+        to="/recipes/tags"
+        className="mt-2 inline-block text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+      >
+        Browse tags
+      </Link>
+
       <form onSubmit={handleFilterSubmit} className="mt-6 flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-ink/70">Search</span>
@@ -103,11 +112,11 @@ function RecipesListPage() {
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-ink/70">Tag</span>
-          <input
-            className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
+          <span className="text-sm font-medium text-ink/70">Tags</span>
+          <TagInput
+            value={tagsFilter}
+            onChange={setTagsFilter}
+            knownTagNames={knownTagNames}
             placeholder="breakfast"
           />
         </label>

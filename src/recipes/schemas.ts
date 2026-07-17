@@ -16,6 +16,10 @@ export const stepSchema = z.object({
 
 export const visibilitySchema = z.enum(visibilityValues);
 
+function normalizeTags(tags: string[]): string[] {
+  return Array.from(new Set(tags.map((t) => t.trim().toLowerCase()).filter(Boolean)));
+}
+
 export const createRecipeSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
@@ -25,7 +29,7 @@ export const createRecipeSchema = z.object({
   coverPhotoUrl: imageUrlSchema.nullable().default(null),
   sourceUrl: z.string().trim().nullable().default(null),
   sourcePdfUrl: z.string().trim().nullable().default(null),
-  tags: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]).transform(normalizeTags),
   yield: z.string().trim().min(1).nullable().default(null),
   calories: z.number().int().nonnegative().nullable().default(null),
   protein: z.number().int().nonnegative().nullable().default(null),
@@ -44,7 +48,10 @@ export const updateRecipeSchema = z.object({
   coverPhotoUrl: imageUrlSchema.nullable().optional(),
   sourceUrl: z.string().trim().nullable().optional(),
   sourcePdfUrl: z.string().trim().nullable().optional(),
-  tags: z.array(z.string()).optional(),
+  tags: z
+    .array(z.string())
+    .optional()
+    .transform((tags) => (tags ? normalizeTags(tags) : undefined)),
   yield: z.string().trim().min(1).nullable().optional(),
   calories: z.number().int().nonnegative().nullable().optional(),
   protein: z.number().int().nonnegative().nullable().optional(),
@@ -73,7 +80,7 @@ export const forkRecipeSchema = z.object({
 
 export const listRecipesSchema = z.object({
   ownerId: z.string().min(1).optional(),
-  tag: z.string().min(1).optional(),
+  tags: z.array(z.string().min(1)).optional(),
   visibility: visibilitySchema.optional(),
   q: z.string().min(1).optional(),
   ingredient: z.string().min(1).optional(),

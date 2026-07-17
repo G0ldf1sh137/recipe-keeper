@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { getRecipe, getIngredientNames, getUnitNames, updateRecipe } from "#/recipes/recipes.functions";
+import { getRecipe, getIngredientNames, getUnitNames, getTagNames, updateRecipe } from "#/recipes/recipes.functions";
 import { RecipeForm } from "#/recipes/RecipeForm";
 import type { RecipeFormValues } from "#/recipes/RecipeForm";
 import { ProcessPhotos } from "#/transcription/ProcessPhotos";
@@ -9,15 +9,16 @@ import type { TranscribedRecipe } from "#/transcription/transcription.server";
 
 export const Route = createFileRoute("/recipes/$recipeId/edit")({
   loader: async ({ params }) => {
-    const [recipe, knownIngredientNames, knownUnitNames] = await Promise.all([
+    const [recipe, knownIngredientNames, knownUnitNames, knownTagNames] = await Promise.all([
       getRecipe({ data: { id: params.recipeId } }),
       getIngredientNames(),
       getUnitNames(),
+      getTagNames(),
     ]);
     if (!recipe.canEdit) {
       throw redirect({ to: "/recipes/$recipeId", params: { recipeId: params.recipeId } });
     }
-    return { recipe, knownIngredientNames, knownUnitNames };
+    return { recipe, knownIngredientNames, knownUnitNames, knownTagNames };
   },
   component: EditRecipePage,
   notFoundComponent: () => (
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/recipes/$recipeId/edit")({
 });
 
 function EditRecipePage() {
-  const { recipe, knownIngredientNames, knownUnitNames } = Route.useLoaderData();
+  const { recipe, knownIngredientNames, knownUnitNames, knownTagNames } = Route.useLoaderData();
   const navigate = useNavigate();
   const updateRecipeFn = useServerFn(updateRecipe);
 
@@ -48,7 +49,7 @@ function EditRecipePage() {
     coverPhotoUrl: recipe.coverPhotoUrl,
     sourceUrl: recipe.sourceUrl,
     sourcePdfUrl: recipe.sourcePdfUrl,
-    tagsInput: recipe.tags.join(", "),
+    tags: recipe.tags,
     yield: recipe.yield,
     calories: recipe.calories,
     protein: recipe.protein,
@@ -71,7 +72,7 @@ function EditRecipePage() {
       steps: transcribed.steps.length
         ? transcribed.steps.map((step) => ({ text: step.text, imageUrls: [] }))
         : prev.steps,
-      tagsInput: transcribed.tags.length ? transcribed.tags.join(", ") : prev.tagsInput,
+      tags: transcribed.tags.length ? transcribed.tags : prev.tags,
       ...(transcribed.yield.trim() ? { yield: transcribed.yield.trim() } : {}),
       ...(transcribed.calories !== null ? { calories: transcribed.calories } : {}),
       ...(transcribed.protein !== null ? { protein: transcribed.protein } : {}),
@@ -103,6 +104,7 @@ function EditRecipePage() {
         submitLabel="Save changes"
         knownIngredientNames={knownIngredientNames}
         knownUnitNames={knownUnitNames}
+        knownTagNames={knownTagNames}
         onPhotoUrlsChange={(photoUrls) => setFormValues((prev) => ({ ...prev, photoUrls }))}
         onSourceUrlChange={(sourceUrl) => setFormValues((prev) => ({ ...prev, sourceUrl }))}
         onSubmit={async (values) => {

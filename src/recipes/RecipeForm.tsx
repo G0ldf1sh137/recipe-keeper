@@ -2,6 +2,7 @@ import { useState } from "react";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 import { MultiImageUpload } from "#/uploads/ImageUpload";
+import { TagInput } from "#/recipes/TagInput";
 
 export type IngredientRow = { qty: string; unit: string; name: string };
 export type StepRow = { text: string; imageUrls: string[] };
@@ -13,7 +14,7 @@ export type RecipeFormValues = {
   coverPhotoUrl: string | null;
   sourceUrl: string | null;
   sourcePdfUrl: string | null;
-  tagsInput: string;
+  tags: string[];
   visibility: Visibility;
   ingredients: IngredientRow[];
   steps: StepRow[];
@@ -50,7 +51,7 @@ export function emptyRecipeFormValues(): RecipeFormValues {
     coverPhotoUrl: null,
     sourceUrl: null,
     sourcePdfUrl: null,
-    tagsInput: "",
+    tags: [],
     visibility: "public",
     ingredients: [{ qty: "", unit: "", name: "" }],
     steps: [{ text: "", imageUrls: [] }],
@@ -73,6 +74,7 @@ export function RecipeForm({
   onSourceUrlChange,
   knownIngredientNames = [],
   knownUnitNames = [],
+  knownTagNames = [],
 }: {
   initialValues: RecipeFormValues;
   submitLabel: string;
@@ -81,6 +83,7 @@ export function RecipeForm({
   onSourceUrlChange?: (url: string | null) => void;
   knownIngredientNames?: string[];
   knownUnitNames?: string[];
+  knownTagNames?: string[];
 }) {
   const [title, setTitle] = useState(initialValues.title);
   const [description, setDescription] = useState(initialValues.description);
@@ -99,7 +102,7 @@ export function RecipeForm({
     onPhotoUrlsChange?.(urls);
     setCoverPhotoUrl((cover) => (cover && !urls.includes(cover) ? (urls[0] ?? null) : cover));
   }
-  const [tagsInput, setTagsInput] = useState(initialValues.tagsInput);
+  const [tags, setTags] = useState<string[]>(initialValues.tags);
   const [yieldInput, setYieldInput] = useState(initialValues.yield ?? "");
   const [caloriesInput, setCaloriesInput] = useState(initialValues.calories?.toString() ?? "");
   const [proteinInput, setProteinInput] = useState(initialValues.protein?.toString() ?? "");
@@ -149,10 +152,7 @@ export function RecipeForm({
         steps: steps
           .filter((row) => row.text.trim())
           .map((row) => ({ text: row.text.trim(), imageUrls: row.imageUrls })),
-        tags: tagsInput
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
+        tags,
       });
     } catch {
       setError("Could not save this recipe. Please try again.");
@@ -353,15 +353,10 @@ export function RecipeForm({
         </button>
       </div>
 
-      <label className="flex flex-col gap-1">
-        <span className="font-medium text-ink/70">Tags (comma separated)</span>
-        <input
-          className={inputClass}
-          value={tagsInput}
-          onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="breakfast, quick"
-        />
-      </label>
+      <div className="flex flex-col gap-1">
+        <span className="font-medium text-ink/70">Tags</span>
+        <TagInput value={tags} onChange={setTags} knownTagNames={knownTagNames} placeholder="breakfast, quick" />
+      </div>
 
       <label className="flex flex-col gap-1">
         <span className="font-medium text-ink/70">Visibility</span>

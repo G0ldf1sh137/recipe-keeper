@@ -1,6 +1,6 @@
 import { and, arrayContains, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
-import { recipes, shares, users, ingredientNames, unitNames } from "#/db/schema";
+import { recipes, shares, users, ingredientNames, unitNames, tagNames } from "#/db/schema";
 import { deleteImageUrls } from "#/uploads/uploads.server";
 import type {
   createRecipeSchema,
@@ -79,7 +79,7 @@ export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, vi
   const conditions = [visibleToViewer(viewerId)];
   if (filters.ownerId) conditions.push(eq(recipes.ownerId, filters.ownerId));
   if (filters.visibility) conditions.push(eq(recipes.visibility, filters.visibility));
-  if (filters.tag) conditions.push(arrayContains(recipes.tags, [filters.tag]));
+  if (filters.tags && filters.tags.length > 0) conditions.push(arrayContains(recipes.tags, filters.tags));
   if (filters.q) {
     conditions.push(or(ilike(recipes.title, `%${filters.q}%`), ilike(recipes.description, `%${filters.q}%`)));
   }
@@ -136,6 +136,34 @@ export async function listUnitNames() {
   return rows.map((row) => row.name);
 }
 
+export async function upsertTagNames(names: string[]) {
+  const unique = Array.from(new Set(names.map((n) => n.trim().toLowerCase()).filter(Boolean)));
+  if (unique.length === 0) return;
+  await db
+    .insert(tagNames)
+    .values(unique.map((name) => ({ name })))
+    .onConflictDoNothing({ target: tagNames.name });
+}
+
+export async function listTagNames() {
+  const rows = await db.query.tagNames.findMany({ orderBy: (t, { asc }) => [asc(t.name)] });
+  return rows.map((row) => row.name);
+}
+
+export async function findTagCounts(viewerId: string | undefined): Promise<{ tag: string; count: number }[]> {
+  const visibility = viewerId
+    ? sql`(${recipes.visibility} = 'public' or ${recipes.ownerId} = ${viewerId})`
+    : sql`${recipes.visibility} = 'public'`;
+  const rows = await db.execute<{ tag: string; count: number }>(sql`
+    select tag, count(*)::int as count
+    from ${recipes}, unnest(${recipes.tags}) as tag
+    where ${visibility}
+    group by tag
+    order by count desc, tag asc
+  `);
+  return [...rows];
+}
+
 export async function insertRecipe(input: z.infer<typeof createRecipeSchema>, ownerId: string) {
   const [recipe] = await db
     .insert(recipes)
@@ -143,6 +171,7 @@ export async function insertRecipe(input: z.infer<typeof createRecipeSchema>, ow
     .returning();
   await upsertIngredientNames(input.ingredients.map((i) => i.name));
   await upsertUnitNames(input.ingredients.map((i) => i.unit));
+  await upsertTagNames(input.tags);
   return recipe;
 }
 
@@ -206,6 +235,7 @@ export async function updateOwnedRecipe(
     await upsertIngredientNames(changes.ingredients.map((i) => i.name));
     await upsertUnitNames(changes.ingredients.map((i) => i.unit));
   }
+  if (changes.tags) await upsertTagNames(changes.tags);
   return updated;
 }
 

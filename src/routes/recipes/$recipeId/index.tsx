@@ -309,9 +309,14 @@ function RecipePage() {
       {recipe.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {recipe.tags.map((tag) => (
-            <span key={tag} className="rounded-full bg-accent-50 px-3 py-1 text-sm text-ink/70">
+            <Link
+              key={tag}
+              to="/recipes"
+              search={{ tags: tag }}
+              className="rounded-full bg-accent-50 px-3 py-1 text-sm text-ink/70 hover:bg-accent-100"
+            >
               {tag}
-            </span>
+            </Link>
           ))}
         </div>
       )}

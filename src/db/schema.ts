@@ -249,3 +249,9 @@ export const unitNames = pgTable("units", {
   name: text("name").notNull().unique(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
+
+export const tagNames = pgTable("tags", {
+  id: id(),
+  name: text("name").notNull().unique(),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});

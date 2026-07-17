@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { createRecipe, getIngredientNames, getUnitNames } from "#/recipes/recipes.functions";
+import { createRecipe, getIngredientNames, getUnitNames, getTagNames } from "#/recipes/recipes.functions";
 import { getSessionUser } from "#/auth/auth.functions";
 import { RecipeForm, emptyRecipeFormValues } from "#/recipes/RecipeForm";
 import type { RecipeFormValues } from "#/recipes/RecipeForm";
@@ -18,8 +18,12 @@ export const Route = createFileRoute("/recipes/new")({
     if (!user) throw redirect({ to: "/login" });
   },
   loader: async () => {
-    const [knownIngredientNames, knownUnitNames] = await Promise.all([getIngredientNames(), getUnitNames()]);
-    return { knownIngredientNames, knownUnitNames };
+    const [knownIngredientNames, knownUnitNames, knownTagNames] = await Promise.all([
+      getIngredientNames(),
+      getUnitNames(),
+      getTagNames(),
+    ]);
+    return { knownIngredientNames, knownUnitNames, knownTagNames };
   },
   component: NewRecipePage,
 });
@@ -27,7 +31,7 @@ export const Route = createFileRoute("/recipes/new")({
 type ImportMode = "choose" | "photo" | "pdf" | "text" | "form";
 
 function NewRecipePage() {
-  const { knownIngredientNames, knownUnitNames } = Route.useLoaderData();
+  const { knownIngredientNames, knownUnitNames, knownTagNames } = Route.useLoaderData();
   const navigate = useNavigate();
   const createRecipeFn = useServerFn(createRecipe);
 
@@ -46,7 +50,7 @@ function NewRecipePage() {
       steps: transcribed.steps.length
         ? transcribed.steps.map((step) => ({ text: step.text, imageUrls: [] }))
         : prev.steps,
-      tagsInput: transcribed.tags.length ? transcribed.tags.join(", ") : prev.tagsInput,
+      tags: transcribed.tags.length ? transcribed.tags : prev.tags,
       ...(transcribed.yield.trim() ? { yield: transcribed.yield.trim() } : {}),
       ...(transcribed.calories !== null ? { calories: transcribed.calories } : {}),
       ...(transcribed.protein !== null ? { protein: transcribed.protein } : {}),
@@ -204,6 +208,7 @@ function NewRecipePage() {
         submitLabel="Save recipe"
         knownIngredientNames={knownIngredientNames}
         knownUnitNames={knownUnitNames}
+        knownTagNames={knownTagNames}
         onPhotoUrlsChange={(photoUrls) => setFormValues((prev) => ({ ...prev, photoUrls }))}
         onSourceUrlChange={(sourceUrl) => setFormValues((prev) => ({ ...prev, sourceUrl }))}
         onSubmit={async (values) => {

@@ -134,6 +134,13 @@
       "when": 1784266134336,
       "tag": "0018_fancy_shard",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1784268369381,
+      "tag": "0019_purple_red_hulk",
+      "breakpoints": true
     }
   ]
 }

@@ -20,6 +20,7 @@ import { Route as CollectionsIndexRouteImport } from './routes/collections/index
 import { Route as CalendarsIndexRouteImport } from './routes/calendars/index'
 import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as SharedTokenRouteImport } from './routes/shared/$token'
+import { Route as RecipesTagsRouteImport } from './routes/recipes/tags'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
 import { Route as GroceryListIdRouteImport } from './routes/grocery/$listId'
 import { Route as CalendarsCalendarIdRouteImport } from './routes/calendars/$calendarId'
@@ -87,6 +88,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
 const SharedTokenRoute = SharedTokenRouteImport.update({
   id: '/shared/$token',
   path: '/shared/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecipesTagsRoute = RecipesTagsRouteImport.update({
+  id: '/recipes/tags',
+  path: '/recipes/tags',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesNewRoute = RecipesNewRouteImport.update({
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
   '/u/$username': typeof UUsernameRoute
   '/calendars/': typeof CalendarsIndexRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
   '/u/$username': typeof UUsernameRoute
   '/calendars': typeof CalendarsIndexRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
+  '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
   '/u/$username': typeof UUsernameRoute
   '/calendars/': typeof CalendarsIndexRoute
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/calendars/$calendarId'
     | '/grocery/$listId'
     | '/recipes/new'
+    | '/recipes/tags'
     | '/shared/$token'
     | '/u/$username'
     | '/calendars/'
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/calendars/$calendarId'
     | '/grocery/$listId'
     | '/recipes/new'
+    | '/recipes/tags'
     | '/shared/$token'
     | '/u/$username'
     | '/calendars'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/calendars/$calendarId'
     | '/grocery/$listId'
     | '/recipes/new'
+    | '/recipes/tags'
     | '/shared/$token'
     | '/u/$username'
     | '/calendars/'
@@ -328,6 +340,7 @@ export interface RootRouteChildren {
   CalendarsCalendarIdRoute: typeof CalendarsCalendarIdRoute
   GroceryListIdRoute: typeof GroceryListIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
+  RecipesTagsRoute: typeof RecipesTagsRoute
   SharedTokenRoute: typeof SharedTokenRoute
   UUsernameRoute: typeof UUsernameRoute
   CalendarsIndexRoute: typeof CalendarsIndexRoute
@@ -421,6 +434,13 @@ declare module '@tanstack/react-router' {
       path: '/shared/$token'
       fullPath: '/shared/$token'
       preLoaderRoute: typeof SharedTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recipes/tags': {
+      id: '/recipes/tags'
+      path: '/recipes/tags'
+      fullPath: '/recipes/tags'
+      preLoaderRoute: typeof RecipesTagsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/new': {
@@ -528,6 +548,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarsCalendarIdRoute: CalendarsCalendarIdRoute,
   GroceryListIdRoute: GroceryListIdRoute,
   RecipesNewRoute: RecipesNewRoute,
+  RecipesTagsRoute: RecipesTagsRoute,
   SharedTokenRoute: SharedTokenRoute,
   UUsernameRoute: UUsernameRoute,
   CalendarsIndexRoute: CalendarsIndexRoute,
