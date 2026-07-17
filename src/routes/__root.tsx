@@ -162,6 +162,15 @@ function AuthHeader({
         >
           Settings
         </Link>
+        {currentUser.isAdmin && (
+          <Link
+            to="/admin"
+            onClick={() => setMenuOpen(false)}
+            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
+            Admin
+          </Link>
+        )}
         {currentUser.avatarUrl && (
           <img src={currentUser.avatarUrl} alt="" className="h-7 w-7 rounded-full ring-2 ring-accent-100" />
         )}

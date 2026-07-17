@@ -14,3 +14,10 @@ export const requireAuthMiddleware = createMiddleware({ type: "function" })
     if (!context.user) throw new Error("Unauthorized");
     return next({ context: { user: context.user } });
   });
+
+export const requireAdminMiddleware = createMiddleware({ type: "function" })
+  .middleware([requireAuthMiddleware])
+  .server(async ({ next, context }) => {
+    if (!context.user.isAdmin) throw new Error("Forbidden");
+    return next({ context: { user: context.user } });
+  });

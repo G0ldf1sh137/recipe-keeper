@@ -9,3 +9,8 @@ export const usernameSchema = z
 export const updateUsernameSchema = z.object({
   username: usernameSchema,
 });
+
+export const setUserAdminSchema = z.object({
+  userId: z.string(),
+  isAdmin: z.boolean(),
+});
