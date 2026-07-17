@@ -13,7 +13,7 @@ import { RecipeCard } from "#/recipes/RecipeCard";
 import { listComments } from "#/comments/comments.functions";
 import { getSessionUser } from "#/auth/auth.functions";
 import { CommentThread } from "#/comments/CommentThread";
-import { getRatingSummary } from "#/ratings/ratings.functions";
+import { getRatingSummary, getRatingSummaries } from "#/ratings/ratings.functions";
 import { RecipeRating } from "#/ratings/RecipeRating";
 import { getCollectionsForRecipe } from "#/collections/collections.functions";
 import { SaveToList } from "#/collections/SaveToList";
@@ -63,7 +63,10 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
           getCalendarsForRecipe({ data: { recipeId: params.recipeId } }),
         ])
       : [[], [], []];
-    return { recipe, comments, user, rating, collections, groceryLists, calendars };
+    const similarRatings = await getRatingSummaries({
+      data: { recipeIds: recipe.similarRecipes.map((r) => r.id) },
+    });
+    return { recipe, comments, user, rating, collections, groceryLists, calendars, similarRatings };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -83,7 +86,8 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, comments, user, rating, collections, groceryLists, calendars } = Route.useLoaderData();
+  const { recipe, comments, user, rating, collections, groceryLists, calendars, similarRatings } =
+    Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
@@ -401,6 +405,19 @@ function RecipePage() {
             {recipe.forks.map((fork) => (
               <li key={fork.id}>
                 <RecipeCard recipe={fork} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {recipe.similarRecipes.length > 0 && (
+        <section className="mt-8">
+          <h2 className="font-serif text-xl font-semibold text-ink">Similar recipes</h2>
+          <ul className="mt-3 flex flex-col gap-3">
+            {recipe.similarRecipes.map((similar) => (
+              <li key={similar.id}>
+                <RecipeCard recipe={similar} rating={similarRatings[similar.id]} />
               </li>
             ))}
           </ul>

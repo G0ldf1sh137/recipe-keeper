@@ -16,6 +16,7 @@ import {
   findRecipeById,
   findRecipes,
   findShareTokenForRecipe,
+  findSimilarRecipes,
   forkRecipe as forkRecipeDb,
   insertRecipe,
   listIngredientNames,
@@ -47,6 +48,12 @@ export const getRecipe = createServerFn({ method: "GET" })
       ? (await findRecipeById(recipe.parentRecipeId, context.user?.id)) ?? null
       : null;
     const forks = await findForksOfRecipe(recipe.id, context.user?.id);
+    const similarRecipes = await findSimilarRecipes(
+      recipe.tags,
+      recipe.ingredients.map((i) => i.name),
+      recipe.id,
+      context.user?.id,
+    );
     return {
       ...recipe,
       isOwner,
@@ -54,6 +61,7 @@ export const getRecipe = createServerFn({ method: "GET" })
       shareUrl: shareToken ? `/shared/${shareToken}` : null,
       forkedFrom,
       forks,
+      similarRecipes,
     };
   });
 

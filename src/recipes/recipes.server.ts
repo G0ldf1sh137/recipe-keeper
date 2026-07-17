@@ -17,6 +17,11 @@ function visibleToViewer(viewerId: string | undefined) {
     : eq(recipes.visibility, "public");
 }
 
+/**
+ * 
+ * @param term 
+ * @returns 
+ */
 function ingredientMatches(term: string) {
   return sql`exists (
     select 1 from jsonb_array_elements(${recipes.ingredients}) as ing
@@ -24,6 +29,11 @@ function ingredientMatches(term: string) {
   )`;
 }
 
+/**
+ * 
+ * @param term 
+ * @returns 
+ */
 function tagMatches(term: string) {
   return sql`exists (
     select 1 from unnest(${recipes.tags}) as t
@@ -55,6 +65,14 @@ const recipeWithOwnerColumns = {
   owner: { name: users.name, avatarUrl: users.avatarUrl, username: users.username },
 };
 
+/**
+ * 
+ * @param id 
+ * @param viewerId 
+ * @param shareToken 
+ * @param isAdmin 
+ * @returns 
+ */
 export async function findRecipeById(
   id: string,
   viewerId: string | undefined,
@@ -82,6 +100,12 @@ export async function findRecipeById(
   return sharedRows.at(0);
 }
 
+/**
+ * 
+ * @param filters 
+ * @param viewerId 
+ * @returns 
+ */
 export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, viewerId: string | undefined) {
   const conditions = [visibleToViewer(viewerId)];
   if (filters.ownerId) conditions.push(eq(recipes.ownerId, filters.ownerId));
@@ -102,6 +126,12 @@ export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, vi
   });
 }
 
+/**
+ * 
+ * @param recipeId 
+ * @param viewerId 
+ * @returns 
+ */
 export async function findForksOfRecipe(recipeId: string, viewerId: string | undefined) {
   return db
     .select(recipeWithOwnerColumns)
@@ -172,6 +202,64 @@ export async function findTagCounts(viewerId: string | undefined): Promise<{ tag
     where ${visibility}
     group by tag
     order by count desc, tag asc
+  `);
+  return [...rows];
+}
+
+export type SimilarRecipe = {
+  id: string;
+  title: string;
+  visibility: "private" | "public";
+  tags: string[];
+  photoUrls: string[];
+  coverPhotoUrl: string | null;
+};
+
+export async function findSimilarRecipes(
+  tags: string[],
+  ingredientNamesToMatch: string[],
+  excludeRecipeId: string,
+  viewerId: string | undefined,
+  limit = 6,
+): Promise<SimilarRecipe[]> {
+  if (tags.length === 0 && ingredientNamesToMatch.length === 0) return [];
+
+  const visibility = viewerId
+    ? sql`(${recipes.visibility} = 'public' or ${recipes.ownerId} = ${viewerId})`
+    : sql`${recipes.visibility} = 'public'`;
+  const lowerIngredientNames = ingredientNamesToMatch.map((n) => n.toLowerCase());
+
+  // drizzle expands an interpolated JS array into a parenthesized param list
+  // (for `in (...)`), not a single array-typed param, so `= any(...)` isn't
+  // usable here — and `in ()` on an empty array is invalid SQL, hence the guards.
+  const tagOverlap =
+    tags.length > 0
+      ? sql`(select count(*) from unnest(${recipes.tags}) as t where t in ${tags})`
+      : sql`0`;
+  const ingredientOverlap =
+    lowerIngredientNames.length > 0
+      ? sql`(select count(*) from jsonb_array_elements(${recipes.ingredients}) as ing
+          where lower(ing->>'name') in ${lowerIngredientNames})`
+      : sql`0`;
+
+  const rows = await db.execute<SimilarRecipe>(sql`
+    select id, title, visibility, tags, "photoUrls", "coverPhotoUrl" from (
+      select
+        ${recipes.id} as id,
+        ${recipes.title} as title,
+        ${recipes.visibility} as visibility,
+        ${recipes.tags} as tags,
+        ${recipes.photoUrls} as "photoUrls",
+        ${recipes.coverPhotoUrl} as "coverPhotoUrl",
+        ${recipes.createdAt} as "createdAt",
+        ${tagOverlap} as tag_overlap,
+        ${ingredientOverlap} as ingredient_overlap
+      from ${recipes}
+      where ${recipes.id} != ${excludeRecipeId} and ${visibility}
+    ) as scored
+    where tag_overlap + ingredient_overlap > 0
+    order by tag_overlap + ingredient_overlap desc, "createdAt" desc
+    limit ${limit}
   `);
   return [...rows];
 }
