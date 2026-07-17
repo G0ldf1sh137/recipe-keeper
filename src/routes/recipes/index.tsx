@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { listRecipes } from "#/recipes/recipes.functions";
+import { listRecipes, getRandomRecipeId } from "#/recipes/recipes.functions";
 import { getRatingSummaries } from "#/ratings/ratings.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
+import { RecipeCardSkeleton } from "#/recipes/RecipeCardSkeleton";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
@@ -16,18 +18,72 @@ export const Route = createFileRoute("/recipes/")({
   validateSearch: recipesSearchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    const recipes = await listRecipes({ data: deps });
+    const { recipes, hasMore } = await listRecipes({ data: deps });
     const ratings = await getRatingSummaries({ data: { recipeIds: recipes.map((r) => r.id) } });
-    return { recipes, ratings };
+    return { recipes, hasMore, ratings };
   },
   component: RecipesListPage,
 });
 
 function RecipesListPage() {
-  const { recipes, ratings } = Route.useLoaderData();
-  const ratingsById = new Map(Object.entries(ratings));
+  const loaderData = Route.useLoaderData();
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
+  const listRecipesFn = useServerFn(listRecipes);
+  const getRatingSummariesFn = useServerFn(getRatingSummaries);
+  const getRandomRecipeIdFn = useServerFn(getRandomRecipeId);
+
+  const [recipes, setRecipes] = useState(loaderData.recipes);
+  const [hasMore, setHasMore] = useState(loaderData.hasMore);
+  const [ratingsById, setRatingsById] = useState(() => new Map(Object.entries(loaderData.ratings)));
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  // Synchronous guards for the scroll-triggered fetch below — state alone isn't
+  // enough here, since IntersectionObserver can fire again before a re-render
+  // (with the updated `loadingMore`/`hasMore` state) has had a chance to land.
+  const scrollStateRef = useRef({ recipes: loaderData.recipes, hasMore: loaderData.hasMore, loadingMore: false });
+
+  useEffect(() => {
+    scrollStateRef.current = { recipes: loaderData.recipes, hasMore: loaderData.hasMore, loadingMore: false };
+    setRecipes(loaderData.recipes);
+    setHasMore(loaderData.hasMore);
+    setRatingsById(new Map(Object.entries(loaderData.ratings)));
+  }, [loaderData]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) void loadMore();
+    });
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+
+    async function loadMore() {
+      const current = scrollStateRef.current;
+      if (current.loadingMore || !current.hasMore) return;
+      scrollStateRef.current = { ...current, loadingMore: true };
+      setLoadingMore(true);
+      try {
+        const result = await listRecipesFn({ data: { ...search, offset: current.recipes.length } });
+        const newRatings = await getRatingSummariesFn({
+          data: { recipeIds: result.recipes.map((r) => r.id) },
+        });
+        const nextRecipes = [...current.recipes, ...result.recipes];
+        scrollStateRef.current = { recipes: nextRecipes, hasMore: result.hasMore, loadingMore: false };
+        setRecipes(nextRecipes);
+        setRatingsById((prev) => {
+          const next = new Map(prev);
+          for (const [id, summary] of Object.entries(newRatings)) next.set(id, summary);
+          return next;
+        });
+        setHasMore(result.hasMore);
+      } finally {
+        setLoadingMore(false);
+      }
+    }
+  }, [search, listRecipesFn, getRatingSummariesFn]);
 
   const [qInput, setQInput] = useState(search.q ?? "");
   useEffect(() => setQInput(search.q ?? ""), [search.q]);
@@ -50,9 +106,9 @@ function RecipesListPage() {
 
   const hasFilters = Boolean(search.visibility || search.q);
 
-  function handleRandom() {
-    const recipe = recipes[Math.floor(Math.random() * recipes.length)];
-    void navigate({ to: "/recipes/$recipeId", params: { recipeId: recipe.id } });
+  async function handleRandom() {
+    const id = await getRandomRecipeIdFn({ data: search });
+    if (id) void navigate({ to: "/recipes/$recipeId", params: { recipeId: id } });
   }
 
   return (
@@ -134,13 +190,26 @@ function RecipesListPage() {
           {hasFilters ? "No recipes match these filters." : "No recipes yet. Create the first one!"}
         </p>
       ) : (
-        <ul className="mt-6 flex flex-col gap-3">
-          {recipes.map((recipe) => (
-            <li key={recipe.id}>
-              <RecipeCard recipe={recipe} rating={ratingsById.get(recipe.id)} />
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="mt-6 flex flex-col gap-3">
+            {recipes.map((recipe) => (
+              <li key={recipe.id}>
+                <RecipeCard recipe={recipe} rating={ratingsById.get(recipe.id)} />
+              </li>
+            ))}
+            {loadingMore && (
+              <>
+                <li>
+                  <RecipeCardSkeleton />
+                </li>
+                <li>
+                  <RecipeCardSkeleton />
+                </li>
+              </>
+            )}
+          </ul>
+          {hasMore && <div ref={sentinelRef} className="h-1" />}
+        </>
       )}
     </div>
   );

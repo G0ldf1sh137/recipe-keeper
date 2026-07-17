@@ -2,13 +2,17 @@ import { and, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
 import { recipes, shares, users, ingredientNames, unitNames, tagNames } from "#/db/schema";
 import { deleteImageUrls } from "#/uploads/uploads.server";
-import type {
-  createRecipeSchema,
-  deleteRecipeSchema,
-  listRecipesSchema,
-  updateRecipeSchema,
-} from "./schemas";
+import type { createRecipeSchema, deleteRecipeSchema, updateRecipeSchema } from "./schemas";
 import type { z } from "zod";
+import type { Visibility } from "#/db/schema";
+
+type RecipeFilters = {
+  ownerId?: string;
+  visibility?: Visibility;
+  q?: string;
+  limit?: number;
+  offset?: number;
+};
 
 // A recipe is visible to a viewer if it's public, or the viewer owns it.
 function visibleToViewer(viewerId: string | undefined) {
@@ -106,7 +110,7 @@ export async function findRecipeById(
  * @param viewerId 
  * @returns 
  */
-export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, viewerId: string | undefined) {
+function buildRecipeFilterConditions(filters: RecipeFilters, viewerId: string | undefined) {
   const conditions = [visibleToViewer(viewerId)];
   if (filters.ownerId) conditions.push(eq(recipes.ownerId, filters.ownerId));
   if (filters.visibility) conditions.push(eq(recipes.visibility, filters.visibility));
@@ -120,10 +124,31 @@ export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, vi
       ),
     );
   }
-  return db.query.recipes.findMany({
+  return conditions;
+}
+
+export async function findRecipes(filters: RecipeFilters, viewerId: string | undefined) {
+  const conditions = buildRecipeFilterConditions(filters, viewerId);
+  const offset: number = filters.offset ?? 0;
+  const limit: number | undefined = filters.limit;
+  const rows = await db.query.recipes.findMany({
     where: and(...conditions),
-    orderBy: (r, { desc }) => [desc(r.createdAt)],
+    orderBy: (r, { desc, asc }) => [desc(r.createdAt), asc(r.id)],
+    ...(limit ? { limit: limit + 1, offset } : {}),
   });
+  if (!limit) return { recipes: rows, hasMore: false };
+  return { recipes: rows.slice(0, limit), hasMore: rows.length > limit };
+}
+
+export async function findRandomRecipeId(filters: RecipeFilters, viewerId: string | undefined) {
+  const conditions = buildRecipeFilterConditions(filters, viewerId);
+  const rows = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(and(...conditions))
+    .orderBy(sql`random()`)
+    .limit(1);
+  return rows.length > 0 ? rows[0].id : null;
 }
 
 /**

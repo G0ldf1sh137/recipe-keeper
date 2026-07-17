@@ -5,6 +5,7 @@ import {
   deleteRecipeSchema,
   forkRecipeSchema,
   getRecipeSchema,
+  getRelatedRecipesSchema,
   listRecipesSchema,
   recipeShareSchema,
   updateRecipeSchema,
@@ -13,6 +14,7 @@ import {
   createShareForRecipe,
   deleteOwnedRecipe,
   findForksOfRecipe,
+  findRandomRecipeId,
   findRecipeById,
   findRecipes,
   findShareTokenForRecipe,
@@ -34,6 +36,11 @@ export const listRecipes = createServerFn({ method: "GET" })
   .validator(listRecipesSchema)
   .handler(async ({ data, context }) => findRecipes(data, context.user?.id));
 
+export const getRandomRecipeId = createServerFn({ method: "GET" })
+  .middleware([sessionMiddleware])
+  .validator(listRecipesSchema)
+  .handler(async ({ data, context }) => findRandomRecipeId(data, context.user?.id));
+
 export const getRecipe = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
   .validator(getRecipeSchema)
@@ -47,22 +54,24 @@ export const getRecipe = createServerFn({ method: "GET" })
     const forkedFrom = recipe.parentRecipeId
       ? (await findRecipeById(recipe.parentRecipeId, context.user?.id)) ?? null
       : null;
-    const forks = await findForksOfRecipe(recipe.id, context.user?.id);
-    const similarRecipes = await findSimilarRecipes(
-      recipe.tags,
-      recipe.ingredients.map((i) => i.name),
-      recipe.id,
-      context.user?.id,
-    );
     return {
       ...recipe,
       isOwner,
       canEdit,
       shareUrl: shareToken ? `/shared/${shareToken}` : null,
       forkedFrom,
-      forks,
-      similarRecipes,
     };
+  });
+
+export const getRelatedRecipes = createServerFn({ method: "GET" })
+  .middleware([sessionMiddleware])
+  .validator(getRelatedRecipesSchema)
+  .handler(async ({ data, context }) => {
+    const [forks, similarRecipes] = await Promise.all([
+      findForksOfRecipe(data.recipeId, context.user?.id),
+      findSimilarRecipes(data.tags, data.ingredientNames, data.recipeId, context.user?.id),
+    ]);
+    return { forks, similarRecipes };
   });
 
 export const createRecipeShare = createServerFn({ method: "POST" })

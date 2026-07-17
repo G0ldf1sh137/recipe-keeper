@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import {
   getRecipe,
+  getRelatedRecipes,
   deleteRecipe,
   createRecipeShare,
   revokeRecipeShare,
   forkRecipe,
 } from "#/recipes/recipes.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
+import { RecipeCardSkeleton } from "#/recipes/RecipeCardSkeleton";
 import { listComments } from "#/comments/comments.functions";
 import { getSessionUser } from "#/auth/auth.functions";
 import { CommentThread } from "#/comments/CommentThread";
@@ -58,10 +60,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
           getMyNote({ data: { recipeId: params.recipeId } }),
         ])
       : [[], [], [], null];
-    const similarRatings = await getRatingSummaries({
-      data: { recipeIds: recipe.similarRecipes.map((r) => r.id) },
-    });
-    return { recipe, comments, user, rating, collections, groceryLists, calendars, note, similarRatings };
+    return { recipe, comments, user, rating, collections, groceryLists, calendars, note };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -81,8 +80,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, comments, user, rating, collections, groceryLists, calendars, note, similarRatings } =
-    Route.useLoaderData();
+  const { recipe, comments, user, rating, collections, groceryLists, calendars, note } = Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
@@ -91,9 +89,41 @@ function RecipePage() {
   const revokeShareFn = useServerFn(revokeRecipeShare);
   const forkRecipeFn = useServerFn(forkRecipe);
   const reportRecipeFn = useServerFn(reportRecipe);
+  const getRelatedRecipesFn = useServerFn(getRelatedRecipes);
+  const getRatingSummariesFn = useServerFn(getRatingSummaries);
   const [deleting, setDeleting] = useState(false);
   const [forking, setForking] = useState(false);
   const { scale, setScale, customInput, handleCustomInputChange, activeFactor, isUnscaled } = useRecipeScale();
+
+  const [related, setRelated] = useState<Awaited<ReturnType<typeof getRelatedRecipes>> | null>(null);
+  const [similarRatings, setSimilarRatings] = useState<Awaited<ReturnType<typeof getRatingSummaries>>>({});
+
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    cancelledRef.current = false;
+    setRelated(null);
+    setSimilarRatings({});
+    void getRelatedRecipesFn({
+      data: {
+        recipeId: recipe.id,
+        tags: recipe.tags,
+        ingredientNames: recipe.ingredients.map((i) => i.name),
+      },
+    }).then((result) => {
+      if (cancelledRef.current) return;
+      setRelated(result);
+      void getRatingSummariesFn({
+        data: { recipeIds: result.similarRecipes.map((r) => r.id) },
+      }).then((summaries) => {
+        if (cancelledRef.current) return;
+        setSimilarRatings(summaries);
+      });
+    });
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [recipe.id, recipe.tags, recipe.ingredients, getRelatedRecipesFn, getRatingSummariesFn]);
 
   async function handleFork() {
     setForking(true);
@@ -372,30 +402,44 @@ function RecipePage() {
 
       <NoteEditor recipeId={recipe.id} initialText={note?.text ?? ""} canEdit={!!user} />
 
-      {recipe.forks.length > 0 && (
+      {(related === null || related.forks.length > 0) && (
         <section className="mt-8">
           <h2 className="font-serif text-xl font-semibold text-ink">
-            Forked {recipe.forks.length} time{recipe.forks.length === 1 ? "" : "s"}
+            {related
+              ? `Forked ${related.forks.length} time${related.forks.length === 1 ? "" : "s"}`
+              : "Forked recipes"}
           </h2>
           <ul className="mt-3 flex flex-col gap-3">
-            {recipe.forks.map((fork) => (
-              <li key={fork.id}>
-                <RecipeCard recipe={fork} />
-              </li>
-            ))}
+            {related === null
+              ? [0, 1].map((i) => (
+                  <li key={i}>
+                    <RecipeCardSkeleton />
+                  </li>
+                ))
+              : related.forks.map((fork) => (
+                  <li key={fork.id}>
+                    <RecipeCard recipe={fork} />
+                  </li>
+                ))}
           </ul>
         </section>
       )}
 
-      {recipe.similarRecipes.length > 0 && (
+      {(related === null || related.similarRecipes.length > 0) && (
         <section className="mt-8">
           <h2 className="font-serif text-xl font-semibold text-ink">Similar recipes</h2>
           <ul className="mt-3 flex flex-col gap-3">
-            {recipe.similarRecipes.map((similar) => (
-              <li key={similar.id}>
-                <RecipeCard recipe={similar} rating={similarRatings[similar.id]} />
-              </li>
-            ))}
+            {related === null
+              ? [0, 1].map((i) => (
+                  <li key={i}>
+                    <RecipeCardSkeleton />
+                  </li>
+                ))
+              : related.similarRecipes.map((similar) => (
+                  <li key={similar.id}>
+                    <RecipeCard recipe={similar} rating={similarRatings[similar.id]} />
+                  </li>
+                ))}
           </ul>
         </section>
       )}
