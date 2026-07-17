@@ -35,13 +35,15 @@ export const getCollection = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
   .validator(getCollectionSchema)
   .handler(async ({ data, context }) => {
-    const collection = await findCollectionForViewer(data.id, context.user?.id, data.shareToken);
+    const isAdmin = context.user?.isAdmin ?? false;
+    const collection = await findCollectionForViewer(data.id, context.user?.id, data.shareToken, isAdmin);
     if (!collection) throw notFound();
     const isOwner = collection.ownerId === context.user?.id;
+    const canManage = isOwner || isAdmin;
     const shareToken = isOwner ? await findShareTokenForCollection(collection.id, context.user!.id) : null;
     const items = await findRecipesInCollection(data.id);
     return {
-      collection: { ...collection, isOwner, shareUrl: shareToken ? `/shared/${shareToken}` : null },
+      collection: { ...collection, isOwner, canManage, shareUrl: shareToken ? `/shared/${shareToken}` : null },
       items,
     };
   });
@@ -68,7 +70,12 @@ export const updateCollectionVisibility = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
   .validator(updateCollectionVisibilitySchema)
   .handler(async ({ data, context }) => {
-    const updated = await updateOwnedCollectionVisibility(data.id, context.user.id, data.visibility);
+    const updated = await updateOwnedCollectionVisibility(
+      data.id,
+      context.user.id,
+      data.visibility,
+      context.user.isAdmin,
+    );
     if (!updated) throw notFound();
     return updated;
   });
@@ -82,7 +89,7 @@ export const renameCollection = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
   .validator(renameCollectionSchema)
   .handler(async ({ data, context }) => {
-    const updated = await renameOwnedCollection(data.id, context.user.id, data.name);
+    const updated = await renameOwnedCollection(data.id, context.user.id, data.name, context.user.isAdmin);
     if (!updated) throw notFound();
     return updated;
   });
@@ -91,7 +98,7 @@ export const deleteCollection = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
   .validator(deleteCollectionSchema)
   .handler(async ({ data, context }) => {
-    const deleted = await deleteOwnedCollection(data.id, context.user.id);
+    const deleted = await deleteOwnedCollection(data.id, context.user.id, context.user.isAdmin);
     if (!deleted) throw notFound();
     return deleted;
   });
@@ -107,7 +114,12 @@ export const toggleRecipeInCollection = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const recipe = await findRecipeById(data.recipeId, context.user.id);
     if (!recipe) throw notFound();
-    const result = await toggleMembership(data.collectionId, data.recipeId, context.user.id);
+    const result = await toggleMembership(
+      data.collectionId,
+      data.recipeId,
+      context.user.id,
+      context.user.isAdmin,
+    );
     if (!result) throw notFound();
     return result;
   });

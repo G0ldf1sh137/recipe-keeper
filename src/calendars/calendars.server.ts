@@ -18,19 +18,24 @@ export async function findCalendarsByOwner(ownerId: string) {
     .orderBy(calendars.createdAt);
 }
 
-export async function findCalendarById(id: string, ownerId: string) {
+export async function findCalendarById(id: string, ownerId: string, isAdmin = false) {
   return db.query.calendars.findFirst({
-    where: and(eq(calendars.id, id), eq(calendars.ownerId, ownerId)),
+    where: isAdmin ? eq(calendars.id, id) : and(eq(calendars.id, id), eq(calendars.ownerId, ownerId)),
   });
 }
 
 // A calendar is visible to a viewer if it's public, or the viewer owns it.
-export async function findCalendarForViewer(id: string, viewerId: string | undefined, shareToken?: string) {
+export async function findCalendarForViewer(
+  id: string,
+  viewerId: string | undefined,
+  shareToken?: string,
+  isAdmin = false,
+) {
   const visible = viewerId
     ? or(eq(calendars.visibility, "public"), eq(calendars.ownerId, viewerId))
     : eq(calendars.visibility, "public");
   const calendar = await db.query.calendars.findFirst({
-    where: and(eq(calendars.id, id), visible),
+    where: isAdmin ? eq(calendars.id, id) : and(eq(calendars.id, id), visible),
   });
   if (calendar) return calendar;
   if (!shareToken) return undefined;
@@ -67,20 +72,15 @@ export async function insertCalendar(name: string, ownerId: string) {
   return calendar;
 }
 
-export async function renameOwnedCalendar(id: string, ownerId: string, name: string) {
-  const rows = await db
-    .update(calendars)
-    .set({ name })
-    .where(and(eq(calendars.id, id), eq(calendars.ownerId, ownerId)))
-    .returning();
+export async function renameOwnedCalendar(id: string, ownerId: string, name: string, isAdmin = false) {
+  const scoped = isAdmin ? eq(calendars.id, id) : and(eq(calendars.id, id), eq(calendars.ownerId, ownerId));
+  const rows = await db.update(calendars).set({ name }).where(scoped).returning();
   return rows.at(0);
 }
 
-export async function deleteOwnedCalendar(id: string, ownerId: string) {
-  const rows = await db
-    .delete(calendars)
-    .where(and(eq(calendars.id, id), eq(calendars.ownerId, ownerId)))
-    .returning();
+export async function deleteOwnedCalendar(id: string, ownerId: string, isAdmin = false) {
+  const scoped = isAdmin ? eq(calendars.id, id) : and(eq(calendars.id, id), eq(calendars.ownerId, ownerId));
+  const rows = await db.delete(calendars).where(scoped).returning();
   return rows.at(0);
 }
 
@@ -117,8 +117,9 @@ export async function addEntryToCalendar(
   recipeId: string,
   dayOfWeek: DayOfWeek,
   ownerId: string,
+  isAdmin = false,
 ) {
-  const calendar = await findCalendarById(calendarId, ownerId);
+  const calendar = await findCalendarById(calendarId, ownerId, isAdmin);
   if (!calendar) return undefined;
 
   const [{ maxPosition }] = await db
@@ -138,8 +139,9 @@ export async function moveEntryInCalendar(
   entryId: string,
   direction: "up" | "down",
   ownerId: string,
+  isAdmin = false,
 ) {
-  const calendar = await findCalendarById(calendarId, ownerId);
+  const calendar = await findCalendarById(calendarId, ownerId, isAdmin);
   if (!calendar) return undefined;
 
   const entry = await db.query.calendarEntries.findFirst({
@@ -164,8 +166,13 @@ export async function moveEntryInCalendar(
   return { ok: true };
 }
 
-export async function removeEntryFromCalendar(calendarId: string, entryId: string, ownerId: string) {
-  const calendar = await findCalendarById(calendarId, ownerId);
+export async function removeEntryFromCalendar(
+  calendarId: string,
+  entryId: string,
+  ownerId: string,
+  isAdmin = false,
+) {
+  const calendar = await findCalendarById(calendarId, ownerId, isAdmin);
   if (!calendar) return undefined;
   const rows = await db
     .delete(calendarEntries)
@@ -174,12 +181,14 @@ export async function removeEntryFromCalendar(calendarId: string, entryId: strin
   return rows.at(0);
 }
 
-export async function updateCalendarVisibility(id: string, ownerId: string, visibility: Visibility) {
-  const rows = await db
-    .update(calendars)
-    .set({ visibility })
-    .where(and(eq(calendars.id, id), eq(calendars.ownerId, ownerId)))
-    .returning();
+export async function updateCalendarVisibility(
+  id: string,
+  ownerId: string,
+  visibility: Visibility,
+  isAdmin = false,
+) {
+  const scoped = isAdmin ? eq(calendars.id, id) : and(eq(calendars.id, id), eq(calendars.ownerId, ownerId));
+  const rows = await db.update(calendars).set({ visibility }).where(scoped).returning();
   return rows.at(0);
 }
 

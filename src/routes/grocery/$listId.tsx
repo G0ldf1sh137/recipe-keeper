@@ -158,6 +158,12 @@ function GroceryListPage() {
         )}
       </div>
 
+      {!list.isOwner && list.canManage && (
+        <p className="mt-3 rounded-lg bg-accent-50 px-3 py-2 text-sm font-medium text-accent-700">
+          Viewing as admin — you aren't the owner of this grocery list.
+        </p>
+      )}
+
       <form onSubmit={handleAddItem} className="mt-6 flex flex-wrap gap-2">
         <input
           className="w-20 rounded-lg border border-accent-100 px-2 py-1 focus:border-accent-400 focus:outline-none"

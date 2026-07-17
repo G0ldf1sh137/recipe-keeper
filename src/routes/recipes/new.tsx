@@ -206,7 +206,6 @@ function NewRecipePage() {
         knownUnitNames={knownUnitNames}
         onPhotoUrlsChange={(photoUrls) => setFormValues((prev) => ({ ...prev, photoUrls }))}
         onSourceUrlChange={(sourceUrl) => setFormValues((prev) => ({ ...prev, sourceUrl }))}
-        onSourcePdfUrlChange={(sourcePdfUrl) => setFormValues((prev) => ({ ...prev, sourcePdfUrl }))}
         onSubmit={async (values) => {
           const recipe = await createRecipeFn({ data: values });
           await navigate({ to: "/recipes/$recipeId", params: { recipeId: recipe.id } });

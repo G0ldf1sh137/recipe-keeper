@@ -10,7 +10,7 @@ export const listComments = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
   .validator(listCommentsSchema)
   .handler(async ({ data, context }) => {
-    const recipe = await findRecipeById(data.recipeId, context.user?.id, data.shareToken);
+    const recipe = await findRecipeById(data.recipeId, context.user?.id, data.shareToken, context.user?.isAdmin);
     if (!recipe) throw notFound();
     return findCommentTreeForRecipe(data.recipeId);
   });
@@ -19,7 +19,7 @@ export const createComment = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
   .validator(createCommentSchema)
   .handler(async ({ data, context }) => {
-    const recipe = await findRecipeById(data.recipeId, context.user.id);
+    const recipe = await findRecipeById(data.recipeId, context.user.id, undefined, context.user.isAdmin);
     if (!recipe) throw notFound();
 
     if (data.parentId) {

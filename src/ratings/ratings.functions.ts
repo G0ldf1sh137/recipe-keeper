@@ -10,7 +10,7 @@ export const getRatingSummary = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
   .validator(getRatingSummarySchema)
   .handler(async ({ data, context }) => {
-    const recipe = await findRecipeById(data.recipeId, context.user?.id, data.shareToken);
+    const recipe = await findRecipeById(data.recipeId, context.user?.id, data.shareToken, context.user?.isAdmin);
     if (!recipe) throw notFound();
     return findRatingSummary(data.recipeId, context.user?.id);
   });
@@ -27,7 +27,7 @@ export const rateRecipe = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
   .validator(rateRecipeSchema)
   .handler(async ({ data, context }) => {
-    const recipe = await findRecipeById(data.recipeId, context.user.id);
+    const recipe = await findRecipeById(data.recipeId, context.user.id, undefined, context.user.isAdmin);
     if (!recipe) throw notFound();
     const isFirstRating = !(await hasRated(data.recipeId, context.user.id));
     await upsertRating(data.recipeId, context.user.id, data.value);

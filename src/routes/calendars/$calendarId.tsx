@@ -152,7 +152,7 @@ function CalendarPage() {
         ) : (
           <>
             <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">{calendar.name}</h1>
-            {calendar.isOwner && (
+            {calendar.canManage && (
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -174,7 +174,13 @@ function CalendarPage() {
         )}
       </div>
 
-      {calendar.isOwner ? (
+      {!calendar.isOwner && calendar.canManage && (
+        <p className="mt-3 rounded-lg bg-accent-50 px-3 py-2 text-sm font-medium text-accent-700">
+          Viewing as admin — you aren't the owner of this calendar.
+        </p>
+      )}
+
+      {calendar.canManage ? (
         <div className="mt-3 flex flex-col gap-3">
           <label className="flex items-center gap-2 text-sm">
             <span className="font-medium text-ink/70">Visibility</span>
@@ -190,12 +196,14 @@ function CalendarPage() {
               ))}
             </select>
           </label>
-          <ShareControl
-            shareUrl={calendar.shareUrl}
-            disabled={calendar.visibility === "private"}
-            onShare={handleShare}
-            onRevoke={handleRevokeShare}
-          />
+          {calendar.isOwner && (
+            <ShareControl
+              shareUrl={calendar.shareUrl}
+              disabled={calendar.visibility === "private"}
+              onShare={handleShare}
+              onRevoke={handleRevokeShare}
+            />
+          )}
         </div>
       ) : (
         <span className="mt-3 block text-xs font-medium uppercase tracking-wide text-accent-600">
@@ -220,7 +228,7 @@ function CalendarPage() {
                     >
                       {entry.title}
                     </Link>
-                    {calendar.isOwner && (
+                    {calendar.canManage && (
                       <div className="flex shrink-0 items-center gap-1">
                         <button
                           type="button"

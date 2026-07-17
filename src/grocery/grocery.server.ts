@@ -21,9 +21,11 @@ export async function findGroceryListsByOwner(ownerId: string) {
     .orderBy(groceryLists.createdAt);
 }
 
-export async function findGroceryListById(id: string, ownerId: string) {
+export async function findGroceryListById(id: string, ownerId: string, isAdmin = false) {
   return db.query.groceryLists.findFirst({
-    where: and(eq(groceryLists.id, id), eq(groceryLists.ownerId, ownerId)),
+    where: isAdmin
+      ? eq(groceryLists.id, id)
+      : and(eq(groceryLists.id, id), eq(groceryLists.ownerId, ownerId)),
   });
 }
 
@@ -57,20 +59,19 @@ export async function insertGroceryList(name: string, ownerId: string) {
   return list;
 }
 
-export async function renameOwnedGroceryList(id: string, ownerId: string, name: string) {
-  const rows = await db
-    .update(groceryLists)
-    .set({ name })
-    .where(and(eq(groceryLists.id, id), eq(groceryLists.ownerId, ownerId)))
-    .returning();
+export async function renameOwnedGroceryList(id: string, ownerId: string, name: string, isAdmin = false) {
+  const scoped = isAdmin
+    ? eq(groceryLists.id, id)
+    : and(eq(groceryLists.id, id), eq(groceryLists.ownerId, ownerId));
+  const rows = await db.update(groceryLists).set({ name }).where(scoped).returning();
   return rows.at(0);
 }
 
-export async function deleteOwnedGroceryList(id: string, ownerId: string) {
-  const rows = await db
-    .delete(groceryLists)
-    .where(and(eq(groceryLists.id, id), eq(groceryLists.ownerId, ownerId)))
-    .returning();
+export async function deleteOwnedGroceryList(id: string, ownerId: string, isAdmin = false) {
+  const scoped = isAdmin
+    ? eq(groceryLists.id, id)
+    : and(eq(groceryLists.id, id), eq(groceryLists.ownerId, ownerId));
+  const rows = await db.delete(groceryLists).where(scoped).returning();
   return rows.at(0);
 }
 
@@ -87,8 +88,13 @@ async function insertIngredientsForRecipe(listId: string, recipe: Awaited<Return
   );
 }
 
-export async function toggleRecipeInGroceryList(listId: string, recipeId: string, ownerId: string) {
-  const list = await findGroceryListById(listId, ownerId);
+export async function toggleRecipeInGroceryList(
+  listId: string,
+  recipeId: string,
+  ownerId: string,
+  isAdmin = false,
+) {
+  const list = await findGroceryListById(listId, ownerId, isAdmin);
   if (!list) return undefined;
 
   const existing = await db.query.groceryListItems.findFirst({
@@ -139,8 +145,9 @@ export async function addManualItem(
   listId: string,
   ownerId: string,
   item: { qty: string; unit: string; name: string },
+  isAdmin = false,
 ) {
-  const list = await findGroceryListById(listId, ownerId);
+  const list = await findGroceryListById(listId, ownerId, isAdmin);
   if (!list) return undefined;
   const [row] = await db
     .insert(groceryListItems)
@@ -149,8 +156,8 @@ export async function addManualItem(
   return row;
 }
 
-export async function deleteGroceryItem(listId: string, itemId: string, ownerId: string) {
-  const list = await findGroceryListById(listId, ownerId);
+export async function deleteGroceryItem(listId: string, itemId: string, ownerId: string, isAdmin = false) {
+  const list = await findGroceryListById(listId, ownerId, isAdmin);
   if (!list) return undefined;
   const rows = await db
     .delete(groceryListItems)
@@ -159,8 +166,14 @@ export async function deleteGroceryItem(listId: string, itemId: string, ownerId:
   return rows.at(0);
 }
 
-export async function setItemsChecked(listId: string, itemIds: string[], ownerId: string, checked: boolean) {
-  const list = await findGroceryListById(listId, ownerId);
+export async function setItemsChecked(
+  listId: string,
+  itemIds: string[],
+  ownerId: string,
+  checked: boolean,
+  isAdmin = false,
+) {
+  const list = await findGroceryListById(listId, ownerId, isAdmin);
   if (!list) return undefined;
   if (itemIds.length === 0) return { ok: true };
   await db
@@ -172,8 +185,8 @@ export async function setItemsChecked(listId: string, itemIds: string[], ownerId
 
 type GroceryLine = { qty: string; unit: string; checked: boolean; itemIds: string[] };
 
-export async function getGroceryListWithGroups(id: string, ownerId: string) {
-  const list = await findGroceryListById(id, ownerId);
+export async function getGroceryListWithGroups(id: string, ownerId: string, isAdmin = false) {
+  const list = await findGroceryListById(id, ownerId, isAdmin);
   if (!list) return undefined;
 
   const items = await db.query.groceryListItems.findMany({

@@ -35,9 +35,11 @@ export const getRecipe = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
   .validator(getRecipeSchema)
   .handler(async ({ data, context }) => {
-    const recipe = await findRecipeById(data.id, context.user?.id, data.shareToken);
+    const isAdmin = context.user?.isAdmin ?? false;
+    const recipe = await findRecipeById(data.id, context.user?.id, data.shareToken, isAdmin);
     if (!recipe) throw notFound();
     const isOwner = recipe.ownerId === context.user?.id;
+    const canEdit = isOwner || isAdmin;
     const shareToken = isOwner ? await findShareTokenForRecipe(recipe.id, context.user!.id) : null;
     const forkedFrom = recipe.parentRecipeId
       ? (await findRecipeById(recipe.parentRecipeId, context.user?.id)) ?? null
@@ -46,6 +48,7 @@ export const getRecipe = createServerFn({ method: "GET" })
     return {
       ...recipe,
       isOwner,
+      canEdit,
       shareUrl: shareToken ? `/shared/${shareToken}` : null,
       forkedFrom,
       forks,
@@ -98,7 +101,7 @@ export const updateRecipe = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
   .validator(updateRecipeSchema)
   .handler(async ({ data, context }) => {
-    const recipe = await updateOwnedRecipe(data, context.user.id);
+    const recipe = await updateOwnedRecipe(data, context.user.id, context.user.isAdmin);
     if (!recipe) throw notFound();
     return recipe;
   });
@@ -107,7 +110,7 @@ export const deleteRecipe = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
   .validator(deleteRecipeSchema)
   .handler(async ({ data, context }) => {
-    const recipe = await deleteOwnedRecipe(data, context.user.id);
+    const recipe = await deleteOwnedRecipe(data, context.user.id, context.user.isAdmin);
     if (!recipe) throw notFound();
     return recipe;
   });

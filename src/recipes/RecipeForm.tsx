@@ -2,7 +2,6 @@ import { useState } from "react";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 import { MultiImageUpload } from "#/uploads/ImageUpload";
-import { PdfUpload } from "#/uploads/PdfUpload";
 
 export type IngredientRow = { qty: string; unit: string; name: string };
 export type StepRow = { text: string; imageUrls: string[] };
@@ -72,7 +71,6 @@ export function RecipeForm({
   onSubmit,
   onPhotoUrlsChange,
   onSourceUrlChange,
-  onSourcePdfUrlChange,
   knownIngredientNames = [],
   knownUnitNames = [],
 }: {
@@ -81,7 +79,6 @@ export function RecipeForm({
   onSubmit: (values: RecipeFormSubmitValues) => Promise<void>;
   onPhotoUrlsChange?: (urls: string[]) => void;
   onSourceUrlChange?: (url: string | null) => void;
-  onSourcePdfUrlChange?: (url: string | null) => void;
   knownIngredientNames?: string[];
   knownUnitNames?: string[];
 }) {
@@ -90,16 +87,11 @@ export function RecipeForm({
   const [photoUrls, setPhotoUrls] = useState<string[]>(initialValues.photoUrls);
   const [coverPhotoUrl, setCoverPhotoUrl] = useState<string | null>(initialValues.coverPhotoUrl);
   const [sourceUrlInput, setSourceUrlInput] = useState(initialValues.sourceUrl ?? "");
-  const [sourcePdfUrl, setSourcePdfUrl] = useState<string | null>(initialValues.sourcePdfUrl);
+  const sourcePdfUrl = initialValues.sourcePdfUrl;
 
   function updateSourceUrl(value: string) {
     setSourceUrlInput(value);
     onSourceUrlChange?.(value.trim() || null);
-  }
-
-  function updateSourcePdfUrl(url: string | null) {
-    setSourcePdfUrl(url);
-    onSourcePdfUrlChange?.(url);
   }
 
   function updatePhotoUrls(urls: string[]) {
@@ -193,11 +185,6 @@ export function RecipeForm({
         {photoUrls.length > 1 && (
           <p className="text-xs text-ink/50">Click ☆ on a photo to use it as the cover shown in recipe lists.</p>
         )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <span className="font-medium text-ink/70">Recipe PDF</span>
-        <PdfUpload url={sourcePdfUrl} onChange={updateSourcePdfUrl} />
       </div>
 
       <label className="flex flex-col gap-1">

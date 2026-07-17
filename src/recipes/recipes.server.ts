@@ -41,12 +41,17 @@ const recipeWithOwnerColumns = {
   owner: { name: users.name, avatarUrl: users.avatarUrl, username: users.username },
 };
 
-export async function findRecipeById(id: string, viewerId: string | undefined, shareToken?: string) {
+export async function findRecipeById(
+  id: string,
+  viewerId: string | undefined,
+  shareToken?: string,
+  isAdmin = false,
+) {
   const rows = await db
     .select(recipeWithOwnerColumns)
     .from(recipes)
     .innerJoin(users, eq(recipes.ownerId, users.id))
-    .where(and(eq(recipes.id, id), visibleToViewer(viewerId)));
+    .where(isAdmin ? eq(recipes.id, id) : and(eq(recipes.id, id), visibleToViewer(viewerId)));
   const recipe = rows.at(0);
   if (recipe) return recipe;
   if (!shareToken) return undefined;
@@ -170,16 +175,15 @@ async function findAllReferencedImageUrls(): Promise<Set<string>> {
   return urls;
 }
 
-export async function updateOwnedRecipe(input: z.infer<typeof updateRecipeSchema>, ownerId: string) {
+export async function updateOwnedRecipe(
+  input: z.infer<typeof updateRecipeSchema>,
+  ownerId: string,
+  isAdmin = false,
+) {
   const { id, ...changes } = input;
-  const before = await db.query.recipes.findFirst({
-    where: and(eq(recipes.id, id), eq(recipes.ownerId, ownerId)),
-  });
-  const rows = await db
-    .update(recipes)
-    .set(changes)
-    .where(and(eq(recipes.id, id), eq(recipes.ownerId, ownerId)))
-    .returning();
+  const scoped = isAdmin ? eq(recipes.id, id) : and(eq(recipes.id, id), eq(recipes.ownerId, ownerId));
+  const before = await db.query.recipes.findFirst({ where: scoped });
+  const rows = await db.update(recipes).set(changes).where(scoped).returning();
   const updated = rows.at(0);
   if (before && updated) {
     const afterUrls = new Set(collectImageUrls(updated));
@@ -197,11 +201,15 @@ export async function updateOwnedRecipe(input: z.infer<typeof updateRecipeSchema
   return updated;
 }
 
-export async function deleteOwnedRecipe(input: z.infer<typeof deleteRecipeSchema>, ownerId: string) {
-  const rows = await db
-    .delete(recipes)
-    .where(and(eq(recipes.id, input.id), eq(recipes.ownerId, ownerId)))
-    .returning();
+export async function deleteOwnedRecipe(
+  input: z.infer<typeof deleteRecipeSchema>,
+  ownerId: string,
+  isAdmin = false,
+) {
+  const scoped = isAdmin
+    ? eq(recipes.id, input.id)
+    : and(eq(recipes.id, input.id), eq(recipes.ownerId, ownerId));
+  const rows = await db.delete(recipes).where(scoped).returning();
   const deleted = rows.at(0);
   if (deleted) {
     const candidateUrls = collectImageUrls(deleted);

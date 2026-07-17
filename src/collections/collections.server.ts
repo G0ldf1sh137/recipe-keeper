@@ -33,19 +33,24 @@ export async function findPublicCollectionsByOwner(ownerId: string) {
     .orderBy(collections.createdAt);
 }
 
-export async function findCollectionById(id: string, ownerId: string) {
+export async function findCollectionById(id: string, ownerId: string, isAdmin = false) {
   return db.query.collections.findFirst({
-    where: and(eq(collections.id, id), eq(collections.ownerId, ownerId)),
+    where: isAdmin ? eq(collections.id, id) : and(eq(collections.id, id), eq(collections.ownerId, ownerId)),
   });
 }
 
 // A collection is visible to a viewer if it's public, or the viewer owns it.
-export async function findCollectionForViewer(id: string, viewerId: string | undefined, shareToken?: string) {
+export async function findCollectionForViewer(
+  id: string,
+  viewerId: string | undefined,
+  shareToken?: string,
+  isAdmin = false,
+) {
   const visible = viewerId
     ? or(eq(collections.visibility, "public"), eq(collections.ownerId, viewerId))
     : eq(collections.visibility, "public");
   const collection = await db.query.collections.findFirst({
-    where: and(eq(collections.id, id), visible),
+    where: isAdmin ? eq(collections.id, id) : and(eq(collections.id, id), visible),
   });
   if (collection) return collection;
   if (!shareToken) return undefined;
@@ -84,20 +89,19 @@ export async function insertCollection(name: string, ownerId: string) {
   return collection;
 }
 
-export async function renameOwnedCollection(id: string, ownerId: string, name: string) {
-  const rows = await db
-    .update(collections)
-    .set({ name })
-    .where(and(eq(collections.id, id), eq(collections.ownerId, ownerId)))
-    .returning();
+export async function renameOwnedCollection(id: string, ownerId: string, name: string, isAdmin = false) {
+  const scoped = isAdmin
+    ? eq(collections.id, id)
+    : and(eq(collections.id, id), eq(collections.ownerId, ownerId));
+  const rows = await db.update(collections).set({ name }).where(scoped).returning();
   return rows.at(0);
 }
 
-export async function deleteOwnedCollection(id: string, ownerId: string) {
-  const rows = await db
-    .delete(collections)
-    .where(and(eq(collections.id, id), eq(collections.ownerId, ownerId)))
-    .returning();
+export async function deleteOwnedCollection(id: string, ownerId: string, isAdmin = false) {
+  const scoped = isAdmin
+    ? eq(collections.id, id)
+    : and(eq(collections.id, id), eq(collections.ownerId, ownerId));
+  const rows = await db.delete(collections).where(scoped).returning();
   return rows.at(0);
 }
 
@@ -118,8 +122,13 @@ export async function findCollectionsWithMembership(ownerId: string, recipeId: s
   return rows.map((row) => ({ id: row.id, name: row.name, inCollection: row.inCollection === 1 }));
 }
 
-export async function toggleMembership(collectionId: string, recipeId: string, ownerId: string) {
-  const collection = await findCollectionById(collectionId, ownerId);
+export async function toggleMembership(
+  collectionId: string,
+  recipeId: string,
+  ownerId: string,
+  isAdmin = false,
+) {
+  const collection = await findCollectionById(collectionId, ownerId, isAdmin);
   if (!collection) return null;
 
   const existing = await db.query.collectionRecipes.findFirst({
@@ -137,12 +146,16 @@ export async function toggleMembership(collectionId: string, recipeId: string, o
   return { inCollection: true };
 }
 
-export async function updateCollectionVisibility(id: string, ownerId: string, visibility: Visibility) {
-  const rows = await db
-    .update(collections)
-    .set({ visibility })
-    .where(and(eq(collections.id, id), eq(collections.ownerId, ownerId)))
-    .returning();
+export async function updateCollectionVisibility(
+  id: string,
+  ownerId: string,
+  visibility: Visibility,
+  isAdmin = false,
+) {
+  const scoped = isAdmin
+    ? eq(collections.id, id)
+    : and(eq(collections.id, id), eq(collections.ownerId, ownerId));
+  const rows = await db.update(collections).set({ visibility }).where(scoped).returning();
   return rows.at(0);
 }
 

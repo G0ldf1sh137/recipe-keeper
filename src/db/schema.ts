@@ -35,6 +35,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   avatarUrl: text("avatar_url"),
   username: text("username").unique(),
+  isAdmin: boolean("is_admin").notNull().default(false),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 

@@ -14,7 +14,7 @@ export const Route = createFileRoute("/recipes/$recipeId/edit")({
       getIngredientNames(),
       getUnitNames(),
     ]);
-    if (!recipe.isOwner) {
+    if (!recipe.canEdit) {
       throw redirect({ to: "/recipes/$recipeId", params: { recipeId: params.recipeId } });
     }
     return { recipe, knownIngredientNames, knownUnitNames };
@@ -105,7 +105,6 @@ function EditRecipePage() {
         knownUnitNames={knownUnitNames}
         onPhotoUrlsChange={(photoUrls) => setFormValues((prev) => ({ ...prev, photoUrls }))}
         onSourceUrlChange={(sourceUrl) => setFormValues((prev) => ({ ...prev, sourceUrl }))}
-        onSourcePdfUrlChange={(sourcePdfUrl) => setFormValues((prev) => ({ ...prev, sourcePdfUrl }))}
         onSubmit={async (values) => {
           await updateRecipeFn({ data: { id: recipe.id, ...values } });
           await navigate({ to: "/recipes/$recipeId", params: { recipeId: recipe.id } });

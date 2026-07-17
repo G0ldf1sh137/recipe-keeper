@@ -149,7 +149,7 @@ function CollectionPage() {
                   </a>
                 </>
               )}
-              {collection.isOwner && (
+              {collection.canManage && (
                 <>
                   <button
                     type="button"
@@ -172,7 +172,13 @@ function CollectionPage() {
         )}
       </div>
 
-      {collection.isOwner ? (
+      {!collection.isOwner && collection.canManage && (
+        <p className="mt-3 rounded-lg bg-accent-50 px-3 py-2 text-sm font-medium text-accent-700">
+          Viewing as admin — you aren't the owner of this cookbook.
+        </p>
+      )}
+
+      {collection.canManage ? (
         <div className="mt-3 flex flex-col gap-3">
           <label className="flex items-center gap-2 text-sm">
             <span className="font-medium text-ink/70">Visibility</span>
@@ -188,12 +194,14 @@ function CollectionPage() {
               ))}
             </select>
           </label>
-          <ShareControl
-            shareUrl={collection.shareUrl}
-            disabled={collection.visibility === "private"}
-            onShare={handleShare}
-            onRevoke={handleRevokeShare}
-          />
+          {collection.isOwner && (
+            <ShareControl
+              shareUrl={collection.shareUrl}
+              disabled={collection.visibility === "private"}
+              onShare={handleShare}
+              onRevoke={handleRevokeShare}
+            />
+          )}
         </div>
       ) : (
         <span className="mt-3 block text-xs font-medium uppercase tracking-wide text-accent-600">
@@ -217,7 +225,7 @@ function CollectionPage() {
               >
                 {item.title}
               </Link>
-              {collection.isOwner && (
+              {collection.canManage && (
                 <button
                   type="button"
                   onClick={() => handleRemove(item.id)}
