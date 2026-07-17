@@ -193,7 +193,7 @@ function GroceryListPage() {
           {sortedGroups.map((group) => {
             const sortedLines = [...group.lines].sort((a, b) => (a.checked === b.checked ? 0 : a.checked ? 1 : -1));
             return (
-              <div key={group.name} className="rounded-xl border border-accent-100 bg-surface px-4 py-3 shadow-sm">
+              <div key={group.name} className="rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm">
                 <span className="font-serif text-lg font-medium capitalize text-ink">{group.name}</span>
                 <ul className="mt-1 flex flex-col gap-1">
                   {sortedLines.map((line) => (

@@ -81,7 +81,7 @@ function ProfilePage() {
             {filteredCollections.map((collection) => (
               <li
                 key={collection.id}
-                className="flex items-center justify-between rounded-xl border border-accent-100 bg-surface px-4 py-3 shadow-sm"
+                className="flex items-center justify-between rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm"
               >
                 <Link
                   to="/collections/$collectionId"

@@ -20,11 +20,12 @@ function Home() {
         </Link>
         <Link
           to="/recipes"
-          className="inline-block rounded-lg border border-accent-200 px-5 py-2.5 font-medium text-ink transition-colors hover:bg-accent-50"
+          className="inline-block rounded-lg border-2 border-accent-300 px-5 py-2.5 font-medium text-ink transition-colors hover:bg-accent-50"
         >
           Browse recipes
         </Link>
       </div>
+      <div className="ribbon-divider mt-10 w-24" />
     </div>
   )
 }

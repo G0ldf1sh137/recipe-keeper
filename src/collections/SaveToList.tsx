@@ -76,7 +76,7 @@ export function SaveToList({
               className={
                 collection.inCollection
                   ? "rounded-full bg-accent-600 px-3 py-1 text-sm font-medium text-white disabled:opacity-50"
-                  : "rounded-full border border-accent-200 px-3 py-1 text-sm font-medium text-ink hover:bg-accent-50 disabled:opacity-50"
+                  : "rounded-full border-2 border-accent-300 px-3 py-1 text-sm font-medium text-ink hover:bg-accent-50 disabled:opacity-50"
               }
             >
               {collection.inCollection ? `✓ ${collection.name}` : collection.name}

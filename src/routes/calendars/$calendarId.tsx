@@ -198,7 +198,7 @@ function CalendarPage() {
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-7">
         {dayOfWeekValues.map((day) => (
-          <div key={day} className="rounded-xl border border-accent-100 bg-surface p-3">
+          <div key={day} className="rounded-xl border-2 border-accent-200 bg-surface p-3">
             <h2 className="font-serif text-sm font-semibold text-ink">{dayLabels[day]}</h2>
             {entriesByDay[day].length === 0 ? (
               <p className="mt-2 text-xs text-ink/40">No recipes</p>

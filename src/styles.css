@@ -3,41 +3,47 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-serif: "Fraunces", ui-serif, Georgia, serif;
+  --font-serif: "Bitter", ui-serif, Georgia, serif;
 
-  --color-accent-50: #fbf0ea;
-  --color-accent-100: #f4dbca;
-  --color-accent-200: #e9bd9f;
-  --color-accent-300: #dd9c72;
-  --color-accent-400: #cf7c4f;
-  --color-accent-500: #c2683f;
-  --color-accent-600: #a8522c;
-  --color-accent-700: #874025;
-  --color-accent-800: #67301c;
-  --color-accent-900: #482112;
+  --color-accent-50: #fdf1d6;
+  --color-accent-100: #f8dfa0;
+  --color-accent-200: #f0c463;
+  --color-accent-300: #e0a53a;
+  --color-accent-400: #c98a24;
+  --color-accent-500: #b0731c;
+  --color-accent-600: #935e18;
+  --color-accent-700: #764a13;
+  --color-accent-800: #59380f;
+  --color-accent-900: #3c250a;
 
-  --color-paper: #fbf8f4;
-  --color-surface: #ffffff;
-  --color-ink: #2a2420;
+  --color-olive: #6b6d3f;
+  --color-rust: #a8492c;
+
+  --color-paper: #f6ecd6;
+  --color-surface: #fffaf0;
+  --color-ink: #2e2013;
 }
 
 .dark {
   color-scheme: dark;
 
-  --color-accent-50: #3a2a20;
-  --color-accent-100: #4a3527;
-  --color-accent-200: #5c4230;
-  --color-accent-300: #8a5c3c;
-  --color-accent-400: #e08a54;
-  --color-accent-500: #d97a4d;
-  --color-accent-600: #cf7c4f;
-  --color-accent-700: #a8552e;
-  --color-accent-800: #874025;
-  --color-accent-900: #67301c;
+  --color-accent-50: #3a2e18;
+  --color-accent-100: #4a3a1f;
+  --color-accent-200: #5f4a28;
+  --color-accent-300: #8a6a35;
+  --color-accent-400: #e0a53a;
+  --color-accent-500: #d6952e;
+  --color-accent-600: #c98a24;
+  --color-accent-700: #a8721f;
+  --color-accent-800: #764a13;
+  --color-accent-900: #59380f;
 
-  --color-paper: #1c1815;
-  --color-surface: #262019;
-  --color-ink: #f2ece4;
+  --color-olive: #9a9c5e;
+  --color-rust: #d4674a;
+
+  --color-paper: #1e1a12;
+  --color-surface: #29231a;
+  --color-ink: #f2e8d5;
 }
 
 * {
@@ -57,8 +63,21 @@ html {
 body {
   margin: 0;
   background-color: var(--color-paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
   color: var(--color-ink);
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
+}
+
+.ribbon-divider {
+  height: 3px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-rust) 0,
+    var(--color-rust) 8px,
+    var(--color-olive) 8px,
+    var(--color-olive) 16px
+  );
 }

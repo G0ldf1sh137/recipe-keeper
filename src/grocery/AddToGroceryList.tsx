@@ -76,7 +76,7 @@ export function AddToGroceryList({
               className={
                 list.inList
                   ? "rounded-full bg-accent-600 px-3 py-1 text-sm font-medium text-white disabled:opacity-50"
-                  : "rounded-full border border-accent-200 px-3 py-1 text-sm font-medium text-ink hover:bg-accent-50 disabled:opacity-50"
+                  : "rounded-full border-2 border-accent-300 px-3 py-1 text-sm font-medium text-ink hover:bg-accent-50 disabled:opacity-50"
               }
             >
               {list.inList ? `✓ ${list.name}` : list.name}

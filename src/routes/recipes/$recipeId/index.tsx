@@ -295,7 +295,7 @@ function RecipePage() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-serif text-xl font-semibold text-ink">Ingredients</h2>
           <div className="flex items-center gap-2">
-            <div className="flex rounded-full border border-accent-100 p-0.5 text-xs">
+            <div className="flex rounded-full border-2 border-accent-200 p-0.5 text-xs">
               {(Object.keys(scaleLabels) as ScalePreset[]).map((value) => (
                 <button
                   key={value}

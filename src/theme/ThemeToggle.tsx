@@ -35,7 +35,7 @@ export function ThemeToggle({ initialTheme }: { initialTheme: ThemePreference })
   }
 
   return (
-    <div className="flex rounded-full border border-accent-100 p-0.5 text-xs">
+    <div className="flex rounded-full border-2 border-accent-200 p-0.5 text-xs">
       {themeValues.map((value) => (
         <button
           key={value}

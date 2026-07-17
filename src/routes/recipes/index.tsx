@@ -65,7 +65,7 @@ function RecipesListPage() {
             <button
               type="button"
               onClick={handleRandom}
-              className="rounded-lg border border-accent-200 px-4 py-2 font-medium text-ink transition-colors hover:bg-accent-50"
+              className="rounded-lg border-2 border-accent-300 px-4 py-2 font-medium text-ink transition-colors hover:bg-accent-50"
             >
               Random recipe
             </button>
@@ -118,7 +118,7 @@ function RecipesListPage() {
 
         <button
           type="submit"
-          className="rounded-lg border border-accent-200 px-4 py-2 font-medium text-ink transition-colors hover:bg-accent-50"
+          className="rounded-lg border-2 border-accent-300 px-4 py-2 font-medium text-ink transition-colors hover:bg-accent-50"
         >
           Apply
         </button>

@@ -35,7 +35,7 @@ export const Route = createRootRoute({
       },
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap',
+        href: 'https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&display=swap',
       },
       {
         rel: 'stylesheet',
@@ -169,38 +169,41 @@ function AuthHeader({
   }
 
   return (
-    <header className="relative flex items-center justify-between border-b border-accent-100 bg-paper px-4 py-4 sm:px-8">
-      <Link to="/" className="font-serif text-xl font-semibold tracking-tight text-ink">
-        Recipe Keeper
-      </Link>
-      <div className="flex items-center gap-4">
-        <ThemeToggle initialTheme={theme} />
-        {user ? (
-          <>
-            <div className="hidden items-center gap-3 sm:flex">{renderNavLinks(user)}</div>
-            <button
-              type="button"
-              onClick={() => setMenuOpen((open) => !open)}
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 sm:hidden"
+    <>
+      <header className="relative flex items-center justify-between border-b-2 border-accent-200 bg-paper px-4 py-4 sm:px-8">
+        <Link to="/" className="font-serif text-xl font-semibold tracking-tight text-ink">
+          Recipe Keeper
+        </Link>
+        <div className="flex items-center gap-4">
+          <ThemeToggle initialTheme={theme} />
+          {user ? (
+            <>
+              <div className="hidden items-center gap-3 sm:flex">{renderNavLinks(user)}</div>
+              <button
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 sm:hidden"
+              >
+                {menuOpen ? '✕' : '☰'}
+              </button>
+            </>
+          ) : (
+            <a
+              href="/auth/google"
+              className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
             >
-              {menuOpen ? '✕' : '☰'}
-            </button>
-          </>
-        ) : (
-          <a
-            href="/auth/google"
-            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-          >
-            Sign in with Google
-          </a>
-        )}
-      </div>
-      {user && menuOpen && (
-        <div className="absolute inset-x-0 top-full flex flex-col gap-3 border-b border-accent-100 bg-paper px-4 py-4 sm:hidden">
-          {renderNavLinks(user)}
+              Sign in with Google
+            </a>
+          )}
         </div>
-      )}
-    </header>
+        {user && menuOpen && (
+          <div className="absolute inset-x-0 top-full flex flex-col gap-3 border-b-2 border-accent-200 bg-paper px-4 py-4 sm:hidden">
+            {renderNavLinks(user)}
+          </div>
+        )}
+      </header>
+      <div className="ribbon-divider" />
+    </>
   )
 }

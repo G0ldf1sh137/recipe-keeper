@@ -32,13 +32,13 @@ export function ProcessPhotos({
   }
 
   return (
-    <section className="mb-6 rounded-xl border border-accent-200 bg-surface p-4">
+    <section className="mb-6 rounded-xl border-2 border-accent-300 bg-surface p-4">
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={handleProcess}
           disabled={scanning}
-          className="rounded-lg border border-accent-200 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50 disabled:opacity-50"
+          className="rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50 disabled:opacity-50"
         >
           {scanning ? "Scanning photos…" : "Process photos"}
         </button>
@@ -71,7 +71,7 @@ export function ProcessPhotos({
       )}
 
       {result?.status === "transcribed" && (
-        <div className="mt-3 rounded-xl border border-accent-200 bg-paper p-4 shadow-sm">
+        <div className="mt-3 rounded-xl border-2 border-accent-300 bg-paper p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="font-serif text-lg font-semibold text-ink">Transcription preview</h3>
             <span className="text-xs font-medium uppercase tracking-wide text-accent-600">Not applied yet</span>
@@ -140,7 +140,7 @@ export function ProcessPhotos({
             <button
               type="button"
               onClick={() => setResult(null)}
-              className="rounded-lg border border-accent-200 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent-50"
+              className="rounded-lg border-2 border-accent-300 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent-50"
             >
               Discard
             </button>

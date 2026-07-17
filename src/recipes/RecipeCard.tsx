@@ -20,7 +20,7 @@ export function RecipeCard({ recipe, rating }: RecipeCardProps) {
     <Link
       to="/recipes/$recipeId"
       params={{ recipeId: recipe.id }}
-      className="flex items-center gap-3 rounded-xl border border-accent-100 bg-surface px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className="flex items-center gap-3 rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
     >
       {imageUrl && (
         <img src={imageUrl} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />

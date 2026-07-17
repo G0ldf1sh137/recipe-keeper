@@ -87,7 +87,7 @@ export function AddCalendarToGroceryList({
                   type="button"
                   onClick={() => handleAdd(list.id)}
                   disabled={busy === list.id}
-                  className="rounded-full border border-accent-200 px-3 py-1 text-sm font-medium text-ink hover:bg-accent-50 disabled:opacity-50"
+                  className="rounded-full border-2 border-accent-300 px-3 py-1 text-sm font-medium text-ink hover:bg-accent-50 disabled:opacity-50"
                 >
                   {busy === list.id ? "Adding..." : `Add to ${list.name}`}
                 </button>
