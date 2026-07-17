@@ -36,6 +36,7 @@ export const users = pgTable("users", {
   avatarUrl: text("avatar_url"),
   username: text("username").unique(),
   isAdmin: boolean("is_admin").notNull().default(false),
+  canTranscribe: boolean("can_transcribe").notNull().default(false),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 

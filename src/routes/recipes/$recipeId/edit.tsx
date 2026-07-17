@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getRecipe, getIngredientNames, getUnitNames, getTagNames, updateRecipe } from "#/recipes/recipes.functions";
+import { getSessionUser } from "#/auth/auth.functions";
 import { RecipeForm } from "#/recipes/RecipeForm";
 import type { RecipeFormValues } from "#/recipes/RecipeForm";
 import { ProcessPhotos } from "#/transcription/ProcessPhotos";
@@ -9,16 +10,18 @@ import type { TranscribedRecipe } from "#/transcription/transcription.server";
 
 export const Route = createFileRoute("/recipes/$recipeId/edit")({
   loader: async ({ params }) => {
-    const [recipe, knownIngredientNames, knownUnitNames, knownTagNames] = await Promise.all([
+    const [recipe, knownIngredientNames, knownUnitNames, knownTagNames, user] = await Promise.all([
       getRecipe({ data: { id: params.recipeId } }),
       getIngredientNames(),
       getUnitNames(),
       getTagNames(),
+      getSessionUser(),
     ]);
     if (!recipe.canEdit) {
       throw redirect({ to: "/recipes/$recipeId", params: { recipeId: params.recipeId } });
     }
-    return { recipe, knownIngredientNames, knownUnitNames, knownTagNames };
+    const canTranscribe = !!user && (user.isAdmin || user.canTranscribe);
+    return { recipe, knownIngredientNames, knownUnitNames, knownTagNames, canTranscribe };
   },
   component: EditRecipePage,
   notFoundComponent: () => (
@@ -38,7 +41,7 @@ export const Route = createFileRoute("/recipes/$recipeId/edit")({
 });
 
 function EditRecipePage() {
-  const { recipe, knownIngredientNames, knownUnitNames, knownTagNames } = Route.useLoaderData();
+  const { recipe, knownIngredientNames, knownUnitNames, knownTagNames, canTranscribe } = Route.useLoaderData();
   const navigate = useNavigate();
   const updateRecipeFn = useServerFn(updateRecipe);
 
@@ -94,6 +97,7 @@ function EditRecipePage() {
             onApply={applyTranscription}
             knownIngredientNames={knownIngredientNames}
             knownUnitNames={knownUnitNames}
+            canUse={canTranscribe}
           />
         </div>
       )}

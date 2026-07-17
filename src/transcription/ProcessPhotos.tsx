@@ -8,11 +8,13 @@ export function ProcessPhotos({
   onApply,
   knownIngredientNames = [],
   knownUnitNames = [],
+  canUse = true,
 }: {
   photoUrls: string[];
   onApply: (recipe: TranscribedRecipe) => void;
   knownIngredientNames?: string[];
   knownUnitNames?: string[];
+  canUse?: boolean;
 }) {
   const processFn = useServerFn(processRecipePhotos);
   const [scanning, setScanning] = useState(false);
@@ -41,17 +43,20 @@ export function ProcessPhotos({
         <button
           type="button"
           onClick={handleProcess}
-          disabled={scanning}
+          disabled={scanning || !canUse}
           className="rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50 disabled:opacity-50"
         >
           {scanning ? "Scanning photos…" : "Process photos"}
         </button>
-        {!scanning && !result && (
+        {!canUse && (
+          <span className="text-xs text-ink/50">AI transcription has been disabled for your account by an admin.</span>
+        )}
+        {canUse && !scanning && !result && (
           <span className="text-xs text-ink/50">
             Uses Claude to transcribe a handwritten recipe from the photos above.
           </span>
         )}
-        {scanning && (
+        {canUse && scanning && (
           <span className="text-xs text-ink/50">Reading the photos with Claude — this can take a minute.</span>
         )}
       </div>

@@ -7,10 +7,12 @@ export function ProcessText({
   onApply,
   knownIngredientNames = [],
   knownUnitNames = [],
+  canUse = true,
 }: {
   onApply: (recipe: TranscribedRecipe) => void;
   knownIngredientNames?: string[];
   knownUnitNames?: string[];
+  canUse?: boolean;
 }) {
   const processFn = useServerFn(processRecipeText);
   const [text, setText] = useState("");
@@ -40,11 +42,12 @@ export function ProcessText({
       <label className="flex flex-col gap-1">
         <span className="font-medium text-ink/70">Paste recipe text</span>
         <textarea
-          className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
+          className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none disabled:opacity-50"
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={6}
           placeholder="Paste a recipe from anywhere — a website, an email, a note..."
+          disabled={!canUse}
         />
       </label>
 
@@ -52,15 +55,20 @@ export function ProcessText({
         <button
           type="button"
           onClick={handleProcess}
-          disabled={scanning || !text.trim()}
+          disabled={scanning || !text.trim() || !canUse}
           className="rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50 disabled:opacity-50"
         >
           {scanning ? "Reading text…" : "Process text"}
         </button>
-        {!scanning && !result && (
+        {!canUse && (
+          <span className="text-xs text-ink/50">AI transcription has been disabled for your account by an admin.</span>
+        )}
+        {canUse && !scanning && !result && (
           <span className="text-xs text-ink/50">Uses Claude to transcribe a recipe from the pasted text.</span>
         )}
-        {scanning && <span className="text-xs text-ink/50">Reading the text with Claude — this can take a minute.</span>}
+        {canUse && scanning && (
+          <span className="text-xs text-ink/50">Reading the text with Claude — this can take a minute.</span>
+        )}
       </div>
 
       {result?.status === "not_handwritten" && (

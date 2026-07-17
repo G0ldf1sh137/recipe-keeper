@@ -16,14 +16,16 @@ export const Route = createFileRoute("/recipes/new")({
   beforeLoad: async () => {
     const user = await getSessionUser();
     if (!user) throw redirect({ to: "/login" });
+    return { user };
   },
-  loader: async () => {
+  loader: async ({ context }) => {
     const [knownIngredientNames, knownUnitNames, knownTagNames] = await Promise.all([
       getIngredientNames(),
       getUnitNames(),
       getTagNames(),
     ]);
-    return { knownIngredientNames, knownUnitNames, knownTagNames };
+    const canTranscribe = context.user.isAdmin || context.user.canTranscribe;
+    return { knownIngredientNames, knownUnitNames, knownTagNames, canTranscribe };
   },
   component: NewRecipePage,
 });
@@ -31,7 +33,7 @@ export const Route = createFileRoute("/recipes/new")({
 type ImportMode = "choose" | "photo" | "pdf" | "text" | "form";
 
 function NewRecipePage() {
-  const { knownIngredientNames, knownUnitNames, knownTagNames } = Route.useLoaderData();
+  const { knownIngredientNames, knownUnitNames, knownTagNames, canTranscribe } = Route.useLoaderData();
   const navigate = useNavigate();
   const createRecipeFn = useServerFn(createRecipe);
 
@@ -67,11 +69,17 @@ function NewRecipePage() {
       <div className="mx-auto max-w-2xl p-4 sm:p-8">
         <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">New recipe</h1>
         <p className="mt-2 text-ink/60">How would you like to start?</p>
+        {!canTranscribe && (
+          <p className="mt-2 text-sm text-ink/50">
+            AI import tools are disabled for your account — you can still start from scratch.
+          </p>
+        )}
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <button
             type="button"
             onClick={() => setMode("photo")}
-            className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+            disabled={!canTranscribe}
+            className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             <span className="font-serif text-lg font-medium text-ink">📷 Import from photo</span>
             <p className="mt-1 text-sm text-ink/60">Upload a photo of a recipe card, and Claude will transcribe it.</p>
@@ -79,7 +87,8 @@ function NewRecipePage() {
           <button
             type="button"
             onClick={() => setMode("pdf")}
-            className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+            disabled={!canTranscribe}
+            className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             <span className="font-serif text-lg font-medium text-ink">📄 Import from PDF</span>
             <p className="mt-1 text-sm text-ink/60">Upload a PDF, and Claude will transcribe it.</p>
@@ -87,7 +96,8 @@ function NewRecipePage() {
           <button
             type="button"
             onClick={() => setMode("text")}
-            className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+            disabled={!canTranscribe}
+            className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             <span className="font-serif text-lg font-medium text-ink">📋 Import from text</span>
             <p className="mt-1 text-sm text-ink/60">Paste a recipe from anywhere, and Claude will parse it.</p>
@@ -141,6 +151,7 @@ function NewRecipePage() {
                 onApply={applyTranscription}
                 knownIngredientNames={knownIngredientNames}
                 knownUnitNames={knownUnitNames}
+                canUse={canTranscribe}
               />
             )}
           </div>
@@ -158,6 +169,7 @@ function NewRecipePage() {
                 onApply={applyTranscription}
                 knownIngredientNames={knownIngredientNames}
                 knownUnitNames={knownUnitNames}
+                canUse={canTranscribe}
               />
             )}
           </div>
@@ -169,6 +181,7 @@ function NewRecipePage() {
               onApply={applyTranscription}
               knownIngredientNames={knownIngredientNames}
               knownUnitNames={knownUnitNames}
+              canUse={canTranscribe}
             />
           </div>
         )}
@@ -187,6 +200,7 @@ function NewRecipePage() {
             onApply={applyTranscription}
             knownIngredientNames={knownIngredientNames}
             knownUnitNames={knownUnitNames}
+            canUse={canTranscribe}
           />
         </div>
       )}
@@ -198,6 +212,7 @@ function NewRecipePage() {
             onApply={applyTranscription}
             knownIngredientNames={knownIngredientNames}
             knownUnitNames={knownUnitNames}
+            canUse={canTranscribe}
           />
         </div>
       )}

@@ -45,6 +45,10 @@ export async function setUserAdminStatus(userId: string, isAdmin: boolean) {
   return db.update(users).set({ isAdmin }).where(eq(users.id, userId)).returning();
 }
 
+export async function setUserCanTranscribeStatus(userId: string, canTranscribe: boolean) {
+  return db.update(users).set({ canTranscribe }).where(eq(users.id, userId)).returning();
+}
+
 export async function upsertGoogleUser(profile: GoogleUserInfo) {
   const existing = await db.query.users.findFirst({
     where: eq(users.googleId, profile.sub),

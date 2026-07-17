@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
-import { listUsers, setUserAdmin } from "#/auth/admin.functions";
+import { listUsers, setUserAdmin, setUserCanTranscribe } from "#/auth/admin.functions";
 import { listOpenReports, resolveReport } from "#/reports/reports.functions";
 import { deleteComment } from "#/comments/comments.functions";
 
@@ -23,11 +23,17 @@ function AdminPage() {
   const { users, reports, currentUserId } = Route.useLoaderData();
   const router = useRouter();
   const setUserAdminFn = useServerFn(setUserAdmin);
+  const setUserCanTranscribeFn = useServerFn(setUserCanTranscribe);
   const resolveReportFn = useServerFn(resolveReport);
   const deleteCommentFn = useServerFn(deleteComment);
 
   async function handleToggle(userId: string, isAdmin: boolean) {
     await setUserAdminFn({ data: { userId, isAdmin: !isAdmin } });
+    await router.invalidate();
+  }
+
+  async function handleToggleTranscribe(userId: string, canTranscribe: boolean) {
+    await setUserCanTranscribeFn({ data: { userId, canTranscribe: !canTranscribe } });
     await router.invalidate();
   }
 
@@ -120,13 +126,13 @@ function AdminPage() {
 
       <section className="mt-8">
         <h2 className="font-serif text-xl font-semibold text-ink">Users</h2>
-        <p className="mt-1 text-ink/60">Grant or revoke admin access for other users.</p>
+        <p className="mt-1 text-ink/60">Grant or revoke admin access and AI import permissions for other users.</p>
 
         <ul className="mt-3 flex flex-col gap-3">
           {users.map((user) => (
             <li
               key={user.id}
-              className="flex items-center justify-between gap-4 rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm"
+              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm"
             >
               <div className="flex items-center gap-3">
                 {user.avatarUrl && (
@@ -137,21 +143,34 @@ function AdminPage() {
                   <p className="text-sm text-ink/60">{user.email}</p>
                 </div>
               </div>
-              {user.id === currentUserId ? (
-                <span className="text-sm font-medium text-ink/50">You</span>
-              ) : (
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => handleToggle(user.id, user.isAdmin)}
+                  onClick={() => handleToggleTranscribe(user.id, user.canTranscribe)}
                   className={
-                    user.isAdmin
+                    user.canTranscribe
                       ? "rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50"
                       : "rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-700"
                   }
                 >
-                  {user.isAdmin ? "Revoke admin" : "Make admin"}
+                  {user.canTranscribe ? "Disable AI import" : "Enable AI import"}
                 </button>
-              )}
+                {user.id === currentUserId ? (
+                  <span className="text-sm font-medium text-ink/50">You</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleToggle(user.id, user.isAdmin)}
+                    className={
+                      user.isAdmin
+                        ? "rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50"
+                        : "rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-700"
+                    }
+                  >
+                    {user.isAdmin ? "Revoke admin" : "Make admin"}
+                  </button>
+                )}
+              </div>
             </li>
           ))}
         </ul>

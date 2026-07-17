@@ -14,3 +14,8 @@ export const setUserAdminSchema = z.object({
   userId: z.string(),
   isAdmin: z.boolean(),
 });
+
+export const setUserCanTranscribeSchema = z.object({
+  userId: z.string(),
+  canTranscribe: z.boolean(),
+});

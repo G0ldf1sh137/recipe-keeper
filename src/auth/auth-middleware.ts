@@ -21,3 +21,10 @@ export const requireAdminMiddleware = createMiddleware({ type: "function" })
     if (!context.user.isAdmin) throw new Error("Forbidden");
     return next({ context: { user: context.user } });
   });
+
+export const requireTranscriptionAccessMiddleware = createMiddleware({ type: "function" })
+  .middleware([requireAuthMiddleware])
+  .server(async ({ next, context }) => {
+    if (!context.user.isAdmin && !context.user.canTranscribe) throw new Error("Forbidden");
+    return next({ context: { user: context.user } });
+  });
