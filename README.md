@@ -1,4 +1,4 @@
-# Recipe Keeper
+# LemmeCook
 
 A recipe-sharing web app: write up recipes with ingredients and steps, organize
 them into collections, share them publicly or via a link, and let Claude

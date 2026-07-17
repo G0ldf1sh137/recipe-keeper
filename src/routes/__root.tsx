@@ -22,7 +22,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'Recipe Keeper',
+        title: 'LemmeCook',
       },
     ],
     links: [
@@ -211,7 +211,7 @@ function AuthHeader({
     <>
       <header className="relative flex items-center justify-between border-b-2 border-accent-200 bg-paper px-4 py-4 sm:px-8">
         <Link to="/" className="font-serif text-xl font-semibold tracking-tight text-ink">
-          Recipe Keeper
+          LemmeCook
         </Link>
         <div className="flex items-center gap-4">
           <Link

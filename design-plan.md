@@ -1,7 +1,7 @@
-# Recipe Keeper — Design Plan
+# LemmeCook — Design Plan
 
 ## Overview
-Recipe Keeper is a web app for creating, organizing, and sharing recipes. Users can write up recipes with ingredients and steps, organize them into collections (presented to users as "cookbooks"), and share them publicly or with specific people via a link.
+LemmeCook is a web app for creating, organizing, and sharing recipes. Users can write up recipes with ingredients and steps, organize them into collections (presented to users as "cookbooks"), and share them publicly or with specific people via a link.
 
 ## Goals
 - Let a user quickly capture a recipe (title, ingredients, steps, photo, tags).

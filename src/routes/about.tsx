@@ -79,9 +79,9 @@ export const Route = createFileRoute("/about")({
 function AboutPage() {
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
-      <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">About Recipe Keeper</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">About LemmeCook</h1>
       <p className="mt-3 text-ink/70">
-        Recipe Keeper is a place to write up, organize, and share your recipes — with a few tools to make
+        LemmeCook is a place to write up, organize, and share your recipes — with a few tools to make
         cooking and meal planning easier along the way.
       </p>
 
