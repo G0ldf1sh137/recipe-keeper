@@ -5,7 +5,6 @@ import { getSessionUser } from "#/auth/auth.functions";
 import { getIngredientNames } from "#/recipes/recipes.functions";
 import { getPantryItems, addPantryItem, removePantryItem, getPantryMatches } from "#/pantry/pantry.functions";
 import type { PantryMatch } from "#/pantry/pantry.server";
-import { TagInput } from "#/recipes/TagInput";
 import { RecipeCard } from "#/recipes/RecipeCard";
 
 export const Route = createFileRoute("/pantry")({
@@ -38,15 +37,26 @@ function PantryPage() {
 
   const [pantryNames, setPantryNames] = useState(loaderData.pantryItems);
   const [matches, setMatches] = useState(loaderData.matches);
+  const [draft, setDraft] = useState("");
 
-  async function handlePantryChange(next: string[]) {
-    const added = next.filter((name) => !pantryNames.includes(name));
-    const removed = pantryNames.filter((name) => !next.includes(name));
-    setPantryNames(next);
-    await Promise.all([
-      ...added.map((name) => addPantryItemFn({ data: { name } })),
-      ...removed.map((name) => removePantryItemFn({ data: { name } })),
-    ]);
+  async function addIngredient(rawName: string) {
+    const name = rawName.trim().toLowerCase();
+    if (!name || pantryNames.includes(name)) return;
+    setPantryNames((prev) => [...prev, name]);
+    await addPantryItemFn({ data: { name } });
+    setMatches(await getPantryMatchesFn());
+  }
+
+  async function handleAddItem(e: React.FormEvent) {
+    e.preventDefault();
+    const name = draft;
+    setDraft("");
+    await addIngredient(name);
+  }
+
+  async function handleRemoveItem(name: string) {
+    setPantryNames((prev) => prev.filter((n) => n !== name));
+    await removePantryItemFn({ data: { name } });
     setMatches(await getPantryMatchesFn());
   }
 
@@ -59,14 +69,48 @@ function PantryPage() {
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Pantry</h1>
       <p className="mt-2 text-ink/60">List what you have, and we'll show you what you can make.</p>
 
-      <div className="mt-6">
-        <TagInput
-          value={pantryNames}
-          onChange={(next) => void handlePantryChange(next)}
-          knownTagNames={loaderData.knownIngredientNames}
+      <form onSubmit={(e) => void handleAddItem(e)} className="mt-6 flex gap-2">
+        <input
+          className="min-w-[10rem] flex-1 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
+          list="pantry-ingredient-names"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
           placeholder="Add an ingredient you have on hand..."
         />
-      </div>
+        <button
+          type="submit"
+          disabled={!draft.trim()}
+          className="rounded-lg bg-accent-600 px-4 py-2 font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
+        >
+          Add
+        </button>
+      </form>
+      <datalist id="pantry-ingredient-names">
+        {loaderData.knownIngredientNames.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
+
+      {pantryNames.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {pantryNames.map((name) => (
+            <span
+              key={name}
+              className="flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-xs text-ink/70"
+            >
+              {name}
+              <button
+                type="button"
+                onClick={() => void handleRemoveItem(name)}
+                aria-label={`Remove ${name}`}
+                className="text-ink/40 hover:text-ink"
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       {pantryNames.length === 0 ? (
         <p className="mt-6 text-ink/60">Add a few ingredients to see what you can make.</p>
@@ -94,9 +138,19 @@ function PantryPage() {
                 {closeMatches.map((match) => (
                   <li key={match.id}>
                     <RecipeCard recipe={match} />
-                    <p className="mt-1 px-1 text-sm text-ink/60">
-                      Missing: {missingIngredientNames(match, pantryNamesLower).join(", ")}
-                    </p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 px-1">
+                      <span className="text-sm text-ink/60">Missing:</span>
+                      {missingIngredientNames(match, pantryNamesLower).map((name) => (
+                        <button
+                          key={name}
+                          type="button"
+                          onClick={() => void addIngredient(name)}
+                          className="rounded-full border border-accent-200 px-2 py-0.5 text-xs text-ink/60 hover:bg-accent-50"
+                        >
+                          + {name}
+                        </button>
+                      ))}
+                    </div>
                   </li>
                 ))}
               </ul>
