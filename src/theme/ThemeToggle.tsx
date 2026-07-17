@@ -13,8 +13,8 @@ function applyTheme(theme: ThemePreference) {
 
 const labels: Record<ThemePreference, string> = {
   light: "Light",
-  dark: "Dark",
   system: "Auto",
+  dark: "Dark",
 };
 
 export function ThemeToggle({ initialTheme }: { initialTheme: ThemePreference }) {

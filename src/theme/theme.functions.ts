@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 
-export const themeValues = ["light", "dark", "system"] as const;
+export const themeValues = ["light", "system", "dark"] as const;
 export type ThemePreference = (typeof themeValues)[number];
 
 export const THEME_COOKIE = "theme";
