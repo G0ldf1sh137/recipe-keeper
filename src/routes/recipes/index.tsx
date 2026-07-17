@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { listRecipes } from "#/recipes/recipes.functions";
+import { listRecipes, getIngredientNames } from "#/recipes/recipes.functions";
 import { getRatingSummaries } from "#/ratings/ratings.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
 import { visibilityValues } from "#/db/schema";
@@ -11,21 +11,25 @@ const recipesSearchSchema = z.object({
   tag: z.string().min(1).optional(),
   visibility: z.enum(visibilityValues).optional(),
   q: z.string().min(1).optional(),
+  ingredient: z.string().min(1).optional(),
 });
 
 export const Route = createFileRoute("/recipes/")({
   validateSearch: recipesSearchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    const recipes = await listRecipes({ data: deps });
+    const [recipes, knownIngredientNames] = await Promise.all([
+      listRecipes({ data: deps }),
+      getIngredientNames(),
+    ]);
     const ratings = await getRatingSummaries({ data: { recipeIds: recipes.map((r) => r.id) } });
-    return { recipes, ratings };
+    return { recipes, ratings, knownIngredientNames };
   },
   component: RecipesListPage,
 });
 
 function RecipesListPage() {
-  const { recipes, ratings } = Route.useLoaderData();
+  const { recipes, ratings, knownIngredientNames } = Route.useLoaderData();
   const ratingsById = new Map(Object.entries(ratings));
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
@@ -36,10 +40,18 @@ function RecipesListPage() {
   const [qInput, setQInput] = useState(search.q ?? "");
   useEffect(() => setQInput(search.q ?? ""), [search.q]);
 
+  const [ingredientInput, setIngredientInput] = useState(search.ingredient ?? "");
+  useEffect(() => setIngredientInput(search.ingredient ?? ""), [search.ingredient]);
+
   function handleFilterSubmit(e: React.FormEvent) {
     e.preventDefault();
     navigate({
-      search: (prev) => ({ ...prev, tag: tagInput.trim() || undefined, q: qInput.trim() || undefined }),
+      search: (prev) => ({
+        ...prev,
+        tag: tagInput.trim() || undefined,
+        q: qInput.trim() || undefined,
+        ingredient: ingredientInput.trim() || undefined,
+      }),
     });
   }
 
@@ -49,7 +61,7 @@ function RecipesListPage() {
     });
   }
 
-  const hasFilters = Boolean(search.tag || search.visibility || search.q);
+  const hasFilters = Boolean(search.tag || search.visibility || search.q || search.ingredient);
 
   function handleRandom() {
     const recipe = recipes[Math.floor(Math.random() * recipes.length)];
@@ -101,6 +113,17 @@ function RecipesListPage() {
         </label>
 
         <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-ink/70">Ingredient</span>
+          <input
+            className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
+            value={ingredientInput}
+            onChange={(e) => setIngredientInput(e.target.value)}
+            placeholder="onion"
+            list="ingredient-names"
+          />
+        </label>
+
+        <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-ink/70">Visibility</span>
           <select
             className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
@@ -146,6 +169,12 @@ function RecipesListPage() {
           ))}
         </ul>
       )}
+
+      <datalist id="ingredient-names">
+        {knownIngredientNames.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
     </div>
   );
 }

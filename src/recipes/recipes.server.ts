@@ -1,4 +1,4 @@
-import { and, arrayContains, eq, ilike, inArray, ne, or } from "drizzle-orm";
+import { and, arrayContains, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
 import { recipes, shares, users, ingredientNames, unitNames } from "#/db/schema";
 import { deleteImageUrls } from "#/uploads/uploads.server";
@@ -15,6 +15,13 @@ function visibleToViewer(viewerId: string | undefined) {
   return viewerId
     ? or(eq(recipes.visibility, "public"), eq(recipes.ownerId, viewerId))
     : eq(recipes.visibility, "public");
+}
+
+function ingredientMatches(term: string) {
+  return sql`exists (
+    select 1 from jsonb_array_elements(${recipes.ingredients}) as ing
+    where ing->>'name' ilike ${`%${term}%`}
+  )`;
 }
 
 const recipeWithOwnerColumns = {
@@ -76,6 +83,7 @@ export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, vi
   if (filters.q) {
     conditions.push(or(ilike(recipes.title, `%${filters.q}%`), ilike(recipes.description, `%${filters.q}%`)));
   }
+  if (filters.ingredient) conditions.push(ingredientMatches(filters.ingredient));
   return db.query.recipes.findMany({
     where: and(...conditions),
     orderBy: (r, { desc }) => [desc(r.createdAt)],
