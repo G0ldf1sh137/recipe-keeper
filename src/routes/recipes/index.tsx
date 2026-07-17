@@ -99,7 +99,7 @@ function RecipesListPage() {
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-ink/70">Visibility</span>
           <select
-            className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
+            className="rounded-lg border border-accent-100 bg-surface px-3 py-2 text-ink focus:border-accent-400 focus:outline-none"
             value={search.visibility ?? ""}
             onChange={(e) => handleVisibilityChange(e.target.value)}
           >

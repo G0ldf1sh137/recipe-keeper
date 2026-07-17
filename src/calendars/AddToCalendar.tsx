@@ -112,7 +112,7 @@ export function AddToCalendar({
                 </button>
               ))}
               <select
-                className="rounded-lg border border-accent-100 px-2 py-1 text-sm focus:border-accent-400 focus:outline-none"
+                className="rounded-lg border border-accent-100 bg-surface px-2 py-1 text-sm text-ink focus:border-accent-400 focus:outline-none"
                 value={dayFor(calendar.id)}
                 onChange={(e) =>
                   setDayByCalendar((prev) => ({ ...prev, [calendar.id]: e.target.value as DayOfWeek }))
@@ -145,7 +145,7 @@ export function AddToCalendar({
           placeholder="New calendar name"
         />
         <select
-          className="rounded-lg border border-accent-100 px-2 py-1.5 text-sm focus:border-accent-400 focus:outline-none"
+          className="rounded-lg border border-accent-100 bg-surface px-2 py-1.5 text-sm text-ink focus:border-accent-400 focus:outline-none"
           value={newDay}
           onChange={(e) => setNewDay(e.target.value as DayOfWeek)}
         >

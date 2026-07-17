@@ -361,7 +361,7 @@ export function RecipeForm({
       <label className="flex flex-col gap-1">
         <span className="font-medium text-ink/70">Visibility</span>
         <select
-          className={inputClass}
+          className={`${inputClass} bg-surface text-ink`}
           value={visibility}
           onChange={(e) => setVisibility(e.target.value as Visibility)}
         >

@@ -183,7 +183,7 @@ function CollectionPage() {
           <label className="flex items-center gap-2 text-sm">
             <span className="font-medium text-ink/70">Visibility</span>
             <select
-              className="rounded-lg border border-accent-100 px-2 py-1 text-sm focus:border-accent-400 focus:outline-none"
+              className="rounded-lg border border-accent-100 bg-surface px-2 py-1 text-sm text-ink focus:border-accent-400 focus:outline-none"
               value={collection.visibility}
               onChange={(e) => handleVisibilityChange(e.target.value as Visibility)}
             >
