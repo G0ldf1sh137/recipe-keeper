@@ -20,6 +20,9 @@ export type RecipeFormValues = {
   steps: StepRow[];
   yield: string | null;
   calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
 };
 
 export type RecipeFormSubmitValues = {
@@ -35,6 +38,9 @@ export type RecipeFormSubmitValues = {
   tags: string[];
   yield: string | null;
   calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
 };
 
 export function emptyRecipeFormValues(): RecipeFormValues {
@@ -51,6 +57,9 @@ export function emptyRecipeFormValues(): RecipeFormValues {
     steps: [{ text: "", imageUrls: [] }],
     yield: null,
     calories: null,
+    protein: null,
+    carbs: null,
+    fat: null,
   };
 }
 
@@ -101,6 +110,9 @@ export function RecipeForm({
   const [tagsInput, setTagsInput] = useState(initialValues.tagsInput);
   const [yieldInput, setYieldInput] = useState(initialValues.yield ?? "");
   const [caloriesInput, setCaloriesInput] = useState(initialValues.calories?.toString() ?? "");
+  const [proteinInput, setProteinInput] = useState(initialValues.protein?.toString() ?? "");
+  const [carbsInput, setCarbsInput] = useState(initialValues.carbs?.toString() ?? "");
+  const [fatInput, setFatInput] = useState(initialValues.fat?.toString() ?? "");
   const [visibility, setVisibility] = useState<Visibility>(initialValues.visibility);
   const [ingredients, setIngredients] = useState<IngredientRow[]>(initialValues.ingredients);
   const [steps, setSteps] = useState<StepRow[]>(initialValues.steps);
@@ -135,6 +147,9 @@ export function RecipeForm({
         sourcePdfUrl,
         yield: yieldInput.trim() || null,
         calories: caloriesInput.trim() ? Number(caloriesInput.trim()) : null,
+        protein: proteinInput.trim() ? Number(proteinInput.trim()) : null,
+        carbs: carbsInput.trim() ? Number(carbsInput.trim()) : null,
+        fat: fatInput.trim() ? Number(fatInput.trim()) : null,
         visibility,
         ingredients: ingredients
           .filter((row) => row.name.trim())
@@ -226,6 +241,44 @@ export function RecipeForm({
             value={caloriesInput}
             onChange={(e) => setCaloriesInput(e.target.value)}
             placeholder="320"
+          />
+        </label>
+      </div>
+
+      <div className="flex flex-wrap gap-4">
+        <label className="flex flex-1 flex-col gap-1">
+          <span className="font-medium text-ink/70">Protein (g)</span>
+          <input
+            type="number"
+            min="0"
+            className={inputClass}
+            value={proteinInput}
+            onChange={(e) => setProteinInput(e.target.value)}
+            placeholder="12"
+          />
+        </label>
+
+        <label className="flex flex-1 flex-col gap-1">
+          <span className="font-medium text-ink/70">Carbs (g)</span>
+          <input
+            type="number"
+            min="0"
+            className={inputClass}
+            value={carbsInput}
+            onChange={(e) => setCarbsInput(e.target.value)}
+            placeholder="34"
+          />
+        </label>
+
+        <label className="flex flex-1 flex-col gap-1">
+          <span className="font-medium text-ink/70">Fat (g)</span>
+          <input
+            type="number"
+            min="0"
+            className={inputClass}
+            value={fatInput}
+            onChange={(e) => setFatInput(e.target.value)}
+            placeholder="10"
           />
         </label>
       </div>

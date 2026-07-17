@@ -49,6 +49,10 @@ function NewRecipePage() {
       tagsInput: transcribed.tags.length ? transcribed.tags.join(", ") : prev.tagsInput,
       ...(transcribed.yield.trim() ? { yield: transcribed.yield.trim() } : {}),
       ...(transcribed.calories !== null ? { calories: transcribed.calories } : {}),
+      ...(transcribed.protein !== null ? { protein: transcribed.protein } : {}),
+      ...(transcribed.carbs !== null ? { carbs: transcribed.carbs } : {}),
+      ...(transcribed.fat !== null ? { fat: transcribed.fat } : {}),
+      ...(transcribed.sourceUrl.trim() ? { sourceUrl: transcribed.sourceUrl.trim() } : {}),
     }));
     setFormKey((k) => k + 1);
     setMode("form");
@@ -128,7 +132,12 @@ function NewRecipePage() {
               onSetCover={(coverPhotoUrl) => setFormValues((prev) => ({ ...prev, coverPhotoUrl }))}
             />
             {formValues.photoUrls.length > 0 && (
-              <ProcessPhotos photoUrls={formValues.photoUrls} onApply={applyTranscription} />
+              <ProcessPhotos
+                photoUrls={formValues.photoUrls}
+                onApply={applyTranscription}
+                knownIngredientNames={knownIngredientNames}
+                knownUnitNames={knownUnitNames}
+              />
             )}
           </div>
         )}
@@ -140,14 +149,23 @@ function NewRecipePage() {
               onChange={(sourcePdfUrl) => setFormValues((prev) => ({ ...prev, sourcePdfUrl }))}
             />
             {formValues.sourcePdfUrl && (
-              <ProcessPdf pdfUrl={formValues.sourcePdfUrl} onApply={applyTranscription} />
+              <ProcessPdf
+                pdfUrl={formValues.sourcePdfUrl}
+                onApply={applyTranscription}
+                knownIngredientNames={knownIngredientNames}
+                knownUnitNames={knownUnitNames}
+              />
             )}
           </div>
         )}
 
         {mode === "text" && (
           <div className="mt-6">
-            <ProcessText onApply={applyTranscription} />
+            <ProcessText
+              onApply={applyTranscription}
+              knownIngredientNames={knownIngredientNames}
+              knownUnitNames={knownUnitNames}
+            />
           </div>
         )}
       </div>
@@ -160,13 +178,23 @@ function NewRecipePage() {
 
       {formValues.photoUrls.length > 0 && (
         <div className="mt-6">
-          <ProcessPhotos photoUrls={formValues.photoUrls} onApply={applyTranscription} />
+          <ProcessPhotos
+            photoUrls={formValues.photoUrls}
+            onApply={applyTranscription}
+            knownIngredientNames={knownIngredientNames}
+            knownUnitNames={knownUnitNames}
+          />
         </div>
       )}
 
       {formValues.sourcePdfUrl && (
         <div className="mt-6">
-          <ProcessPdf pdfUrl={formValues.sourcePdfUrl} onApply={applyTranscription} />
+          <ProcessPdf
+            pdfUrl={formValues.sourcePdfUrl}
+            onApply={applyTranscription}
+            knownIngredientNames={knownIngredientNames}
+            knownUnitNames={knownUnitNames}
+          />
         </div>
       )}
 

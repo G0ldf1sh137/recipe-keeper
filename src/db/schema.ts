@@ -66,6 +66,9 @@ export const recipes = pgTable("recipes", {
   tags: text("tags").array().notNull().default([]),
   yield: text("yield"),
   calories: integer("calories"),
+  protein: integer("protein"),
+  carbs: integer("carbs"),
+  fat: integer("fat"),
   visibility: text("visibility", { enum: visibilityValues }).notNull().default("public"),
   ...timestamps,
 });

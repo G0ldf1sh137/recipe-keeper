@@ -11,6 +11,9 @@ export type RecipePdfData = {
   tags: string[];
   yield: string | null;
   calories: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
   sourceUrl: string | null;
 };
 
@@ -54,6 +57,11 @@ export function RecipePdfPage({ recipe }: { recipe: RecipePdfData }) {
     recipe.yield ?? undefined,
     recipe.calories !== null ? `${recipe.calories} cal/serving` : undefined,
   ].filter(Boolean);
+  const macroParts = [
+    recipe.protein !== null ? `${recipe.protein}g protein` : undefined,
+    recipe.carbs !== null ? `${recipe.carbs}g carbs` : undefined,
+    recipe.fat !== null ? `${recipe.fat}g fat` : undefined,
+  ].filter(Boolean);
 
   return (
     <Page size="LETTER" style={styles.page}>
@@ -62,6 +70,7 @@ export function RecipePdfPage({ recipe }: { recipe: RecipePdfData }) {
 
       {recipe.description && <Text style={styles.description}>{recipe.description}</Text>}
       {metaParts.length > 0 && <Text style={styles.metaLine}>{metaParts.join(" · ")}</Text>}
+      {macroParts.length > 0 && <Text style={styles.metaLine}>{macroParts.join(" · ")}</Text>}
 
       {recipe.tags.length > 0 && (
         <View style={styles.tags}>

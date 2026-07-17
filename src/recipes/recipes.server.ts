@@ -32,6 +32,9 @@ const recipeWithOwnerColumns = {
   tags: recipes.tags,
   yield: recipes.yield,
   calories: recipes.calories,
+  protein: recipes.protein,
+  carbs: recipes.carbs,
+  fat: recipes.fat,
   visibility: recipes.visibility,
   createdAt: recipes.createdAt,
   updatedAt: recipes.updatedAt,
@@ -231,6 +234,9 @@ export async function forkRecipe(recipeId: string, ownerId: string, shareToken?:
       tags: original.tags,
       yield: original.yield,
       calories: original.calories,
+      protein: original.protein,
+      carbs: original.carbs,
+      fat: original.fat,
       visibility: "private",
     })
     .returning();

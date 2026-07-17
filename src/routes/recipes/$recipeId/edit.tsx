@@ -51,6 +51,9 @@ function EditRecipePage() {
     tagsInput: recipe.tags.join(", "),
     yield: recipe.yield,
     calories: recipe.calories,
+    protein: recipe.protein,
+    carbs: recipe.carbs,
+    fat: recipe.fat,
     visibility: recipe.visibility,
     ingredients: recipe.ingredients.length ? recipe.ingredients : [{ qty: "", unit: "", name: "" }],
     steps: recipe.steps.length ? recipe.steps : [{ text: "", imageUrls: [] }],
@@ -71,6 +74,10 @@ function EditRecipePage() {
       tagsInput: transcribed.tags.length ? transcribed.tags.join(", ") : prev.tagsInput,
       ...(transcribed.yield.trim() ? { yield: transcribed.yield.trim() } : {}),
       ...(transcribed.calories !== null ? { calories: transcribed.calories } : {}),
+      ...(transcribed.protein !== null ? { protein: transcribed.protein } : {}),
+      ...(transcribed.carbs !== null ? { carbs: transcribed.carbs } : {}),
+      ...(transcribed.fat !== null ? { fat: transcribed.fat } : {}),
+      ...(transcribed.sourceUrl.trim() ? { sourceUrl: transcribed.sourceUrl.trim() } : {}),
     }));
     setFormKey((k) => k + 1);
   }
@@ -81,7 +88,12 @@ function EditRecipePage() {
 
       {formValues.photoUrls.length > 0 && (
         <div className="mt-6">
-          <ProcessPhotos photoUrls={formValues.photoUrls} onApply={applyTranscription} />
+          <ProcessPhotos
+            photoUrls={formValues.photoUrls}
+            onApply={applyTranscription}
+            knownIngredientNames={knownIngredientNames}
+            knownUnitNames={knownUnitNames}
+          />
         </div>
       )}
 

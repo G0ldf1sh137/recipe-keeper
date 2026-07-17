@@ -46,6 +46,30 @@ const scrapedRecipeOutputSchema = z.object({
           .describe(
             "Calories per serving. Use the page's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
           ),
+        protein: z
+          .number()
+          .int()
+          .nonnegative()
+          .nullable()
+          .describe(
+            "Grams of protein per serving. Use the page's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+          ),
+        carbs: z
+          .number()
+          .int()
+          .nonnegative()
+          .nullable()
+          .describe(
+            "Grams of carbohydrates per serving. Use the page's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+          ),
+        fat: z
+          .number()
+          .int()
+          .nonnegative()
+          .nullable()
+          .describe(
+            "Grams of fat per serving. Use the page's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+          ),
         photoUrls: z
           .array(z.string().url())
           .describe(
@@ -74,7 +98,7 @@ If it does show a recipe:
 - Split the method into ordered steps as the page presents them.
 - Find absolute image URLs on the page: the main/finished-dish photo(s) go in the recipe-level photoUrls; any image clearly illustrating one specific step goes in that step's imageUrls. Only include real photo URLs actually present on the fetched page — never invent one. Skip ads, logos, author photos, and images for unrelated recipes.
 - Suggest 2-4 lowercase tags.
-- Determine the yield (servings) and calories per serving: use the page's stated values if present; otherwise estimate both from the ingredient list and quantities using your general nutrition knowledge. Only leave them blank (empty string / null) if there's not enough information to make any reasonable estimate.
+- Determine the yield (servings) and nutrition per serving (calories, protein, carbs, fat): use the page's stated values if present; otherwise estimate them from the ingredient list and quantities using your general nutrition knowledge. Only leave a figure blank (empty string / null) if there's not enough information to make any reasonable estimate.
 
 If it does not show a recipe, say so and briefly explain what the page appears to show instead (including if the page could not be fetched at all).
 

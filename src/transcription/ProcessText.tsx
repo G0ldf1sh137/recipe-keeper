@@ -3,7 +3,15 @@ import { useServerFn } from "@tanstack/react-start";
 import { processRecipeText } from "./transcription.functions";
 import type { TranscriptionResult, TranscribedRecipe } from "./transcription.server";
 
-export function ProcessText({ onApply }: { onApply: (recipe: TranscribedRecipe) => void }) {
+export function ProcessText({
+  onApply,
+  knownIngredientNames = [],
+  knownUnitNames = [],
+}: {
+  onApply: (recipe: TranscribedRecipe) => void;
+  knownIngredientNames?: string[];
+  knownUnitNames?: string[];
+}) {
   const processFn = useServerFn(processRecipeText);
   const [text, setText] = useState("");
   const [scanning, setScanning] = useState(false);
@@ -13,7 +21,7 @@ export function ProcessText({ onApply }: { onApply: (recipe: TranscribedRecipe) 
     setScanning(true);
     setResult(null);
     try {
-      setResult(await processFn({ data: { recipeText: text } }));
+      setResult(await processFn({ data: { recipeText: text, knownIngredientNames, knownUnitNames } }));
     } catch {
       setResult({ status: "error", message: "Reading failed. Please try again." });
     } finally {
@@ -95,6 +103,20 @@ export function ProcessText({ onApply }: { onApply: (recipe: TranscribedRecipe) 
                 .filter(Boolean)
                 .join(" · ")}
             </p>
+          )}
+          {(result.recipe.protein !== null || result.recipe.carbs !== null || result.recipe.fat !== null) && (
+            <p className="mt-1 text-sm text-ink/60">
+              {[
+                result.recipe.protein !== null ? `${result.recipe.protein}g protein` : null,
+                result.recipe.carbs !== null ? `${result.recipe.carbs}g carbs` : null,
+                result.recipe.fat !== null ? `${result.recipe.fat}g fat` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          )}
+          {result.recipe.sourceUrl.trim() && (
+            <p className="mt-1 text-xs text-ink/50">Source: {result.recipe.sourceUrl.trim()}</p>
           )}
 
           {result.recipe.ingredients.length > 0 && (

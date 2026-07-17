@@ -239,6 +239,18 @@ function RecipePage() {
         </p>
       )}
 
+      {(recipe.protein || recipe.carbs || recipe.fat) && (
+        <p className="mt-2 text-sm text-ink/60">
+          {[
+            recipe.protein ? `${recipe.protein}g protein` : null,
+            recipe.carbs ? `${recipe.carbs}g carbs` : null,
+            recipe.fat ? `${recipe.fat}g fat` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      )}
+
       {recipe.sourceUrl && (
         <p className="mt-2 text-sm text-ink/60">
           Originally from{" "}

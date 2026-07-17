@@ -40,6 +40,35 @@ const transcriptionOutputSchema = z.object({
           .describe(
             "Calories per serving. Use the recipe's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
           ),
+        protein: z
+          .number()
+          .int()
+          .nonnegative()
+          .nullable()
+          .describe(
+            "Grams of protein per serving. Use the recipe's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+          ),
+        carbs: z
+          .number()
+          .int()
+          .nonnegative()
+          .nullable()
+          .describe(
+            "Grams of carbohydrates per serving. Use the recipe's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+          ),
+        fat: z
+          .number()
+          .int()
+          .nonnegative()
+          .nullable()
+          .describe(
+            "Grams of fat per serving. Use the recipe's own stated figure if present; otherwise estimate from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+          ),
+        sourceUrl: z
+          .string()
+          .describe(
+            "A source URL for this recipe if one is explicitly written or shown in the input (printed on a recipe card/PDF, a link mentioned in pasted text). Empty string if none is present — never invent one.",
+          ),
       }),
       z.null(),
     ])
@@ -63,7 +92,8 @@ If they do show a handwritten or typed recipe:
 - Split the method into ordered steps. If the writing is one continuous paragraph, break it at natural sentence boundaries.
 - If a word is truly illegible, transcribe your best reading followed by "(?)".
 - Suggest 2-4 lowercase tags.
-- Determine the yield (servings) and calories per serving: transcribe them as written if the recipe states them; if not, estimate both from the ingredient list and quantities using your general nutrition knowledge. Only leave them blank (empty string / null) if there's not enough information to make any reasonable estimate.
+- Determine the yield (servings) and nutrition per serving (calories, protein, carbs, fat): transcribe them as written if the recipe states them; if not, estimate them from the ingredient list and quantities using your general nutrition knowledge. Only leave a figure blank (empty string / null) if there's not enough information to make any reasonable estimate.
+- If a source URL is written or shown anywhere in the input, extract it into sourceUrl; otherwise leave it as an empty string. Never invent one.
 
 If they do not, say so and briefly explain what the photos appear to show instead.`;
 
@@ -81,7 +111,8 @@ If it does show a recipe:
 - Split the method into ordered steps. If the writing is one continuous paragraph, break it at natural sentence boundaries.
 - If a word is truly illegible, transcribe your best reading followed by "(?)".
 - Suggest 2-4 lowercase tags.
-- Determine the yield (servings) and calories per serving: transcribe them as written if the recipe states them; if not, estimate both from the ingredient list and quantities using your general nutrition knowledge. Only leave them blank (empty string / null) if there's not enough information to make any reasonable estimate.
+- Determine the yield (servings) and nutrition per serving (calories, protein, carbs, fat): transcribe them as written if the recipe states them; if not, estimate them from the ingredient list and quantities using your general nutrition knowledge. Only leave a figure blank (empty string / null) if there's not enough information to make any reasonable estimate.
+- If a source URL is written or shown anywhere in the input, extract it into sourceUrl; otherwise leave it as an empty string. Never invent one.
 
 If it does not, say so and briefly explain what the PDF appears to show instead.`;
 
@@ -94,12 +125,35 @@ If it does describe a recipe:
 - Normalize each ingredient line into qty/unit/name (e.g. "2 cups flour" -> qty "2", unit "cups", name "flour"). Leave qty or unit empty when the text doesn't specify them.
 - Split the method into ordered steps. If the method is one continuous paragraph, break it at natural sentence boundaries.
 - Suggest 2-4 lowercase tags.
-- Determine the yield (servings) and calories per serving: use the text's own stated figure if present; if not, estimate both from the ingredient list and quantities using your general nutrition knowledge. Only leave them blank (empty string / null) if there's not enough information to make any reasonable estimate.
+- Determine the yield (servings) and nutrition per serving (calories, protein, carbs, fat): use the text's own stated figures if present; if not, estimate them from the ingredient list and quantities using your general nutrition knowledge. Only leave a figure blank (empty string / null) if there's not enough information to make any reasonable estimate.
+- If a source URL is written or shown anywhere in the input, extract it into sourceUrl; otherwise leave it as an empty string. Never invent one.
 
 If it does not describe a recipe, say so and briefly explain what the text appears to be instead.`;
 
-export async function transcribeRecipeText(recipeText: string): Promise<TranscriptionResult> {
+function buildNormalizationNote(knownIngredientNames: string[], knownUnitNames: string[]): string {
+  const parts = [
+    `Normalize each ingredient's name and unit so the same ingredient looks identical across different recipes (this lets a grocery list combine matching items). Use a clean, singular, lowercase ingredient name (e.g. "onion" not "onions" or "diced onions"; drop prep notes like "softened" or "to taste" that don't change what's shopped for) and a standard singular unit word (e.g. "tablespoon" not "tbsp"/"tablespoons", "cup" not "c."/"cups", "ounce" not "oz."). Only include a unit when one is actually stated or clearly implied.`,
+  ];
+  if (knownIngredientNames.length > 0) {
+    parts.push(
+      `Ingredient names already used in this app — reuse the exact spelling below when this ingredient is the same thing (but prefer the clean form above over reusing a messy or overly specific existing entry): ${knownIngredientNames.join(", ")}.`,
+    );
+  }
+  if (knownUnitNames.length > 0) {
+    parts.push(
+      `Units already used in this app — reuse the exact spelling below when equivalent: ${knownUnitNames.join(", ")}.`,
+    );
+  }
+  return parts.join("\n");
+}
+
+export async function transcribeRecipeText(
+  recipeText: string,
+  knownIngredientNames: string[] = [],
+  knownUnitNames: string[] = [],
+): Promise<TranscriptionResult> {
   const client = new Anthropic();
+  const prompt = `${TEXT_PROMPT}\n\n${buildNormalizationNote(knownIngredientNames, knownUnitNames)}`;
 
   let response;
   try {
@@ -108,7 +162,7 @@ export async function transcribeRecipeText(recipeText: string): Promise<Transcri
       max_tokens: 16000,
       thinking: { type: "adaptive" },
       output_config: { format: zodOutputFormat(transcriptionOutputSchema) },
-      messages: [{ role: "user", content: [{ type: "text", text: recipeText }, { type: "text", text: TEXT_PROMPT }] }],
+      messages: [{ role: "user", content: [{ type: "text", text: recipeText }, { type: "text", text: prompt }] }],
     });
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {
@@ -135,7 +189,11 @@ export async function transcribeRecipeText(recipeText: string): Promise<Transcri
   return { status: "transcribed", recipe: output.recipe };
 }
 
-export async function transcribeRecipePdf(pdfUrl: string): Promise<TranscriptionResult> {
+export async function transcribeRecipePdf(
+  pdfUrl: string,
+  knownIngredientNames: string[] = [],
+  knownUnitNames: string[] = [],
+): Promise<TranscriptionResult> {
   let response: Response;
   try {
     response = await fetch(pdfUrl);
@@ -148,6 +206,7 @@ export async function transcribeRecipePdf(pdfUrl: string): Promise<Transcription
   const data = Buffer.from(bytes).toString("base64");
 
   const client = new Anthropic();
+  const prompt = `${PDF_PROMPT}\n\n${buildNormalizationNote(knownIngredientNames, knownUnitNames)}`;
 
   let apiResponse;
   try {
@@ -161,7 +220,7 @@ export async function transcribeRecipePdf(pdfUrl: string): Promise<Transcription
           role: "user",
           content: [
             { type: "document", source: { type: "base64", media_type: "application/pdf", data } },
-            { type: "text", text: PDF_PROMPT },
+            { type: "text", text: prompt },
           ],
         },
       ],
@@ -191,13 +250,18 @@ export async function transcribeRecipePdf(pdfUrl: string): Promise<Transcription
   return { status: "transcribed", recipe: output.recipe };
 }
 
-export async function transcribeRecipePhotos(photoUrls: string[]): Promise<TranscriptionResult> {
+export async function transcribeRecipePhotos(
+  photoUrls: string[],
+  knownIngredientNames: string[] = [],
+  knownUnitNames: string[] = [],
+): Promise<TranscriptionResult> {
   const images = buildImageBlocks(photoUrls);
   if (images.length === 0) {
     return { status: "error", message: "None of this recipe's photos could be read." };
   }
 
   const client = new Anthropic();
+  const prompt = `${PROMPT}\n\n${buildNormalizationNote(knownIngredientNames, knownUnitNames)}`;
 
   let response;
   try {
@@ -206,7 +270,7 @@ export async function transcribeRecipePhotos(photoUrls: string[]): Promise<Trans
       max_tokens: 16000,
       thinking: { type: "adaptive" },
       output_config: { format: zodOutputFormat(transcriptionOutputSchema) },
-      messages: [{ role: "user", content: [...images, { type: "text", text: PROMPT }] }],
+      messages: [{ role: "user", content: [...images, { type: "text", text: prompt }] }],
     });
   } catch (error) {
     if (error instanceof Anthropic.AuthenticationError) {

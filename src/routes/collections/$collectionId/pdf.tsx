@@ -46,6 +46,9 @@ export const Route = createFileRoute("/collections/$collectionId/pdf")({
             tags: recipe.tags,
             yield: recipe.yield,
             calories: recipe.calories,
+            protein: recipe.protein,
+            carbs: recipe.carbs,
+            fat: recipe.fat,
             sourceUrl: recipe.sourceUrl,
           }));
 

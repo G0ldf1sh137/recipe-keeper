@@ -28,6 +28,9 @@ export const createRecipeSchema = z.object({
   tags: z.array(z.string()).default([]),
   yield: z.string().trim().min(1).nullable().default(null),
   calories: z.number().int().nonnegative().nullable().default(null),
+  protein: z.number().int().nonnegative().nullable().default(null),
+  carbs: z.number().int().nonnegative().nullable().default(null),
+  fat: z.number().int().nonnegative().nullable().default(null),
   visibility: visibilitySchema.default("public"),
 });
 
@@ -44,6 +47,9 @@ export const updateRecipeSchema = z.object({
   tags: z.array(z.string()).optional(),
   yield: z.string().trim().min(1).nullable().optional(),
   calories: z.number().int().nonnegative().nullable().optional(),
+  protein: z.number().int().nonnegative().nullable().optional(),
+  carbs: z.number().int().nonnegative().nullable().optional(),
+  fat: z.number().int().nonnegative().nullable().optional(),
   visibility: visibilitySchema.optional(),
 });
 
