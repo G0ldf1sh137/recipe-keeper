@@ -23,6 +23,7 @@ import {
   revokeShareForRecipe,
   updateOwnedRecipe,
 } from "./recipes.server";
+import { insertNotification } from "#/notifications/notifications.server";
 import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
 
 export const listRecipes = createServerFn({ method: "GET" })
@@ -73,9 +74,15 @@ export const forkRecipe = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
   .validator(forkRecipeSchema)
   .handler(async ({ data, context }) => {
-    const forked = await forkRecipeDb(data.recipeId, context.user.id, data.shareToken);
-    if (!forked) throw notFound();
-    return forked;
+    const result = await forkRecipeDb(data.recipeId, context.user.id, data.shareToken);
+    if (!result) throw notFound();
+    await insertNotification({
+      recipientId: result.originalOwnerId,
+      actorId: context.user.id,
+      recipeId: data.recipeId,
+      type: "fork",
+    });
+    return result.forked;
   });
 
 export const getIngredientNames = createServerFn({ method: "GET" }).handler(async () => listIngredientNames());

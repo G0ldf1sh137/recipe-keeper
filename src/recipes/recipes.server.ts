@@ -234,7 +234,7 @@ export async function forkRecipe(recipeId: string, ownerId: string, shareToken?:
       visibility: "private",
     })
     .returning();
-  return forked;
+  return { forked, originalOwnerId: original.ownerId };
 }
 
 export async function findShareTokenForRecipe(recipeId: string, ownerId: string) {

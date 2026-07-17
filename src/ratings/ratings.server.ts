@@ -4,6 +4,13 @@ import { ratings } from "#/db/schema";
 
 export type RatingSummary = { average: number; count: number };
 
+export async function hasRated(recipeId: string, userId: string): Promise<boolean> {
+  const existing = await db.query.ratings.findFirst({
+    where: and(eq(ratings.recipeId, recipeId), eq(ratings.userId, userId)),
+  });
+  return existing !== undefined;
+}
+
 export async function upsertRating(recipeId: string, userId: string, value: number) {
   await db
     .insert(ratings)

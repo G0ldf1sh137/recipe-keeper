@@ -198,6 +198,25 @@ export const groceryListItems = pgTable("grocery_list_items", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+export const notificationTypeValues = ["comment", "fork", "rating"] as const;
+export type NotificationType = (typeof notificationTypeValues)[number];
+
+export const notifications = pgTable("notifications", {
+  id: id(),
+  recipientId: text("recipient_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  actorId: text("actor_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  recipeId: text("recipe_id")
+    .notNull()
+    .references(() => recipes.id, { onDelete: "cascade" }),
+  type: text("type", { enum: notificationTypeValues }).notNull(),
+  readAt: timestamp("read_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 export const ingredientNames = pgTable("ingredients", {
   id: id(),
   name: text("name").notNull().unique(),

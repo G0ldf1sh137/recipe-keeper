@@ -3,6 +3,7 @@ import { notFound } from "@tanstack/react-router";
 import { createCommentSchema, listCommentsSchema } from "./schemas";
 import { findCommentById, findCommentTreeForRecipe, insertComment } from "./comments.server";
 import { findRecipeById } from "#/recipes/recipes.server";
+import { insertNotification } from "#/notifications/notifications.server";
 import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
 
 export const listComments = createServerFn({ method: "GET" })
@@ -26,5 +27,12 @@ export const createComment = createServerFn({ method: "POST" })
       if (!parent || parent.recipeId !== data.recipeId) throw notFound();
     }
 
-    return insertComment(data, context.user.id);
+    const comment = await insertComment(data, context.user.id);
+    await insertNotification({
+      recipientId: recipe.ownerId,
+      actorId: context.user.id,
+      recipeId: data.recipeId,
+      type: "comment",
+    });
+    return comment;
   });

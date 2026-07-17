@@ -3,9 +3,11 @@ import { HeadContent, Scripts, createRootRoute, Link, useRouter } from '@tanstac
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { useServerFn } from '@tanstack/react-start'
+import { Bell } from 'lucide-react'
 import { getSessionUser, logout } from '#/auth/auth.functions'
 import { getThemePreference } from '#/theme/theme.functions'
 import { ThemeToggle } from '#/theme/ThemeToggle'
+import { getUnreadNotificationCount } from '#/notifications/notifications.functions'
 
 import appCss from '../styles.css?url'
 
@@ -44,14 +46,18 @@ export const Route = createRootRoute({
     ],
   }),
   loader: async () => {
-    const [user, theme] = await Promise.all([getSessionUser(), getThemePreference()])
-    return { user, theme }
+    const [user, theme, unreadCount] = await Promise.all([
+      getSessionUser(),
+      getThemePreference(),
+      getUnreadNotificationCount(),
+    ])
+    return { user, theme, unreadCount }
   },
   shellComponent: RootDocument,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { user, theme } = Route.useLoaderData()
+  const { user, theme, unreadCount } = Route.useLoaderData()
 
   return (
     <html lang="en" className={theme === 'dark' ? 'dark' : undefined} suppressHydrationWarning>
@@ -68,7 +74,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         )}
       </head>
       <body>
-        <AuthHeader user={user} theme={theme} />
+        <AuthHeader user={user} theme={theme} unreadCount={unreadCount} />
         {children}
         <TanStackDevtools
           config={{
@@ -87,12 +93,27 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
+function NotificationBell({ unreadCount, onNavigate }: { unreadCount: number; onNavigate?: () => void }) {
+  return (
+    <Link to="/notifications" onClick={onNavigate} className="relative text-accent-600 hover:text-accent-700 dark:hover:text-accent-400">
+      <Bell size={20} />
+      {unreadCount > 0 && (
+        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+      )}
+    </Link>
+  )
+}
+
 function AuthHeader({
   user,
   theme,
+  unreadCount,
 }: {
   user: Awaited<ReturnType<typeof getSessionUser>>
   theme: Awaited<ReturnType<typeof getThemePreference>>
+  unreadCount: number
 }) {
   const router = useRouter()
   const logoutFn = useServerFn(logout)
@@ -178,6 +199,7 @@ function AuthHeader({
           <ThemeToggle initialTheme={theme} />
           {user ? (
             <>
+              <NotificationBell unreadCount={unreadCount} />
               <div className="hidden items-center gap-3 sm:flex">{renderNavLinks(user)}</div>
               <button
                 type="button"

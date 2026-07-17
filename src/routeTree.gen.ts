@@ -13,6 +13,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
+import { Route as NotificationsIndexRouteImport } from './routes/notifications/index'
 import { Route as GroceryIndexRouteImport } from './routes/grocery/index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections/index'
 import { Route as CalendarsIndexRouteImport } from './routes/calendars/index'
@@ -49,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
 const RecipesIndexRoute = RecipesIndexRouteImport.update({
   id: '/recipes/',
   path: '/recipes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsIndexRoute = NotificationsIndexRouteImport.update({
+  id: '/notifications/',
+  path: '/notifications/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GroceryIndexRoute = GroceryIndexRouteImport.update({
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/calendars/': typeof CalendarsIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/grocery/': typeof GroceryIndexRoute
+  '/notifications/': typeof NotificationsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/calendars': typeof CalendarsIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/grocery': typeof GroceryIndexRoute
+  '/notifications': typeof NotificationsIndexRoute
   '/recipes': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
@@ -200,6 +208,7 @@ export interface FileRoutesById {
   '/calendars/': typeof CalendarsIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/grocery/': typeof GroceryIndexRoute
+  '/notifications/': typeof NotificationsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/calendars/'
     | '/collections/'
     | '/grocery/'
+    | '/notifications/'
     | '/recipes/'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/calendars'
     | '/collections'
     | '/grocery'
+    | '/notifications'
     | '/recipes'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/calendars/'
     | '/collections/'
     | '/grocery/'
+    | '/notifications/'
     | '/recipes/'
     | '/auth/google/callback'
     | '/recipes/$recipeId/edit'
@@ -295,6 +307,7 @@ export interface RootRouteChildren {
   CalendarsIndexRoute: typeof CalendarsIndexRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
   GroceryIndexRoute: typeof GroceryIndexRoute
+  NotificationsIndexRoute: typeof NotificationsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
   RecipesRecipeIdEditRoute: typeof RecipesRecipeIdEditRoute
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       path: '/recipes'
       fullPath: '/recipes/'
       preLoaderRoute: typeof RecipesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications/': {
+      id: '/notifications/'
+      path: '/notifications'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof NotificationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/grocery/': {
@@ -471,6 +491,7 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarsIndexRoute: CalendarsIndexRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
   GroceryIndexRoute: GroceryIndexRoute,
+  NotificationsIndexRoute: NotificationsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
   RecipesRecipeIdEditRoute: RecipesRecipeIdEditRoute,
