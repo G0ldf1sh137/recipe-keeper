@@ -3,6 +3,7 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
 import { updateUsername } from "#/auth/username.functions";
+import { updateNotificationPreferences } from "#/notifications/notifications.functions";
 
 export const Route = createFileRoute("/settings")({
   beforeLoad: async () => {
@@ -17,11 +18,18 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const user = Route.useLoaderData();
   const updateUsernameFn = useServerFn(updateUsername);
+  const updateNotificationPreferencesFn = useServerFn(updateNotificationPreferences);
 
   const [username, setUsername] = useState(user.username ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const [notifyOnComment, setNotifyOnComment] = useState(user.notifyOnComment);
+  const [notifyOnRating, setNotifyOnRating] = useState(user.notifyOnRating);
+  const [notifyOnFork, setNotifyOnFork] = useState(user.notifyOnFork);
+  const [notificationsSaved, setNotificationsSaved] = useState(false);
+  const [notificationsSubmitting, setNotificationsSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,6 +48,18 @@ function SettingsPage() {
       setError("Use 3-30 lowercase letters, numbers, or hyphens.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleNotificationsSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setNotificationsSubmitting(true);
+    setNotificationsSaved(false);
+    try {
+      await updateNotificationPreferencesFn({ data: { notifyOnComment, notifyOnRating, notifyOnFork } });
+      setNotificationsSaved(true);
+    } finally {
+      setNotificationsSubmitting(false);
     }
   }
 
@@ -86,6 +106,46 @@ function SettingsPage() {
           className="mt-2 self-start rounded-lg bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-50"
         >
           {submitting ? "Saving..." : "Save"}
+        </button>
+      </form>
+
+      <form onSubmit={handleNotificationsSubmit} className="mt-8 flex flex-col gap-2">
+        <h2 className="font-serif text-xl font-semibold text-ink">Notifications</h2>
+        <p className="text-sm text-ink/50">Notify me when someone...</p>
+        <label className="flex items-center gap-2 text-ink/70">
+          <input
+            type="checkbox"
+            className="accent-accent-600"
+            checked={notifyOnComment}
+            onChange={(e) => setNotifyOnComment(e.target.checked)}
+          />
+          comments on one of my recipes
+        </label>
+        <label className="flex items-center gap-2 text-ink/70">
+          <input
+            type="checkbox"
+            className="accent-accent-600"
+            checked={notifyOnRating}
+            onChange={(e) => setNotifyOnRating(e.target.checked)}
+          />
+          rates one of my recipes
+        </label>
+        <label className="flex items-center gap-2 text-ink/70">
+          <input
+            type="checkbox"
+            className="accent-accent-600"
+            checked={notifyOnFork}
+            onChange={(e) => setNotifyOnFork(e.target.checked)}
+          />
+          forks one of my recipes
+        </label>
+        {notificationsSaved && <p className="text-green-700">Saved.</p>}
+        <button
+          type="submit"
+          disabled={notificationsSubmitting}
+          className="mt-2 self-start rounded-lg bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-50"
+        >
+          {notificationsSubmitting ? "Saving..." : "Save"}
         </button>
       </form>
     </div>

@@ -12,6 +12,12 @@ export type NotificationRow = {
   recipe: { id: string; title: string };
 };
 
+const notificationPreferenceColumns = {
+  comment: "notifyOnComment",
+  rating: "notifyOnRating",
+  fork: "notifyOnFork",
+} as const satisfies Record<NotificationType, keyof typeof users.$inferSelect>;
+
 export async function insertNotification(input: {
   recipientId: string;
   actorId: string;
@@ -19,7 +25,19 @@ export async function insertNotification(input: {
   type: NotificationType;
 }) {
   if (input.recipientId === input.actorId) return;
+  const recipient = await db.query.users.findFirst({
+    where: eq(users.id, input.recipientId),
+    columns: { notifyOnComment: true, notifyOnRating: true, notifyOnFork: true },
+  });
+  if (!recipient?.[notificationPreferenceColumns[input.type]]) return;
   await db.insert(notifications).values(input);
+}
+
+export async function updateNotificationPreferences(
+  userId: string,
+  prefs: { notifyOnComment: boolean; notifyOnRating: boolean; notifyOnFork: boolean },
+) {
+  return db.update(users).set(prefs).where(eq(users.id, userId)).returning();
 }
 
 export async function findNotificationsForUser(userId: string): Promise<NotificationRow[]> {
