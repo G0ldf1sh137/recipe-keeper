@@ -39,6 +39,11 @@ const featureGroups = [
       "Build a shopping list from one or more recipes, with duplicate ingredients automatically combined, plus manually-added items.",
   },
   {
+    title: "Pantry mode",
+    description:
+      "List the ingredients you have on hand and see which recipes you can make right now, plus close matches showing exactly what you're missing.",
+  },
+  {
     title: "Search & discovery",
     description:
       "Search recipes by title, tag, or ingredient in one box, browse every tag in use, browse public cookbooks from other users, and see recipes similar to the one you're viewing.",

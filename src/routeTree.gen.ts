@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as PantryRouteImport } from './routes/pantry'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
@@ -41,6 +42,11 @@ import { Route as AuthGoogleCallbackRouteImport } from './routes/auth/google/cal
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PantryRoute = PantryRouteImport.update({
+  id: '/pantry',
+  path: '/pantry',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/pantry': typeof PantryRoute
   '/settings': typeof SettingsRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/pantry': typeof PantryRoute
   '/settings': typeof SettingsRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
@@ -247,6 +255,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
+  '/pantry': typeof PantryRoute
   '/settings': typeof SettingsRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
@@ -279,6 +288,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/login'
+    | '/pantry'
     | '/settings'
     | '/api/rotate-image'
     | '/api/upload'
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/login'
+    | '/pantry'
     | '/settings'
     | '/api/rotate-image'
     | '/api/upload'
@@ -339,6 +350,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/admin'
     | '/login'
+    | '/pantry'
     | '/settings'
     | '/api/rotate-image'
     | '/api/upload'
@@ -370,6 +382,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
+  PantryRoute: typeof PantryRoute
   SettingsRoute: typeof SettingsRoute
   ApiRotateImageRoute: typeof ApiRotateImageRoute
   ApiUploadRoute: typeof ApiUploadRoute
@@ -403,6 +416,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pantry': {
+      id: '/pantry'
+      path: '/pantry'
+      fullPath: '/pantry'
+      preLoaderRoute: typeof PantryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -602,6 +622,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
+  PantryRoute: PantryRoute,
   SettingsRoute: SettingsRoute,
   ApiRotateImageRoute: ApiRotateImageRoute,
   ApiUploadRoute: ApiUploadRoute,

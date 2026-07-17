@@ -162,6 +162,13 @@
       "when": 1784315906031,
       "tag": "0022_free_doctor_doom",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1784322044165,
+      "tag": "0023_aromatic_wild_pack",
+      "breakpoints": true
     }
   ]
 }

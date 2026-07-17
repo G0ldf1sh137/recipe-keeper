@@ -257,6 +257,18 @@ export const reports = pgTable("reports", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+export const pantryItems = pgTable(
+  "pantry_items",
+  {
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.ownerId, table.name] })],
+);
+
 export const ingredientNames = pgTable("ingredients", {
   id: id(),
   name: text("name").notNull().unique(),
