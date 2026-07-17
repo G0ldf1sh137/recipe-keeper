@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { flushSync } from "react-dom";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
@@ -39,12 +40,22 @@ function PantryPage() {
   const [matches, setMatches] = useState(loaderData.matches);
   const [draft, setDraft] = useState("");
 
+  function applyMatches(nextMatches: PantryMatch[]) {
+    if (!("startViewTransition" in document)) {
+      setMatches(nextMatches);
+      return;
+    }
+    document.startViewTransition(() => {
+      flushSync(() => setMatches(nextMatches));
+    });
+  }
+
   async function addIngredient(rawName: string) {
     const name = rawName.trim().toLowerCase();
     if (!name || pantryNames.includes(name)) return;
     setPantryNames((prev) => [...prev, name]);
     await addPantryItemFn({ data: { name } });
-    setMatches(await getPantryMatchesFn());
+    applyMatches(await getPantryMatchesFn());
   }
 
   async function handleAddItem(e: React.FormEvent) {
@@ -57,7 +68,7 @@ function PantryPage() {
   async function handleRemoveItem(name: string) {
     setPantryNames((prev) => prev.filter((n) => n !== name));
     await removePantryItemFn({ data: { name } });
-    setMatches(await getPantryMatchesFn());
+    applyMatches(await getPantryMatchesFn());
   }
 
   const pantryNamesLower = new Set(pantryNames.map((name) => name.toLowerCase()));
@@ -123,7 +134,7 @@ function PantryPage() {
               <h2 className="font-serif text-xl font-semibold text-ink">You can make these now</h2>
               <ul className="mt-3 flex flex-col gap-3">
                 {readyToMake.map((match) => (
-                  <li key={match.id}>
+                  <li key={match.id} style={{ viewTransitionName: `pantry-recipe-${match.id}` }}>
                     <RecipeCard recipe={match} />
                   </li>
                 ))}
@@ -136,7 +147,7 @@ function PantryPage() {
               <h2 className="font-serif text-xl font-semibold text-ink">Close matches</h2>
               <ul className="mt-3 flex flex-col gap-3">
                 {closeMatches.map((match) => (
-                  <li key={match.id}>
+                  <li key={match.id} style={{ viewTransitionName: `pantry-recipe-${match.id}` }}>
                     <RecipeCard recipe={match} />
                     <div className="mt-1 flex flex-wrap items-center gap-1.5 px-1">
                       <span className="text-sm text-ink/60">Missing:</span>
