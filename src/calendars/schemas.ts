@@ -42,3 +42,9 @@ export const removeEntryFromCalendarSchema = z.object({
   calendarId: z.string().min(1),
   entryId: z.string().min(1),
 });
+
+export const moveEntryInCalendarSchema = z.object({
+  calendarId: z.string().min(1),
+  entryId: z.string().min(1),
+  direction: z.enum(["up", "down"]),
+});

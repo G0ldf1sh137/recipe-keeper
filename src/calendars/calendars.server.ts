@@ -59,7 +59,7 @@ export async function findEntriesForCalendar(calendarId: string) {
     .from(calendarEntries)
     .innerJoin(recipes, eq(calendarEntries.recipeId, recipes.id))
     .where(eq(calendarEntries.calendarId, calendarId))
-    .orderBy(calendarEntries.createdAt);
+    .orderBy(calendarEntries.position);
 }
 
 export async function insertCalendar(name: string, ownerId: string) {
@@ -120,8 +120,48 @@ export async function addEntryToCalendar(
 ) {
   const calendar = await findCalendarById(calendarId, ownerId);
   if (!calendar) return undefined;
-  const [entry] = await db.insert(calendarEntries).values({ calendarId, recipeId, dayOfWeek }).returning();
+
+  const [{ maxPosition }] = await db
+    .select({ maxPosition: sql<number>`coalesce(max(${calendarEntries.position}), -1)` })
+    .from(calendarEntries)
+    .where(and(eq(calendarEntries.calendarId, calendarId), eq(calendarEntries.dayOfWeek, dayOfWeek)));
+
+  const [entry] = await db
+    .insert(calendarEntries)
+    .values({ calendarId, recipeId, dayOfWeek, position: maxPosition + 1 })
+    .returning();
   return entry;
+}
+
+export async function moveEntryInCalendar(
+  calendarId: string,
+  entryId: string,
+  direction: "up" | "down",
+  ownerId: string,
+) {
+  const calendar = await findCalendarById(calendarId, ownerId);
+  if (!calendar) return undefined;
+
+  const entry = await db.query.calendarEntries.findFirst({
+    where: and(eq(calendarEntries.id, entryId), eq(calendarEntries.calendarId, calendarId)),
+  });
+  if (!entry) return undefined;
+
+  const dayEntries = await db.query.calendarEntries.findMany({
+    where: and(eq(calendarEntries.calendarId, calendarId), eq(calendarEntries.dayOfWeek, entry.dayOfWeek)),
+    orderBy: (e, { asc }) => [asc(e.position)],
+  });
+
+  const index = dayEntries.findIndex((e) => e.id === entryId);
+  const neighborIndex = direction === "up" ? index - 1 : index + 1;
+  if (neighborIndex < 0 || neighborIndex >= dayEntries.length) return { ok: true };
+
+  const neighbor = dayEntries[neighborIndex];
+  await db.transaction(async (tx) => {
+    await tx.update(calendarEntries).set({ position: neighbor.position }).where(eq(calendarEntries.id, entry.id));
+    await tx.update(calendarEntries).set({ position: entry.position }).where(eq(calendarEntries.id, neighbor.id));
+  });
+  return { ok: true };
 }
 
 export async function removeEntryFromCalendar(calendarId: string, entryId: string, ownerId: string) {

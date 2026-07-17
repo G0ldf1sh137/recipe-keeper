@@ -7,6 +7,7 @@ import {
   renameCalendar,
   deleteCalendar,
   removeRecipeFromCalendarDay,
+  moveCalendarEntry,
   createCalendarShare,
   revokeCalendarShare,
   updateCalendarVisibility,
@@ -66,6 +67,7 @@ function CalendarPage() {
   const renameFn = useServerFn(renameCalendar);
   const deleteFn = useServerFn(deleteCalendar);
   const removeFn = useServerFn(removeRecipeFromCalendarDay);
+  const moveFn = useServerFn(moveCalendarEntry);
   const createShareFn = useServerFn(createCalendarShare);
   const revokeShareFn = useServerFn(revokeCalendarShare);
   const updateVisibilityFn = useServerFn(updateCalendarVisibility);
@@ -89,6 +91,11 @@ function CalendarPage() {
 
   async function handleRemove(entryId: string) {
     await removeFn({ data: { calendarId: calendar.id, entryId } });
+    await router.invalidate();
+  }
+
+  async function handleMove(entryId: string, direction: "up" | "down") {
+    await moveFn({ data: { calendarId: calendar.id, entryId, direction } });
     await router.invalidate();
   }
 
@@ -204,7 +211,7 @@ function CalendarPage() {
               <p className="mt-2 text-xs text-ink/40">No recipes</p>
             ) : (
               <ul className="mt-2 flex flex-col gap-2">
-                {entriesByDay[day].map((entry) => (
+                {entriesByDay[day].map((entry, index) => (
                   <li key={entry.entryId} className="flex items-start justify-between gap-1">
                     <Link
                       to="/recipes/$recipeId"
@@ -214,14 +221,34 @@ function CalendarPage() {
                       {entry.title}
                     </Link>
                     {calendar.isOwner && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(entry.entryId)}
-                        aria-label="Remove"
-                        className="shrink-0 text-xs font-medium text-red-600 hover:text-red-700"
-                      >
-                        ✕
-                      </button>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleMove(entry.entryId, "up")}
+                          disabled={index === 0}
+                          aria-label="Move up"
+                          className="text-base font-medium text-accent-600 hover:text-accent-700 disabled:opacity-30"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMove(entry.entryId, "down")}
+                          disabled={index === entriesByDay[day].length - 1}
+                          aria-label="Move down"
+                          className="text-base font-medium text-accent-600 hover:text-accent-700 disabled:opacity-30"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(entry.entryId)}
+                          aria-label="Remove"
+                          className="text-base font-medium text-red-600 hover:text-red-700"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     )}
                   </li>
                 ))}

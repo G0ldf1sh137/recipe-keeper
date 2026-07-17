@@ -117,6 +117,7 @@ export const calendarEntries = pgTable("calendar_entries", {
     .notNull()
     .references(() => recipes.id, { onDelete: "cascade" }),
   dayOfWeek: text("day_of_week", { enum: dayOfWeekValues }).notNull(),
+  position: integer("position").notNull().default(0),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 

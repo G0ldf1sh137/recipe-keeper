@@ -9,6 +9,7 @@ import {
   calendarShareSchema,
   addEntryToCalendarSchema,
   removeEntryFromCalendarSchema,
+  moveEntryInCalendarSchema,
   updateCalendarVisibilitySchema,
 } from "./schemas";
 import {
@@ -24,6 +25,7 @@ import {
   revokeShareForCalendar,
   addEntryToCalendar,
   removeEntryFromCalendar,
+  moveEntryInCalendar,
   updateCalendarVisibility as updateOwnedCalendarVisibility,
 } from "./calendars.server";
 import { findRecipeById } from "#/recipes/recipes.server";
@@ -125,4 +127,13 @@ export const removeRecipeFromCalendarDay = createServerFn({ method: "POST" })
     const removed = await removeEntryFromCalendar(data.calendarId, data.entryId, context.user.id);
     if (!removed) throw notFound();
     return removed;
+  });
+
+export const moveCalendarEntry = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .validator(moveEntryInCalendarSchema)
+  .handler(async ({ data, context }) => {
+    const result = await moveEntryInCalendar(data.calendarId, data.entryId, data.direction, context.user.id);
+    if (!result) throw notFound();
+    return result;
   });
