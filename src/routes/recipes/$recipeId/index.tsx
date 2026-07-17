@@ -21,6 +21,8 @@ import { getGroceryListsForRecipe } from "#/grocery/grocery.functions";
 import { AddToGroceryList } from "#/grocery/AddToGroceryList";
 import { getCalendarsForRecipe } from "#/calendars/calendars.functions";
 import { AddToCalendar } from "#/calendars/AddToCalendar";
+import { getMyNote } from "#/notes/notes.functions";
+import { NoteEditor } from "#/notes/NoteEditor";
 import { ShareControl } from "#/sharing/ShareControl";
 import { reportRecipe } from "#/reports/reports.functions";
 import { ReportButton } from "#/reports/ReportButton";
@@ -48,17 +50,18 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
       getSessionUser(),
       getRatingSummary({ data: { recipeId: params.recipeId, shareToken: deps.shareToken } }),
     ]);
-    const [collections, groceryLists, calendars] = user
+    const [collections, groceryLists, calendars, note] = user
       ? await Promise.all([
           getCollectionsForRecipe({ data: { recipeId: params.recipeId } }),
           getGroceryListsForRecipe({ data: { recipeId: params.recipeId } }),
           getCalendarsForRecipe({ data: { recipeId: params.recipeId } }),
+          getMyNote({ data: { recipeId: params.recipeId } }),
         ])
-      : [[], [], []];
+      : [[], [], [], null];
     const similarRatings = await getRatingSummaries({
       data: { recipeIds: recipe.similarRecipes.map((r) => r.id) },
     });
-    return { recipe, comments, user, rating, collections, groceryLists, calendars, similarRatings };
+    return { recipe, comments, user, rating, collections, groceryLists, calendars, note, similarRatings };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -78,7 +81,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, comments, user, rating, collections, groceryLists, calendars, similarRatings } =
+  const { recipe, comments, user, rating, collections, groceryLists, calendars, note, similarRatings } =
     Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const navigate = useNavigate();
@@ -363,6 +366,8 @@ function RecipePage() {
       <AddToGroceryList recipeId={recipe.id} groceryLists={groceryLists} canSave={!!user} />
 
       <AddToCalendar recipeId={recipe.id} calendars={calendars} canSave={!!user} />
+
+      <NoteEditor recipeId={recipe.id} initialText={note?.text ?? ""} canEdit={!!user} />
 
       {recipe.forks.length > 0 && (
         <section className="mt-8">

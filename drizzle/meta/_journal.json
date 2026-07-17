@@ -141,6 +141,13 @@
       "when": 1784268369381,
       "tag": "0019_purple_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1784309201679,
+      "tag": "0020_abnormal_beast",
+      "breakpoints": true
     }
   ]
 }

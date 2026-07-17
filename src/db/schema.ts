@@ -180,6 +180,21 @@ export const ratings = pgTable(
   (table) => [primaryKey({ columns: [table.recipeId, table.userId] })],
 );
 
+export const recipeNotes = pgTable(
+  "recipe_notes",
+  {
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    text: text("text").notNull(),
+    ...timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.recipeId, table.userId] })],
+);
+
 export const groceryLists = pgTable("grocery_lists", {
   id: id(),
   ownerId: text("owner_id")
