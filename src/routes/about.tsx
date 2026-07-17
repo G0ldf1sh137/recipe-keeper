@@ -21,7 +21,7 @@ const featureGroups = [
   {
     title: "Cook mode",
     description:
-      "A distraction-free, one-step-at-a-time view with ingredient scaling, built-in timers for steps with a cook time, and a screen wake lock so your display doesn't sleep mid-recipe.",
+      "A distraction-free, one-step-at-a-time view with ingredient scaling, built-in timers for steps with a cook time, a screen wake lock so your display doesn't sleep mid-recipe, and hands-free voice control to move between steps, start a timer, or have a step read aloud.",
   },
   {
     title: "Scaling",

@@ -59,6 +59,127 @@ function useWakeLock() {
 
 type TimerState = { totalSeconds: number; remainingSeconds: number; stepIndex: number } | null;
 
+// Minimal ambient typing for the (non-standard, Chrome/Safari-prefixed) SpeechRecognition
+// API. lib.dom.d.ts already ships SpeechRecognitionEvent/SpeechRecognitionErrorEvent — reuse
+// those, and only declare the recognizer interface + constructor + window properties.
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
+  onend: ((this: SpeechRecognition) => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognition;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+
+type VoiceCommand = "next" | "previous" | "repeat" | "startTimer" | "stopListening";
+
+const commandMatchers: { command: VoiceCommand; keywords: string[] }[] = [
+  { command: "stopListening", keywords: ["stop listening"] },
+  { command: "startTimer", keywords: ["start timer", "start the timer"] },
+  { command: "repeat", keywords: ["repeat"] },
+  { command: "previous", keywords: ["previous", "back", "go back"] },
+  { command: "next", keywords: ["next"] },
+];
+
+function matchCommand(transcript: string): VoiceCommand | undefined {
+  const normalized = transcript.trim().toLowerCase();
+  return commandMatchers.find((m) => m.keywords.some((kw) => normalized.includes(kw)))?.command;
+}
+
+function speak(text: string) {
+  speechSynthesis.cancel(); // cancel any in-flight utterance so repeated "repeat"s don't queue
+  speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+}
+
+// Auto-restarts on Chrome's habit of stopping the recognizer after a pause even with
+// `continuous: true`; `shouldRestartRef` is turned off by an explicit stop() or a
+// permission-denied error so it can't loop-restart forever after either.
+function useVoiceControl(onCommand: (command: VoiceCommand) => void) {
+  const [supported, setSupported] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const shouldRestartRef = useRef(false);
+  const onCommandRef = useRef(onCommand);
+  onCommandRef.current = onCommand;
+
+  useEffect(() => {
+    setSupported((window.SpeechRecognition ?? window.webkitSpeechRecognition) != null);
+    return () => {
+      shouldRestartRef.current = false;
+      recognitionRef.current?.stop();
+      recognitionRef.current?.abort();
+    };
+  }, []);
+
+  function start() {
+    const Ctor = window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    if (!Ctor) return;
+    const recognition = new Ctor();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = navigator.language;
+    recognition.onresult = (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript;
+      const command = matchCommand(transcript);
+      if (command) onCommandRef.current(command);
+    };
+    recognition.onerror = (event) => {
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        shouldRestartRef.current = false;
+        setError("Microphone access denied. Enable it in your browser settings to use voice control.");
+        setListening(false);
+        return;
+      }
+      if (event.error === "no-speech") return; // benign — restart happens via onend as normal
+      setError("Voice recognition error — try again.");
+    };
+    recognition.onend = () => {
+      if (shouldRestartRef.current) {
+        try {
+          recognition.start();
+        } catch {
+          // Already started, or a transient failure — ignore.
+        }
+      } else {
+        setListening(false);
+      }
+    };
+    recognitionRef.current = recognition;
+    shouldRestartRef.current = true;
+    setError(null);
+    recognition.start();
+    setListening(true);
+  }
+
+  function stop() {
+    shouldRestartRef.current = false;
+    recognitionRef.current?.stop();
+    setListening(false);
+  }
+
+  function toggleListening() {
+    if (listening) stop();
+    else start();
+  }
+
+  return { supported, listening, error, toggleListening, stop };
+}
+
 // A short beep via Web Audio — no external asset needed. Browsers require a
 // prior user gesture before audio can play; the AudioContext is created and
 // resumed at Start-timer click time (a real gesture), so scheduling this tone
@@ -128,6 +249,32 @@ function CookModePage() {
     setStepIndex(Math.max(0, Math.min(stepCount - 1, index)));
   }
 
+  const {
+    supported: voiceSupported,
+    listening: voiceListening,
+    error: voiceError,
+    toggleListening: toggleVoiceListening,
+    stop: stopVoiceListening,
+  } = useVoiceControl((command) => {
+    switch (command) {
+      case "next":
+        goTo(stepIndex + 1);
+        break;
+      case "previous":
+        goTo(stepIndex - 1);
+        break;
+      case "repeat":
+        if (stepCount > 0) speak(step.text);
+        break;
+      case "startTimer":
+        if (stepDuration !== undefined) startTimer(stepDuration);
+        break;
+      case "stopListening":
+        stopVoiceListening();
+        break;
+    }
+  });
+
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "ArrowRight") setStepIndex((i) => Math.min(stepCount - 1, i + 1));
@@ -173,7 +320,7 @@ function CookModePage() {
         </div>
       )}
 
-      <div className="mt-4">
+      <div className="mt-4 flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => setIngredientsOpen((open) => !open)}
@@ -181,6 +328,31 @@ function CookModePage() {
         >
           {ingredientsOpen ? "Hide ingredients" : "Show ingredients"}
         </button>
+        {voiceSupported && (
+          <button
+            type="button"
+            onClick={toggleVoiceListening}
+            aria-pressed={voiceListening}
+            aria-label={voiceListening ? "Voice control, listening" : "Voice control, off"}
+            className={
+              voiceListening
+                ? "flex items-center gap-2 rounded-lg bg-accent-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-700"
+                : "rounded-lg border-2 border-accent-300 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent-50"
+            }
+          >
+            {voiceListening && <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-white" />}
+            {voiceListening ? "Listening…" : "🎤 Voice control"}
+          </button>
+        )}
+      </div>
+
+      {voiceError && (
+        <div className="mt-3 flex items-start justify-between gap-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+          <span>{voiceError}</span>
+        </div>
+      )}
+
+      <div className="mt-4">
         {ingredientsOpen && (
           <div className="mt-3 rounded-xl border-2 border-accent-200 bg-surface p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
