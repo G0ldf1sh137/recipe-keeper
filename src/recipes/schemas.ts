@@ -80,8 +80,6 @@ export const forkRecipeSchema = z.object({
 
 export const listRecipesSchema = z.object({
   ownerId: z.string().min(1).optional(),
-  tags: z.array(z.string().min(1)).optional(),
   visibility: visibilitySchema.optional(),
   q: z.string().min(1).optional(),
-  ingredient: z.string().min(1).optional(),
 });

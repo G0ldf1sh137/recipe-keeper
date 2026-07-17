@@ -46,7 +46,7 @@ export function RecipeCard({ recipe, rating }: RecipeCardProps) {
               <Link
                 key={tag}
                 to="/recipes"
-                search={{ tags: tag }}
+                search={{ q: tag }}
                 className="rounded-full bg-accent-50 px-2 py-0.5 text-xs text-ink/70 hover:bg-accent-100"
               >
                 {tag}

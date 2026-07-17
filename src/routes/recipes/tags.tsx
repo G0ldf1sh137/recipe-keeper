@@ -27,7 +27,7 @@ function TagsPage() {
             <li key={tag}>
               <Link
                 to="/recipes"
-                search={{ tags: tag }}
+                search={{ q: tag }}
                 className="flex items-center justify-between rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
                 <span className="font-medium text-ink">{tag}</span>

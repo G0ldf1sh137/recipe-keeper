@@ -312,7 +312,7 @@ function RecipePage() {
             <Link
               key={tag}
               to="/recipes"
-              search={{ tags: tag }}
+              search={{ q: tag }}
               className="rounded-full bg-accent-50 px-3 py-1 text-sm text-ink/70 hover:bg-accent-100"
             >
               {tag}

@@ -1,58 +1,43 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
-import { listRecipes, getIngredientNames, getTagNames } from "#/recipes/recipes.functions";
+import { listRecipes } from "#/recipes/recipes.functions";
 import { getRatingSummaries } from "#/ratings/ratings.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
-import { TagInput } from "#/recipes/TagInput";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
 const recipesSearchSchema = z.object({
-  tags: z.string().min(1).optional(),
   visibility: z.enum(visibilityValues).optional(),
   q: z.string().min(1).optional(),
-  ingredient: z.string().min(1).optional(),
 });
 
 export const Route = createFileRoute("/recipes/")({
   validateSearch: recipesSearchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    const [recipes, knownIngredientNames, knownTagNames] = await Promise.all([
-      listRecipes({ data: { ...deps, tags: deps.tags?.split(",").filter(Boolean) } }),
-      getIngredientNames(),
-      getTagNames(),
-    ]);
+    const recipes = await listRecipes({ data: deps });
     const ratings = await getRatingSummaries({ data: { recipeIds: recipes.map((r) => r.id) } });
-    return { recipes, ratings, knownIngredientNames, knownTagNames };
+    return { recipes, ratings };
   },
   component: RecipesListPage,
 });
 
 function RecipesListPage() {
-  const { recipes, ratings, knownIngredientNames, knownTagNames } = Route.useLoaderData();
+  const { recipes, ratings } = Route.useLoaderData();
   const ratingsById = new Map(Object.entries(ratings));
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
-  const [tagsFilter, setTagsFilter] = useState<string[]>(search.tags?.split(",").filter(Boolean) ?? []);
-  useEffect(() => setTagsFilter(search.tags?.split(",").filter(Boolean) ?? []), [search.tags]);
-
   const [qInput, setQInput] = useState(search.q ?? "");
   useEffect(() => setQInput(search.q ?? ""), [search.q]);
-
-  const [ingredientInput, setIngredientInput] = useState(search.ingredient ?? "");
-  useEffect(() => setIngredientInput(search.ingredient ?? ""), [search.ingredient]);
 
   function handleFilterSubmit(e: React.FormEvent) {
     e.preventDefault();
     navigate({
       search: (prev) => ({
         ...prev,
-        tags: tagsFilter.length > 0 ? tagsFilter.join(",") : undefined,
         q: qInput.trim() || undefined,
-        ingredient: ingredientInput.trim() || undefined,
       }),
     });
   }
@@ -63,7 +48,7 @@ function RecipesListPage() {
     });
   }
 
-  const hasFilters = Boolean(search.tags || search.visibility || search.q || search.ingredient);
+  const hasFilters = Boolean(search.visibility || search.q);
 
   function handleRandom() {
     const recipe = recipes[Math.floor(Math.random() * recipes.length)];
@@ -104,31 +89,10 @@ function RecipesListPage() {
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-ink/70">Search</span>
           <input
-            className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
+            className="w-64 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
             value={qInput}
             onChange={(e) => setQInput(e.target.value)}
-            placeholder="waffles"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-ink/70">Tags</span>
-          <TagInput
-            value={tagsFilter}
-            onChange={setTagsFilter}
-            knownTagNames={knownTagNames}
-            placeholder="breakfast"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-ink/70">Ingredient</span>
-          <input
-            className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
-            value={ingredientInput}
-            onChange={(e) => setIngredientInput(e.target.value)}
-            placeholder="onion"
-            list="ingredient-names"
+            placeholder="title, tag, or ingredient"
           />
         </label>
 
@@ -178,12 +142,6 @@ function RecipesListPage() {
           ))}
         </ul>
       )}
-
-      <datalist id="ingredient-names">
-        {knownIngredientNames.map((name) => (
-          <option key={name} value={name} />
-        ))}
-      </datalist>
     </div>
   );
 }

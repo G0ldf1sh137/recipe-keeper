@@ -1,4 +1,4 @@
-import { and, arrayContains, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
+import { and, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
 import { recipes, shares, users, ingredientNames, unitNames, tagNames } from "#/db/schema";
 import { deleteImageUrls } from "#/uploads/uploads.server";
@@ -21,6 +21,13 @@ function ingredientMatches(term: string) {
   return sql`exists (
     select 1 from jsonb_array_elements(${recipes.ingredients}) as ing
     where ing->>'name' ilike ${`%${term}%`}
+  )`;
+}
+
+function tagMatches(term: string) {
+  return sql`exists (
+    select 1 from unnest(${recipes.tags}) as t
+    where t ilike ${`%${term}%`}
   )`;
 }
 
@@ -79,11 +86,16 @@ export async function findRecipes(filters: z.infer<typeof listRecipesSchema>, vi
   const conditions = [visibleToViewer(viewerId)];
   if (filters.ownerId) conditions.push(eq(recipes.ownerId, filters.ownerId));
   if (filters.visibility) conditions.push(eq(recipes.visibility, filters.visibility));
-  if (filters.tags && filters.tags.length > 0) conditions.push(arrayContains(recipes.tags, filters.tags));
   if (filters.q) {
-    conditions.push(or(ilike(recipes.title, `%${filters.q}%`), ilike(recipes.description, `%${filters.q}%`)));
+    conditions.push(
+      or(
+        ilike(recipes.title, `%${filters.q}%`),
+        ilike(recipes.description, `%${filters.q}%`),
+        tagMatches(filters.q),
+        ingredientMatches(filters.q),
+      ),
+    );
   }
-  if (filters.ingredient) conditions.push(ingredientMatches(filters.ingredient));
   return db.query.recipes.findMany({
     where: and(...conditions),
     orderBy: (r, { desc }) => [desc(r.createdAt)],
