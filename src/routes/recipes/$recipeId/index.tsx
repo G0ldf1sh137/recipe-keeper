@@ -22,6 +22,8 @@ import { AddToGroceryList } from "#/grocery/AddToGroceryList";
 import { getCalendarsForRecipe } from "#/calendars/calendars.functions";
 import { AddToCalendar } from "#/calendars/AddToCalendar";
 import { ShareControl } from "#/sharing/ShareControl";
+import { reportRecipe } from "#/reports/reports.functions";
+import { ReportButton } from "#/reports/ReportButton";
 import { parseQuantity, scaleQuantity } from "#/recipes/quantity";
 import type { Fraction } from "#/recipes/quantity";
 
@@ -89,6 +91,7 @@ function RecipePage() {
   const createShareFn = useServerFn(createRecipeShare);
   const revokeShareFn = useServerFn(revokeRecipeShare);
   const forkRecipeFn = useServerFn(forkRecipe);
+  const reportRecipeFn = useServerFn(reportRecipe);
   const [deleting, setDeleting] = useState(false);
   const [forking, setForking] = useState(false);
   const [scale, setScale] = useState<ScalePreset>("1");
@@ -117,6 +120,10 @@ function RecipePage() {
   async function handleShare() {
     await createShareFn({ data: { recipeId: recipe.id } });
     await router.invalidate();
+  }
+
+  async function handleReport(reason: string) {
+    await reportRecipeFn({ data: { recipeId: recipe.id, reason } });
   }
 
   async function handleRevoke() {
@@ -161,6 +168,7 @@ function RecipePage() {
               {forking ? "Forking..." : "Fork"}
             </button>
           )}
+          {!!user && !recipe.isOwner && <ReportButton onReport={handleReport} />}
           {recipe.canEdit && (
             <>
               <Link
@@ -394,7 +402,13 @@ function RecipePage() {
         </section>
       )}
 
-      <CommentThread recipeId={recipe.id} comments={comments} canComment={!!user} />
+      <CommentThread
+        recipeId={recipe.id}
+        comments={comments}
+        canComment={!!user}
+        currentUserId={user?.id}
+        isAdmin={!!user?.isAdmin}
+      />
     </div>
   );
 }

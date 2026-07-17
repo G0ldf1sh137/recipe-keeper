@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { notFound } from "@tanstack/react-router";
-import { createCommentSchema, listCommentsSchema } from "./schemas";
-import { findCommentById, findCommentTreeForRecipe, insertComment } from "./comments.server";
+import { createCommentSchema, listCommentsSchema, deleteCommentSchema } from "./schemas";
+import { findCommentById, findCommentTreeForRecipe, insertComment, deleteCommentById } from "./comments.server";
 import { findRecipeById } from "#/recipes/recipes.server";
 import { insertNotification } from "#/notifications/notifications.server";
-import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
+import { sessionMiddleware, requireAuthMiddleware, requireAdminMiddleware } from "#/auth/auth-middleware";
 
 export const listComments = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
@@ -35,4 +35,13 @@ export const createComment = createServerFn({ method: "POST" })
       type: "comment",
     });
     return comment;
+  });
+
+export const deleteComment = createServerFn({ method: "POST" })
+  .middleware([requireAdminMiddleware])
+  .validator(deleteCommentSchema)
+  .handler(async ({ data }) => {
+    const deleted = await deleteCommentById(data.commentId);
+    if (!deleted) throw notFound();
+    return deleted;
   });

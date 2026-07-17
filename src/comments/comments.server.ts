@@ -54,3 +54,8 @@ export async function insertComment(input: z.infer<typeof createCommentSchema>, 
     .returning();
   return comment;
 }
+
+export async function deleteCommentById(id: string) {
+  const rows = await db.delete(comments).where(eq(comments.id, id)).returning();
+  return rows.at(0);
+}

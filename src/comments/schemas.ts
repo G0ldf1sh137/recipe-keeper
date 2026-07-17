@@ -10,3 +10,7 @@ export const listCommentsSchema = z.object({
   recipeId: z.string().min(1),
   shareToken: z.string().min(1).optional(),
 });
+
+export const deleteCommentSchema = z.object({
+  commentId: z.string().min(1),
+});

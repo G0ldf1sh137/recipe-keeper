@@ -127,6 +127,13 @@
       "when": 1784262853657,
       "tag": "0017_youthful_ultimatum",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1784266134336,
+      "tag": "0018_fancy_shard",
+      "breakpoints": true
     }
   ]
 }

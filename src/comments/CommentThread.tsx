@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { createComment } from "./comments.functions";
+import { createComment, deleteComment } from "./comments.functions";
+import { reportComment } from "#/reports/reports.functions";
+import { ReportButton } from "#/reports/ReportButton";
 import type { CommentNode } from "./comments.server";
 
 function formatRelativeTime(date: Date) {
@@ -65,17 +67,30 @@ function CommentForm({
 function CommentItem({
   comment,
   canComment,
+  currentUserId,
+  isAdmin,
   replyingTo,
   onReplyClick,
   onReplySubmit,
+  onReport,
+  onDelete,
 }: {
   comment: CommentNode;
   canComment: boolean;
+  currentUserId?: string;
+  isAdmin?: boolean;
   replyingTo: string | null;
   onReplyClick: (id: string | null) => void;
   onReplySubmit: (parentId: string, body: string) => Promise<void>;
+  onReport: (commentId: string, reason: string) => Promise<void>;
+  onDelete: (commentId: string) => Promise<void>;
 }) {
   const isReplying = replyingTo === comment.id;
+
+  function handleDelete() {
+    if (!window.confirm("Delete this comment? This can't be undone.")) return;
+    void onDelete(comment.id);
+  }
 
   return (
     <li className="border-l-2 border-accent-100 pl-4">
@@ -98,15 +113,29 @@ function CommentItem({
       </div>
       <p className="mt-1 whitespace-pre-wrap text-ink/80">{comment.body}</p>
 
-      {canComment && (
-        <button
-          type="button"
-          className="mt-1 text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-          onClick={() => onReplyClick(isReplying ? null : comment.id)}
-        >
-          {isReplying ? "Cancel" : "Reply"}
-        </button>
-      )}
+      <div className="mt-1 flex items-center gap-3">
+        {canComment && (
+          <button
+            type="button"
+            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+            onClick={() => onReplyClick(isReplying ? null : comment.id)}
+          >
+            {isReplying ? "Cancel" : "Reply"}
+          </button>
+        )}
+        {currentUserId && currentUserId !== comment.author.id && (
+          <ReportButton onReport={(reason) => onReport(comment.id, reason)} />
+        )}
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="text-sm font-medium text-red-600 hover:text-red-700"
+          >
+            Delete
+          </button>
+        )}
+      </div>
 
       {isReplying && (
         <div className="mt-2">
@@ -121,9 +150,13 @@ function CommentItem({
               key={reply.id}
               comment={reply}
               canComment={canComment}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
               replyingTo={replyingTo}
               onReplyClick={onReplyClick}
               onReplySubmit={onReplySubmit}
+              onReport={onReport}
+              onDelete={onDelete}
             />
           ))}
         </ul>
@@ -136,18 +169,33 @@ export function CommentThread({
   recipeId,
   comments,
   canComment,
+  currentUserId,
+  isAdmin,
 }: {
   recipeId: string;
   comments: CommentNode[];
   canComment: boolean;
+  currentUserId?: string;
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const createCommentFn = useServerFn(createComment);
+  const reportCommentFn = useServerFn(reportComment);
+  const deleteCommentFn = useServerFn(deleteComment);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
   async function postComment(body: string, parentId?: string) {
     await createCommentFn({ data: { recipeId, parentId, body } });
     setReplyingTo(null);
+    await router.invalidate();
+  }
+
+  async function reportCommentHandler(commentId: string, reason: string) {
+    await reportCommentFn({ data: { commentId, reason } });
+  }
+
+  async function deleteCommentHandler(commentId: string) {
+    await deleteCommentFn({ data: { commentId } });
     await router.invalidate();
   }
 
@@ -180,9 +228,13 @@ export function CommentThread({
               key={comment.id}
               comment={comment}
               canComment={canComment}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
               replyingTo={replyingTo}
               onReplyClick={setReplyingTo}
               onReplySubmit={(parentId, body) => postComment(body, parentId)}
+              onReport={reportCommentHandler}
+              onDelete={deleteCommentHandler}
             />
           ))}
         </ul>

@@ -221,6 +221,23 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+export const reportStatusValues = ["open", "resolved"] as const;
+export type ReportStatus = (typeof reportStatusValues)[number];
+
+export const reports = pgTable("reports", {
+  id: id(),
+  reporterId: text("reporter_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  recipeId: text("recipe_id").references(() => recipes.id, { onDelete: "cascade" }),
+  commentId: text("comment_id").references(() => comments.id, { onDelete: "cascade" }),
+  reason: text("reason").notNull(),
+  status: text("status", { enum: reportStatusValues }).notNull().default("open"),
+  resolvedBy: text("resolved_by").references(() => users.id, { onDelete: "set null" }),
+  resolvedAt: timestamp("resolved_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 export const ingredientNames = pgTable("ingredients", {
   id: id(),
   name: text("name").notNull().unique(),
