@@ -14,6 +14,11 @@ const featureGroups = [
       "Import a recipe by uploading a photo of a handwritten card, a PDF, pasting text from anywhere, or a source URL — Claude reads it and fills in the form for you.",
   },
   {
+    title: "Recipe forking",
+    description:
+      "Copy an existing recipe to make it your own, with a link back to the original recipe so you can see how it differs.",
+  },
+  {
     title: "Cook mode",
     description:
       "A distraction-free, one-step-at-a-time view with ingredient scaling, built-in timers for steps with a cook time, and a screen wake lock so your display doesn't sleep mid-recipe.",
