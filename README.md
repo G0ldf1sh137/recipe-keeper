@@ -107,14 +107,6 @@ builds with zero extra config.
    OAuth client's Authorized redirect URIs.
 5. Run migrations against the deployed database once: `DATABASE_URL=<from Vercel> npm run db:migrate`.
 
-### Render (alternative)
-
-`render.yaml` defines a [Render](https://render.com) Blueprint: a Node web
-service and a managed Postgres database (recipe photos live in S3, not on a
-disk). See the comments in that file for one-time setup steps. Note: Render's
-paid plans require a payment method on the account before resources can be
-created, even at their lowest tier.
-
 ## Project structure
 
 Each feature lives in its own directory under `src/` with a consistent shape:

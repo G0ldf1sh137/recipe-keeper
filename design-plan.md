@@ -15,10 +15,10 @@ LemmeCook is a web app for creating, organizing, and sharing recipes. Users can 
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Data fetching/mutations**: TanStack Query + Start server functions
-- **Database**: Postgres (via Drizzle ORM); local dev via `docker-compose.yml`, prod via managed Render Postgres
+- **Database**: Postgres (via Drizzle ORM); local dev via `docker-compose.yml`, prod via managed Neon Postgres
 - **Auth**: Google OAuth sign-in, server-side sessions (HttpOnly cookie, session id hashed at rest)
 - **AI**: Claude API (claude-opus-4-8, vision/document input + structured outputs) — transcribes a handwritten recipe from uploaded photos or an uploaded PDF into the recipe record via an owner-only "Process photos"/"Process PDF" button with preview-then-confirm; a web-scraping importer (fetches a recipe's source URL via the `web_fetch` tool and extracts title/ingredients/steps/photos) is built but not yet wired into the UI
-- **Deployment target**: Vercel (via the Nitro Vite plugin) + Neon Postgres; `render.yaml` kept as an alternative. Recipe photos stored in S3.
+- **Deployment target**: Vercel (via the Nitro Vite plugin) + Neon Postgres. Recipe photos stored in S3.
 - **PDF export**: `@react-pdf/renderer` (pure-JS PDF renderer, no headless browser) generates a downloadable PDF of a recipe on demand, server-side.
 
 ## Core Data Model
