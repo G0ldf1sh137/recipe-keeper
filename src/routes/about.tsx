@@ -36,7 +36,7 @@ const featureGroups = [
   {
     title: "Grocery lists",
     description:
-      "Build a shopping list from one or more recipes, with duplicate ingredients automatically combined, plus manually-added items.",
+      "Build a shopping list from one or more recipes, with duplicate ingredients automatically combined, plus manually-added items. Anything you've already got in your pantry is called out separately, so you're not shopping for things you already have.",
   },
   {
     title: "Pantry mode",

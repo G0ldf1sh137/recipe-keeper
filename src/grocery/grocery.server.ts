@@ -5,6 +5,7 @@ import { findRecipeById } from "#/recipes/recipes.server";
 import { findCalendarForViewer, findEntriesForCalendar } from "#/calendars/calendars.server";
 import { parseQuantity, addFractions, formatFraction } from "#/recipes/quantity";
 import type { Fraction } from "#/recipes/quantity";
+import { listPantryItems } from "#/pantry/pantry.server";
 
 export async function findGroceryListsByOwner(ownerId: string) {
   return db
@@ -189,10 +190,14 @@ export async function getGroceryListWithGroups(id: string, ownerId: string, isAd
   const list = await findGroceryListById(id, ownerId, isAdmin);
   if (!list) return undefined;
 
-  const items = await db.query.groceryListItems.findMany({
-    where: eq(groceryListItems.listId, id),
-    orderBy: (i, { asc }) => [asc(i.createdAt)],
-  });
+  const [items, pantryNames] = await Promise.all([
+    db.query.groceryListItems.findMany({
+      where: eq(groceryListItems.listId, id),
+      orderBy: (i, { asc }) => [asc(i.createdAt)],
+    }),
+    listPantryItems(list.ownerId),
+  ]);
+  const pantrySet = new Set(pantryNames);
 
   const byName = new Map<string, typeof items>();
   for (const item of items) {
@@ -233,7 +238,8 @@ export async function getGroceryListWithGroups(id: string, ownerId: string, isAd
       }));
     });
 
-    return { name: group[0].name, lines };
+    const name = group[0].name;
+    return { name, lines, inPantry: pantrySet.has(name.trim().toLowerCase()) };
   });
 
   return { list, groups };

@@ -94,11 +94,41 @@ function GroceryListPage() {
   }
 
   // Fully-checked groups sink to the bottom, keeping still-needed items in view.
-  const sortedGroups = [...groups].sort((a, b) => {
-    const aDone = a.lines.every((l) => l.checked);
-    const bDone = b.lines.every((l) => l.checked);
-    return aDone === bDone ? 0 : aDone ? 1 : -1;
-  });
+  function sortGroups(groupsToSort: typeof groups) {
+    return [...groupsToSort].sort((a, b) => {
+      const aDone = a.lines.every((l) => l.checked);
+      const bDone = b.lines.every((l) => l.checked);
+      return aDone === bDone ? 0 : aDone ? 1 : -1;
+    });
+  }
+
+  function renderGroup(group: (typeof groups)[number]) {
+    const sortedLines = [...group.lines].sort((a, b) => (a.checked === b.checked ? 0 : a.checked ? 1 : -1));
+    return (
+      <div key={group.name} className="rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm">
+        <span className="font-serif text-lg font-medium capitalize text-ink">{group.name}</span>
+        <ul className="mt-1 flex flex-col gap-1">
+          {sortedLines.map((line) => (
+            <li key={line.itemIds.join(",")} className="flex items-center gap-2">
+              <label className="flex flex-1 items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={line.checked}
+                  onChange={() => handleToggleLine(line.itemIds, line.checked)}
+                />
+                <span className={line.checked ? "text-ink/40 line-through" : "text-ink/80"}>
+                  {[line.qty, line.unit].filter(Boolean).join(" ")}
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  const toBuy = groups.filter((g) => !g.inPantry);
+  const inPantry = groups.filter((g) => g.inPantry);
 
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
@@ -195,31 +225,22 @@ function GroceryListPage() {
       {groups.length === 0 ? (
         <p className="mt-6 text-ink/60">No items yet. Add a recipe or an item above.</p>
       ) : (
-        <div className="mt-6 flex flex-col gap-4">
-          {sortedGroups.map((group) => {
-            const sortedLines = [...group.lines].sort((a, b) => (a.checked === b.checked ? 0 : a.checked ? 1 : -1));
-            return (
-              <div key={group.name} className="rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm">
-                <span className="font-serif text-lg font-medium capitalize text-ink">{group.name}</span>
-                <ul className="mt-1 flex flex-col gap-1">
-                  {sortedLines.map((line) => (
-                    <li key={line.itemIds.join(",")} className="flex items-center gap-2">
-                      <label className="flex flex-1 items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={line.checked}
-                          onChange={() => handleToggleLine(line.itemIds, line.checked)}
-                        />
-                        <span className={line.checked ? "text-ink/40 line-through" : "text-ink/80"}>
-                          {[line.qty, line.unit].filter(Boolean).join(" ")}
-                        </span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
+        <div className="mt-6 flex flex-col gap-8">
+          <section>
+            <h2 className="font-serif text-xl font-semibold text-ink">Shopping list</h2>
+            {toBuy.length === 0 ? (
+              <p className="mt-3 text-ink/60">Everything on this list is already in your pantry!</p>
+            ) : (
+              <div className="mt-3 flex flex-col gap-4">{sortGroups(toBuy).map(renderGroup)}</div>
+            )}
+          </section>
+
+          {inPantry.length > 0 && (
+            <section>
+              <h2 className="font-serif text-xl font-semibold text-ink">Already in your pantry</h2>
+              <div className="mt-3 flex flex-col gap-4">{sortGroups(inPantry).map(renderGroup)}</div>
+            </section>
+          )}
         </div>
       )}
 
