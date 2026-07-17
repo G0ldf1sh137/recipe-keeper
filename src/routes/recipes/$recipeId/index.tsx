@@ -24,19 +24,11 @@ import { AddToCalendar } from "#/calendars/AddToCalendar";
 import { ShareControl } from "#/sharing/ShareControl";
 import { reportRecipe } from "#/reports/reports.functions";
 import { ReportButton } from "#/reports/ReportButton";
-import { parseQuantity, scaleQuantity } from "#/recipes/quantity";
-import type { Fraction } from "#/recipes/quantity";
+import { scaleQuantity } from "#/recipes/quantity";
+import { useRecipeScale } from "#/recipes/useRecipeScale";
+import { ScaleToggle } from "#/recipes/ScaleToggle";
 
 const recipeSearchSchema = z.object({ st: z.string().optional() });
-
-type ScalePreset = "0.5" | "1" | "2" | "custom";
-
-const scaleLabels: Record<ScalePreset, string> = { "0.5": "0.5x", "1": "1x", "2": "2x", custom: "Custom" };
-const presetFactors: Record<Exclude<ScalePreset, "custom">, Fraction> = {
-  "0.5": { num: 1n, den: 2n },
-  "1": { num: 1n, den: 1n },
-  "2": { num: 2n, den: 1n },
-};
 
 function sourceUrlHostname(url: string): string {
   try {
@@ -98,18 +90,7 @@ function RecipePage() {
   const reportRecipeFn = useServerFn(reportRecipe);
   const [deleting, setDeleting] = useState(false);
   const [forking, setForking] = useState(false);
-  const [scale, setScale] = useState<ScalePreset>("1");
-  const [customInput, setCustomInput] = useState("1");
-  const [customFactor, setCustomFactor] = useState<Fraction>({ num: 1n, den: 1n });
-
-  const activeFactor = scale === "custom" ? customFactor : presetFactors[scale];
-  const isUnscaled = activeFactor.num === activeFactor.den;
-
-  function handleCustomInputChange(value: string) {
-    setCustomInput(value);
-    const parsed = parseQuantity(value);
-    if (parsed) setCustomFactor(parsed);
-  }
+  const { scale, setScale, customInput, handleCustomInputChange, activeFactor, isUnscaled } = useRecipeScale();
 
   async function handleFork() {
     setForking(true);
@@ -156,6 +137,14 @@ function RecipePage() {
           ← Back home
         </Link>
         <div className="flex gap-3">
+          <Link
+            to="/recipes/$recipeId/cook"
+            params={{ recipeId: recipe.id }}
+            search={{ st: shareToken }}
+            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
+            Cook mode
+          </Link>
           <a
             href={`/recipes/${recipe.id}/pdf${shareToken ? `?st=${shareToken}` : ""}`}
             className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
@@ -328,33 +317,12 @@ function RecipePage() {
       <section className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-serif text-xl font-semibold text-ink">Ingredients</h2>
-          <div className="flex items-center gap-2">
-            <div className="flex rounded-full border-2 border-accent-200 p-0.5 text-xs">
-              {(Object.keys(scaleLabels) as ScalePreset[]).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setScale(value)}
-                  aria-pressed={scale === value}
-                  className={
-                    scale === value
-                      ? "rounded-full bg-accent-600 px-2.5 py-1 font-medium text-white"
-                      : "rounded-full px-2.5 py-1 font-medium text-ink/60 hover:text-ink"
-                  }
-                >
-                  {scaleLabels[value]}
-                </button>
-              ))}
-            </div>
-            {scale === "custom" && (
-              <input
-                value={customInput}
-                onChange={(e) => handleCustomInputChange(e.target.value)}
-                placeholder="e.g. 1.5 or 3/4"
-                className="w-28 rounded-lg border border-accent-100 px-2 py-1 text-xs focus:border-accent-400 focus:outline-none"
-              />
-            )}
-          </div>
+          <ScaleToggle
+            scale={scale}
+            onScaleChange={setScale}
+            customInput={customInput}
+            onCustomInputChange={handleCustomInputChange}
+          />
         </div>
         <ul className="mt-2 list-inside list-disc text-ink/80">
           {recipe.ingredients.map((ing, i) => (

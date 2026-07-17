@@ -32,6 +32,7 @@ import { Route as CollectionsCollectionIdIndexRouteImport } from './routes/colle
 import { Route as AuthGoogleIndexRouteImport } from './routes/auth/google/index'
 import { Route as RecipesRecipeIdPdfRouteImport } from './routes/recipes/$recipeId/pdf'
 import { Route as RecipesRecipeIdEditRouteImport } from './routes/recipes/$recipeId/edit'
+import { Route as RecipesRecipeIdCookRouteImport } from './routes/recipes/$recipeId/cook'
 import { Route as CollectionsCollectionIdPdfRouteImport } from './routes/collections/$collectionId/pdf'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth/google/callback'
 
@@ -151,6 +152,11 @@ const RecipesRecipeIdEditRoute = RecipesRecipeIdEditRouteImport.update({
   path: '/recipes/$recipeId/edit',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecipesRecipeIdCookRoute = RecipesRecipeIdCookRouteImport.update({
+  id: '/recipes/$recipeId/cook',
+  path: '/recipes/$recipeId/cook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CollectionsCollectionIdPdfRoute =
   CollectionsCollectionIdPdfRouteImport.update({
     id: '/collections/$collectionId/pdf',
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/collections/$collectionId/pdf': typeof CollectionsCollectionIdPdfRoute
+  '/recipes/$recipeId/cook': typeof RecipesRecipeIdCookRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
   '/recipes/$recipeId/pdf': typeof RecipesRecipeIdPdfRoute
   '/auth/google/': typeof AuthGoogleIndexRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/recipes': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/collections/$collectionId/pdf': typeof CollectionsCollectionIdPdfRoute
+  '/recipes/$recipeId/cook': typeof RecipesRecipeIdCookRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
   '/recipes/$recipeId/pdf': typeof RecipesRecipeIdPdfRoute
   '/auth/google': typeof AuthGoogleIndexRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/collections/$collectionId/pdf': typeof CollectionsCollectionIdPdfRoute
+  '/recipes/$recipeId/cook': typeof RecipesRecipeIdCookRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
   '/recipes/$recipeId/pdf': typeof RecipesRecipeIdPdfRoute
   '/auth/google/': typeof AuthGoogleIndexRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/recipes/'
     | '/auth/google/callback'
     | '/collections/$collectionId/pdf'
+    | '/recipes/$recipeId/cook'
     | '/recipes/$recipeId/edit'
     | '/recipes/$recipeId/pdf'
     | '/auth/google/'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/recipes'
     | '/auth/google/callback'
     | '/collections/$collectionId/pdf'
+    | '/recipes/$recipeId/cook'
     | '/recipes/$recipeId/edit'
     | '/recipes/$recipeId/pdf'
     | '/auth/google'
@@ -322,6 +333,7 @@ export interface FileRouteTypes {
     | '/recipes/'
     | '/auth/google/callback'
     | '/collections/$collectionId/pdf'
+    | '/recipes/$recipeId/cook'
     | '/recipes/$recipeId/edit'
     | '/recipes/$recipeId/pdf'
     | '/auth/google/'
@@ -350,6 +362,7 @@ export interface RootRouteChildren {
   RecipesIndexRoute: typeof RecipesIndexRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
   CollectionsCollectionIdPdfRoute: typeof CollectionsCollectionIdPdfRoute
+  RecipesRecipeIdCookRoute: typeof RecipesRecipeIdCookRoute
   RecipesRecipeIdEditRoute: typeof RecipesRecipeIdEditRoute
   RecipesRecipeIdPdfRoute: typeof RecipesRecipeIdPdfRoute
   AuthGoogleIndexRoute: typeof AuthGoogleIndexRoute
@@ -520,6 +533,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesRecipeIdEditRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recipes/$recipeId/cook': {
+      id: '/recipes/$recipeId/cook'
+      path: '/recipes/$recipeId/cook'
+      fullPath: '/recipes/$recipeId/cook'
+      preLoaderRoute: typeof RecipesRecipeIdCookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/collections/$collectionId/pdf': {
       id: '/collections/$collectionId/pdf'
       path: '/collections/$collectionId/pdf'
@@ -558,6 +578,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecipesIndexRoute: RecipesIndexRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
   CollectionsCollectionIdPdfRoute: CollectionsCollectionIdPdfRoute,
+  RecipesRecipeIdCookRoute: RecipesRecipeIdCookRoute,
   RecipesRecipeIdEditRoute: RecipesRecipeIdEditRoute,
   RecipesRecipeIdPdfRoute: RecipesRecipeIdPdfRoute,
   AuthGoogleIndexRoute: AuthGoogleIndexRoute,

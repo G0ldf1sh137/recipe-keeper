@@ -58,6 +58,8 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { user, theme, unreadCount } = Route.useLoaderData()
+  const router = useRouter()
+  const isCookMode = /^\/recipes\/[^/]+\/cook$/.test(router.state.location.pathname)
 
   return (
     <html lang="en" className={theme === 'dark' ? 'dark' : undefined} suppressHydrationWarning>
@@ -74,7 +76,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         )}
       </head>
       <body>
-        <AuthHeader user={user} theme={theme} unreadCount={unreadCount} />
+        {!isCookMode && <AuthHeader user={user} theme={theme} unreadCount={unreadCount} />}
         {children}
         <TanStackDevtools
           config={{
