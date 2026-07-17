@@ -9,11 +9,13 @@ import {
   collectionShareSchema,
   toggleRecipeInCollectionSchema,
   updateCollectionVisibilitySchema,
+  listPublicCollectionsSchema,
 } from "./schemas";
 import {
   createShareForCollection,
   findCollectionsByOwner,
   findCollectionForViewer,
+  findPublicCollections,
   findRecipesInCollection,
   findShareTokenForCollection,
   insertCollection,
@@ -30,6 +32,11 @@ import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware
 export const listMyCollections = createServerFn({ method: "GET" })
   .middleware([requireAuthMiddleware])
   .handler(async ({ context }) => findCollectionsByOwner(context.user.id));
+
+export const listPublicCollections = createServerFn({ method: "GET" })
+  .middleware([sessionMiddleware])
+  .validator(listPublicCollectionsSchema)
+  .handler(async ({ data, context }) => findPublicCollections(context.user?.id, data.q));
 
 export const getCollection = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])

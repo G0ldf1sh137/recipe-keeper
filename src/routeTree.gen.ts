@@ -23,6 +23,7 @@ import { Route as SharedTokenRouteImport } from './routes/shared/$token'
 import { Route as RecipesTagsRouteImport } from './routes/recipes/tags'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
 import { Route as GroceryListIdRouteImport } from './routes/grocery/$listId'
+import { Route as CollectionsBrowseRouteImport } from './routes/collections/browse'
 import { Route as CalendarsCalendarIdRouteImport } from './routes/calendars/$calendarId'
 import { Route as ApiUploadPdfRouteImport } from './routes/api/upload-pdf'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
@@ -106,6 +107,11 @@ const GroceryListIdRoute = GroceryListIdRouteImport.update({
   path: '/grocery/$listId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CollectionsBrowseRoute = CollectionsBrowseRouteImport.update({
+  id: '/collections/browse',
+  path: '/collections/browse',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CalendarsCalendarIdRoute = CalendarsCalendarIdRouteImport.update({
   id: '/calendars/$calendarId',
   path: '/calendars/$calendarId',
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/api/upload': typeof ApiUploadRoute
   '/api/upload-pdf': typeof ApiUploadPdfRoute
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
+  '/collections/browse': typeof CollectionsBrowseRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/api/upload': typeof ApiUploadRoute
   '/api/upload-pdf': typeof ApiUploadPdfRoute
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
+  '/collections/browse': typeof CollectionsBrowseRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/api/upload': typeof ApiUploadRoute
   '/api/upload-pdf': typeof ApiUploadPdfRoute
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
+  '/collections/browse': typeof CollectionsBrowseRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/api/upload-pdf'
     | '/calendars/$calendarId'
+    | '/collections/browse'
     | '/grocery/$listId'
     | '/recipes/new'
     | '/recipes/tags'
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/api/upload-pdf'
     | '/calendars/$calendarId'
+    | '/collections/browse'
     | '/grocery/$listId'
     | '/recipes/new'
     | '/recipes/tags'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/api/upload'
     | '/api/upload-pdf'
     | '/calendars/$calendarId'
+    | '/collections/browse'
     | '/grocery/$listId'
     | '/recipes/new'
     | '/recipes/tags'
@@ -350,6 +362,7 @@ export interface RootRouteChildren {
   ApiUploadRoute: typeof ApiUploadRoute
   ApiUploadPdfRoute: typeof ApiUploadPdfRoute
   CalendarsCalendarIdRoute: typeof CalendarsCalendarIdRoute
+  CollectionsBrowseRoute: typeof CollectionsBrowseRoute
   GroceryListIdRoute: typeof GroceryListIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
   RecipesTagsRoute: typeof RecipesTagsRoute
@@ -470,6 +483,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroceryListIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/collections/browse': {
+      id: '/collections/browse'
+      path: '/collections/browse'
+      fullPath: '/collections/browse'
+      preLoaderRoute: typeof CollectionsBrowseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/calendars/$calendarId': {
       id: '/calendars/$calendarId'
       path: '/calendars/$calendarId'
@@ -566,6 +586,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUploadRoute: ApiUploadRoute,
   ApiUploadPdfRoute: ApiUploadPdfRoute,
   CalendarsCalendarIdRoute: CalendarsCalendarIdRoute,
+  CollectionsBrowseRoute: CollectionsBrowseRoute,
   GroceryListIdRoute: GroceryListIdRoute,
   RecipesNewRoute: RecipesNewRoute,
   RecipesTagsRoute: RecipesTagsRoute,

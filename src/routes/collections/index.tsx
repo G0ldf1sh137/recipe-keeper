@@ -70,6 +70,13 @@ function CollectionsPage() {
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Your cookbooks</h1>
 
+      <Link
+        to="/collections/browse"
+        className="mt-2 inline-block text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+      >
+        Browse public cookbooks
+      </Link>
+
       <form onSubmit={handleCreate} className="mt-6 flex gap-3">
         <input
           className="flex-1 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"

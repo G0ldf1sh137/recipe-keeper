@@ -1,4 +1,4 @@
-import { and, eq, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
 import { collections, collectionRecipes, recipes, shares, users } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
@@ -31,6 +31,33 @@ export async function findPublicCollectionsByOwner(ownerId: string) {
     .where(and(eq(collections.ownerId, ownerId), eq(collections.visibility, "public")))
     .groupBy(collections.id)
     .orderBy(collections.createdAt);
+}
+
+// Global browse: every public collection, plus the viewer's own regardless
+// of visibility — same "public or own" rule used everywhere else in the app.
+export async function findPublicCollections(viewerId: string | undefined, q?: string) {
+  const visible = viewerId
+    ? or(eq(collections.visibility, "public"), eq(collections.ownerId, viewerId))
+    : eq(collections.visibility, "public");
+  const conditions = [visible];
+  if (q) conditions.push(ilike(collections.name, `%${q}%`));
+
+  return db
+    .select({
+      id: collections.id,
+      name: collections.name,
+      visibility: collections.visibility,
+      createdAt: collections.createdAt,
+      recipeCount: sql<number>`count(${collectionRecipes.recipeId})::int`,
+      ownerName: users.name,
+      ownerUsername: users.username,
+    })
+    .from(collections)
+    .innerJoin(users, eq(collections.ownerId, users.id))
+    .leftJoin(collectionRecipes, eq(collectionRecipes.collectionId, collections.id))
+    .where(and(...conditions))
+    .groupBy(collections.id, users.name, users.username)
+    .orderBy(desc(collections.createdAt));
 }
 
 export async function findCollectionById(id: string, ownerId: string, isAdmin = false) {

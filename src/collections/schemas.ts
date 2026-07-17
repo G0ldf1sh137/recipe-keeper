@@ -36,3 +36,7 @@ export const toggleRecipeInCollectionSchema = z.object({
   collectionId: z.string().min(1),
   recipeId: z.string().min(1),
 });
+
+export const listPublicCollectionsSchema = z.object({
+  q: z.string().min(1).optional(),
+});
