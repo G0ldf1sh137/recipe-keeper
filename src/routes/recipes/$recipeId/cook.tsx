@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { getRecipe } from "#/recipes/recipes.functions";
 import { scaleQuantity } from "#/recipes/quantity";
 import { useRecipeScale } from "#/recipes/useRecipeScale";
 import { ScaleToggle } from "#/recipes/ScaleToggle";
+import { parseStepDuration, formatDuration } from "#/recipes/parseStepDuration";
 
 const cookSearchSchema = z.object({ st: z.string().optional() });
 
@@ -56,19 +57,72 @@ function useWakeLock() {
   }, []);
 }
 
+type TimerState = { totalSeconds: number; remainingSeconds: number; stepIndex: number } | null;
+
+// A short beep via Web Audio — no external asset needed. Browsers require a
+// prior user gesture before audio can play; the AudioContext is created and
+// resumed at Start-timer click time (a real gesture), so scheduling this tone
+// later when the countdown reaches zero still works on an already-unlocked context.
+function playBeep(context: AudioContext) {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  oscillator.frequency.value = 880;
+  gain.gain.setValueAtTime(0.2, context.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.6);
+  oscillator.start();
+  oscillator.stop(context.currentTime + 0.6);
+}
+
 function CookModePage() {
   const recipe = Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const { scale, setScale, customInput, handleCustomInputChange, activeFactor, isUnscaled } = useRecipeScale();
   const [stepIndex, setStepIndex] = useState(0);
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
+  const [timer, setTimer] = useState<TimerState>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   useWakeLock();
+
+  useEffect(() => {
+    return () => void audioContextRef.current?.close();
+  }, []);
+
+  function startTimer(seconds: number) {
+    audioContextRef.current ??= new AudioContext();
+    void audioContextRef.current.resume();
+    setTimer({ totalSeconds: seconds, remainingSeconds: seconds, stepIndex });
+  }
+
+  function clearTimer() {
+    setTimer(null);
+  }
+
+  // Ticks the active timer down once a second; stops once it reaches zero.
+  useEffect(() => {
+    if (!timer || timer.remainingSeconds <= 0) return;
+    const id = setInterval(() => {
+      setTimer((prev) => (prev ? { ...prev, remainingSeconds: Math.max(0, prev.remainingSeconds - 1) } : prev));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [timer]);
+
+  // Runs whenever the timer object changes, but only alerts when it's the
+  // exact tick that reaches zero — once ticking stops, `timer` no longer
+  // changes on its own, so this can't re-fire without a new user action.
+  useEffect(() => {
+    if (!timer || timer.remainingSeconds !== 0) return;
+    if (audioContextRef.current) playBeep(audioContextRef.current);
+    if ("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
+  }, [timer]);
 
   const stepCount = recipe.steps.length;
   const step = recipe.steps[stepIndex];
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === stepCount - 1;
+  const stepDuration = stepCount > 0 ? parseStepDuration(step.text) : undefined;
 
   function goTo(index: number) {
     setStepIndex(Math.max(0, Math.min(stepCount - 1, index)));
@@ -99,6 +153,25 @@ function CookModePage() {
           {stepCount > 0 ? `Step ${stepIndex + 1} of ${stepCount}` : ""}
         </span>
       </div>
+
+      {timer && (
+        <div
+          className={`mt-3 flex items-center justify-between rounded-lg border-2 px-4 py-2 ${
+            timer.remainingSeconds === 0 ? "border-accent-500 bg-accent-50" : "border-accent-200 bg-surface"
+          }`}
+        >
+          <span className="font-medium text-ink">
+            {timer.remainingSeconds === 0 ? "⏰ Time's up!" : `⏱ ${formatDuration(timer.remainingSeconds)}`}
+          </span>
+          <button
+            type="button"
+            onClick={clearTimer}
+            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
+            {timer.remainingSeconds === 0 ? "Dismiss" : "Cancel"}
+          </button>
+        </div>
+      )}
 
       <div className="mt-4">
         <button
@@ -167,6 +240,16 @@ function CookModePage() {
               )}
             </div>
           </div>
+
+          {stepDuration !== undefined && (
+            <button
+              type="button"
+              onClick={() => startTimer(stepDuration)}
+              className="mt-4 rounded-lg border-2 border-accent-300 px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-accent-50"
+            >
+              ⏱ Start {formatDuration(stepDuration)} timer
+            </button>
+          )}
 
           <div className="mt-4 flex items-center justify-between gap-3">
             <button
