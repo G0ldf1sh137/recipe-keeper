@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { CalendarDays } from "lucide-react";
 import { createCalendar, addRecipeToCalendarDay, removeRecipeFromCalendarDay } from "./calendars.functions";
 import { dayOfWeekValues } from "#/db/schema";
 import type { DayOfWeek } from "#/db/schema";
+import { DropdownButton } from "#/ui/DropdownButton";
 
 const dayLabels: Record<DayOfWeek, string> = {
   mon: "Mon",
@@ -31,43 +33,32 @@ export function AddToCalendar({
   const addFn = useServerFn(addRecipeToCalendarDay);
   const removeFn = useServerFn(removeRecipeFromCalendarDay);
   const createFn = useServerFn(createCalendar);
+  const [creating, setCreating] = useState(false);
   const [newCalendarName, setNewCalendarName] = useState("");
-  const [newDay, setNewDay] = useState<DayOfWeek>("mon");
-  const [dayByCalendar, setDayByCalendar] = useState<Record<string, DayOfWeek>>({});
   const [busy, setBusy] = useState<string | null>(null);
 
-  function dayFor(calendarId: string) {
-    return dayByCalendar[calendarId] ?? "mon";
-  }
-
-  async function handleAdd(calendarId: string) {
-    setBusy(`${calendarId}:new`);
+  async function handleToggleDay(calendarId: string, day: DayOfWeek, existingEntryId: string | undefined) {
+    setBusy(`${calendarId}:${day}`);
     try {
-      await addFn({ data: { calendarId, recipeId, dayOfWeek: dayFor(calendarId) } });
+      if (existingEntryId) {
+        await removeFn({ data: { calendarId, entryId: existingEntryId } });
+      } else {
+        await addFn({ data: { calendarId, recipeId, dayOfWeek: day } });
+      }
       await router.invalidate();
     } finally {
       setBusy(null);
     }
   }
 
-  async function handleRemove(calendarId: string, entryId: string) {
-    setBusy(`${calendarId}:${entryId}`);
-    try {
-      await removeFn({ data: { calendarId, entryId } });
-      await router.invalidate();
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function handleCreateAndAdd(e: React.FormEvent) {
+  async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!newCalendarName.trim()) return;
     setBusy("new");
     try {
-      const calendar = await createFn({ data: { name: newCalendarName.trim() } });
-      await addFn({ data: { calendarId: calendar.id, recipeId, dayOfWeek: newDay } });
+      await createFn({ data: { name: newCalendarName.trim() } });
       setNewCalendarName("");
+      setCreating(false);
       await router.invalidate();
     } finally {
       setBusy(null);
@@ -76,93 +67,76 @@ export function AddToCalendar({
 
   if (!canSave) {
     return (
-      <section className="mt-8">
-        <h2 className="font-serif text-xl font-semibold text-ink">Add to calendar</h2>
-        <p className="mt-3 text-sm text-ink/60">
-          <a
-            href="/auth/google"
-            className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-          >
-            Sign in with Google
-          </a>{" "}
-          to add this recipe to a weekly calendar.
-        </p>
-      </section>
+      <a
+        href="/auth/google"
+        className="flex items-center gap-1.5 rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-accent-50"
+      >
+        <CalendarDays size={16} />
+        Calendar
+      </a>
     );
   }
 
-  return (
-    <section className="mt-8">
-      <h2 className="font-serif text-xl font-semibold text-ink">Add to calendar</h2>
+  const savedCount = calendars.filter((c) => c.entries.length > 0).length;
 
+  return (
+    <DropdownButton label="Calendar" icon={<CalendarDays size={16} />} badge={savedCount || undefined}>
       {calendars.length > 0 && (
-        <div className="mt-3 flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
           {calendars.map((calendar) => (
-            <div key={calendar.id} className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-ink/70">{calendar.name}</span>
-              {calendar.entries.map((entry) => (
-                <button
-                  key={entry.entryId}
-                  type="button"
-                  onClick={() => handleRemove(calendar.id, entry.entryId)}
-                  disabled={busy === `${calendar.id}:${entry.entryId}`}
-                  className="rounded-full bg-accent-600 px-3 py-1 text-sm font-medium text-white disabled:opacity-50"
-                >
-                  ✕ {dayLabels[entry.dayOfWeek]}
-                </button>
-              ))}
-              <select
-                className="rounded-lg border border-accent-100 bg-surface px-2 py-1 text-sm text-ink focus:border-accent-400 focus:outline-none"
-                value={dayFor(calendar.id)}
-                onChange={(e) =>
-                  setDayByCalendar((prev) => ({ ...prev, [calendar.id]: e.target.value as DayOfWeek }))
-                }
-              >
-                {dayOfWeekValues.map((day) => (
-                  <option key={day} value={day}>
-                    {dayLabels[day]}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => handleAdd(calendar.id)}
-                disabled={busy === `${calendar.id}:new`}
-                className="rounded-full border-2 border-accent-300 px-3 py-1 text-sm font-medium text-ink hover:bg-accent-50 disabled:opacity-50"
-              >
-                + Add
-              </button>
+            <div key={calendar.id}>
+              <p className="text-sm font-medium text-ink/70">{calendar.name}</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {dayOfWeekValues.map((day) => {
+                  const entry = calendar.entries.find((e) => e.dayOfWeek === day);
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => handleToggleDay(calendar.id, day, entry?.entryId)}
+                      disabled={busy === `${calendar.id}:${day}`}
+                      className={
+                        entry
+                          ? "rounded-full bg-accent-600 px-2 py-0.5 text-xs font-medium text-white disabled:opacity-50"
+                          : "rounded-full border-2 border-accent-300 px-2 py-0.5 text-xs font-medium text-ink hover:bg-accent-50 disabled:opacity-50"
+                      }
+                    >
+                      {dayLabels[day]}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      <form onSubmit={handleCreateAndAdd} className="mt-3 flex flex-wrap gap-2">
-        <input
-          className="flex-1 rounded-lg border border-accent-100 px-3 py-1.5 text-sm focus:border-accent-400 focus:outline-none"
-          value={newCalendarName}
-          onChange={(e) => setNewCalendarName(e.target.value)}
-          placeholder="New calendar name"
-        />
-        <select
-          className="rounded-lg border border-accent-100 bg-surface px-2 py-1.5 text-sm text-ink focus:border-accent-400 focus:outline-none"
-          value={newDay}
-          onChange={(e) => setNewDay(e.target.value as DayOfWeek)}
-        >
-          {dayOfWeekValues.map((day) => (
-            <option key={day} value={day}>
-              {dayLabels[day]}
-            </option>
-          ))}
-        </select>
+      {creating ? (
+        <form onSubmit={handleCreate} className={`flex gap-2 ${calendars.length > 0 ? "mt-3" : ""}`}>
+          <input
+            className="flex-1 rounded-lg border border-accent-100 px-2 py-1 text-sm focus:border-accent-400 focus:outline-none"
+            value={newCalendarName}
+            onChange={(e) => setNewCalendarName(e.target.value)}
+            placeholder="New calendar name"
+            autoFocus
+          />
+          <button
+            type="submit"
+            disabled={busy === "new" || !newCalendarName.trim()}
+            className="rounded-lg bg-accent-600 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
+          >
+            {busy === "new" ? "Adding..." : "Add"}
+          </button>
+        </form>
+      ) : (
         <button
-          type="submit"
-          disabled={busy === "new" || !newCalendarName.trim()}
-          className="rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
+          type="button"
+          onClick={() => setCreating(true)}
+          className={`text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 ${calendars.length > 0 ? "mt-3" : ""}`}
         >
-          {busy === "new" ? "Adding..." : "+ New calendar"}
+          + New calendar
         </button>
-      </form>
-    </section>
+      )}
+    </DropdownButton>
   );
 }

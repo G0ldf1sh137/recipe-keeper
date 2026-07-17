@@ -361,11 +361,14 @@ function RecipePage() {
         </ol>
       </section>
 
-      <SaveToList recipeId={recipe.id} collections={collections} canSave={!!user} />
-
-      <AddToGroceryList recipeId={recipe.id} groceryLists={groceryLists} canSave={!!user} />
-
-      <AddToCalendar recipeId={recipe.id} calendars={calendars} canSave={!!user} />
+      <section className="mt-8">
+        <h2 className="font-serif text-xl font-semibold text-ink">Add this recipe to...</h2>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <SaveToList recipeId={recipe.id} collections={collections} canSave={!!user} />
+          <AddToGroceryList recipeId={recipe.id} groceryLists={groceryLists} canSave={!!user} />
+          <AddToCalendar recipeId={recipe.id} calendars={calendars} canSave={!!user} />
+        </div>
+      </section>
 
       <NoteEditor recipeId={recipe.id} initialText={note?.text ?? ""} canEdit={!!user} />
 

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { ShoppingCart } from "lucide-react";
 import { createGroceryList, toggleRecipeInGroceryList } from "./grocery.functions";
+import { DropdownButton } from "#/ui/DropdownButton";
 
 type GroceryListOption = { id: string; name: string; inList: boolean };
 
@@ -17,6 +19,7 @@ export function AddToGroceryList({
   const router = useRouter();
   const toggleFn = useServerFn(toggleRecipeInGroceryList);
   const createFn = useServerFn(createGroceryList);
+  const [creating, setCreating] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -38,6 +41,7 @@ export function AddToGroceryList({
       const list = await createFn({ data: { name: newListName.trim() } });
       await toggleFn({ data: { listId: list.id, recipeId } });
       setNewListName("");
+      setCreating(false);
       await router.invalidate();
     } finally {
       setBusy(null);
@@ -46,27 +50,22 @@ export function AddToGroceryList({
 
   if (!canSave) {
     return (
-      <section className="mt-8">
-        <h2 className="font-serif text-xl font-semibold text-ink">Add to grocery list</h2>
-        <p className="mt-3 text-sm text-ink/60">
-          <a
-            href="/auth/google"
-            className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-          >
-            Sign in with Google
-          </a>{" "}
-          to add this recipe's ingredients to a grocery list.
-        </p>
-      </section>
+      <a
+        href="/auth/google"
+        className="flex items-center gap-1.5 rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-accent-50"
+      >
+        <ShoppingCart size={16} />
+        Grocery list
+      </a>
     );
   }
 
-  return (
-    <section className="mt-8">
-      <h2 className="font-serif text-xl font-semibold text-ink">Add to grocery list</h2>
+  const savedCount = groceryLists.filter((l) => l.inList).length;
 
+  return (
+    <DropdownButton label="Grocery list" icon={<ShoppingCart size={16} />} badge={savedCount || undefined}>
       {groceryLists.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2">
           {groceryLists.map((list) => (
             <button
               key={list.id}
@@ -85,21 +84,32 @@ export function AddToGroceryList({
         </div>
       )}
 
-      <form onSubmit={handleCreateAndAdd} className="mt-3 flex gap-2">
-        <input
-          className="flex-1 rounded-lg border border-accent-100 px-3 py-1.5 text-sm focus:border-accent-400 focus:outline-none"
-          value={newListName}
-          onChange={(e) => setNewListName(e.target.value)}
-          placeholder="New grocery list name"
-        />
+      {creating ? (
+        <form onSubmit={handleCreateAndAdd} className={`flex gap-2 ${groceryLists.length > 0 ? "mt-3" : ""}`}>
+          <input
+            className="flex-1 rounded-lg border border-accent-100 px-2 py-1 text-sm focus:border-accent-400 focus:outline-none"
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            placeholder="New list name"
+            autoFocus
+          />
+          <button
+            type="submit"
+            disabled={busy === "new" || !newListName.trim()}
+            className="rounded-lg bg-accent-600 px-2.5 py-1 text-sm font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
+          >
+            {busy === "new" ? "Adding..." : "Add"}
+          </button>
+        </form>
+      ) : (
         <button
-          type="submit"
-          disabled={busy === "new" || !newListName.trim()}
-          className="rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
+          type="button"
+          onClick={() => setCreating(true)}
+          className={`text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 ${groceryLists.length > 0 ? "mt-3" : ""}`}
         >
-          {busy === "new" ? "Adding..." : "+ New list"}
+          + New list
         </button>
-      </form>
-    </section>
+      )}
+    </DropdownButton>
   );
 }
