@@ -17,7 +17,7 @@ import type { Visibility } from "#/db/schema";
 
 const collectionSearchSchema = z.object({ st: z.string().optional() });
 
-export const Route = createFileRoute("/collections/$collectionId")({
+export const Route = createFileRoute("/collections/$collectionId/")({
   validateSearch: collectionSearchSchema,
   loaderDeps: ({ search }) => ({ shareToken: search.st }),
   loader: async ({ params, deps }) =>
@@ -41,6 +41,7 @@ export const Route = createFileRoute("/collections/$collectionId")({
 
 function CollectionPage() {
   const { collection, items } = Route.useLoaderData();
+  const { st: shareToken } = Route.useSearch();
   const router = useRouter();
   const navigate = useNavigate();
   const renameFn = useServerFn(renameCollection);
@@ -132,13 +133,21 @@ function CollectionPage() {
             <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">{collection.name}</h1>
             <div className="flex gap-3">
               {items.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleRandom}
-                  className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-                >
-                  Random recipe
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={handleRandom}
+                    className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+                  >
+                    Random recipe
+                  </button>
+                  <a
+                    href={`/collections/${collection.id}/pdf${shareToken ? `?st=${shareToken}` : ""}`}
+                    className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+                  >
+                    Print to PDF
+                  </a>
+                </>
               )}
               {collection.isOwner && (
                 <>

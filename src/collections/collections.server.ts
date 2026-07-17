@@ -1,6 +1,6 @@
 import { and, eq, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
-import { collections, collectionRecipes, recipes, shares } from "#/db/schema";
+import { collections, collectionRecipes, recipes, shares, users } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
 export async function findCollectionsByOwner(ownerId: string) {
@@ -57,6 +57,11 @@ export async function findCollectionForViewer(id: string, viewerId: string | und
   return db.query.collections.findFirst({
     where: and(eq(collections.id, id), ne(collections.visibility, "private")),
   });
+}
+
+export async function findCollectionOwnerName(ownerId: string) {
+  const owner = await db.query.users.findFirst({ where: eq(users.id, ownerId) });
+  return owner?.name ?? "";
 }
 
 export async function findRecipesInCollection(collectionId: string) {
