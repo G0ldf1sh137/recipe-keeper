@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SubscribersOnlyRouteImport } from './routes/subscribers-only'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PantryRouteImport } from './routes/pantry'
 import { Route as LoginRouteImport } from './routes/login'
@@ -39,6 +40,11 @@ import { Route as RecipesRecipeIdCookRouteImport } from './routes/recipes/$recip
 import { Route as CollectionsCollectionIdPdfRouteImport } from './routes/collections/$collectionId/pdf'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth/google/callback'
 
+const SubscribersOnlyRoute = SubscribersOnlyRouteImport.update({
+  id: '/subscribers-only',
+  path: '/subscribers-only',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/pantry': typeof PantryRoute
   '/settings': typeof SettingsRoute
+  '/subscribers-only': typeof SubscribersOnlyRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
   '/api/upload-pdf': typeof ApiUploadPdfRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/pantry': typeof PantryRoute
   '/settings': typeof SettingsRoute
+  '/subscribers-only': typeof SubscribersOnlyRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
   '/api/upload-pdf': typeof ApiUploadPdfRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/pantry': typeof PantryRoute
   '/settings': typeof SettingsRoute
+  '/subscribers-only': typeof SubscribersOnlyRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
   '/api/upload-pdf': typeof ApiUploadPdfRoute
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/pantry'
     | '/settings'
+    | '/subscribers-only'
     | '/api/rotate-image'
     | '/api/upload'
     | '/api/upload-pdf'
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/pantry'
     | '/settings'
+    | '/subscribers-only'
     | '/api/rotate-image'
     | '/api/upload'
     | '/api/upload-pdf'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/pantry'
     | '/settings'
+    | '/subscribers-only'
     | '/api/rotate-image'
     | '/api/upload'
     | '/api/upload-pdf'
@@ -384,6 +396,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PantryRoute: typeof PantryRoute
   SettingsRoute: typeof SettingsRoute
+  SubscribersOnlyRoute: typeof SubscribersOnlyRoute
   ApiRotateImageRoute: typeof ApiRotateImageRoute
   ApiUploadRoute: typeof ApiUploadRoute
   ApiUploadPdfRoute: typeof ApiUploadPdfRoute
@@ -411,6 +424,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/subscribers-only': {
+      id: '/subscribers-only'
+      path: '/subscribers-only'
+      fullPath: '/subscribers-only'
+      preLoaderRoute: typeof SubscribersOnlyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -624,6 +644,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PantryRoute: PantryRoute,
   SettingsRoute: SettingsRoute,
+  SubscribersOnlyRoute: SubscribersOnlyRoute,
   ApiRotateImageRoute: ApiRotateImageRoute,
   ApiUploadRoute: ApiUploadRoute,
   ApiUploadPdfRoute: ApiUploadPdfRoute,

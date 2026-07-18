@@ -30,10 +30,10 @@ import {
 } from "./calendars.server";
 import { findRecipeById } from "#/recipes/recipes.server";
 import { dayOfWeekValues } from "#/db/schema";
-import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
+import { sessionMiddleware, requireSubscriberMiddleware } from "#/auth/auth-middleware";
 
 export const listMyCalendars = createServerFn({ method: "GET" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .handler(async ({ context }) => findCalendarsByOwner(context.user.id));
 
 export const getCalendar = createServerFn({ method: "GET" })
@@ -57,7 +57,7 @@ export const getCalendar = createServerFn({ method: "GET" })
   });
 
 export const createCalendarShare = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(calendarShareSchema)
   .handler(async ({ data, context }) => {
     const token = await createShareForCalendar(data.calendarId, context.user.id);
@@ -66,7 +66,7 @@ export const createCalendarShare = createServerFn({ method: "POST" })
   });
 
 export const revokeCalendarShare = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(calendarShareSchema)
   .handler(async ({ data, context }) => {
     const result = await revokeShareForCalendar(data.calendarId, context.user.id);
@@ -75,7 +75,7 @@ export const revokeCalendarShare = createServerFn({ method: "POST" })
   });
 
 export const updateCalendarVisibility = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(updateCalendarVisibilitySchema)
   .handler(async ({ data, context }) => {
     const updated = await updateOwnedCalendarVisibility(
@@ -89,12 +89,12 @@ export const updateCalendarVisibility = createServerFn({ method: "POST" })
   });
 
 export const createCalendar = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(createCalendarSchema)
   .handler(async ({ data, context }) => insertCalendar(data.name, context.user.id));
 
 export const renameCalendar = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(renameCalendarSchema)
   .handler(async ({ data, context }) => {
     const updated = await renameOwnedCalendar(data.id, context.user.id, data.name, context.user.isAdmin);
@@ -103,7 +103,7 @@ export const renameCalendar = createServerFn({ method: "POST" })
   });
 
 export const deleteCalendar = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(deleteCalendarSchema)
   .handler(async ({ data, context }) => {
     const deleted = await deleteOwnedCalendar(data.id, context.user.id, context.user.isAdmin);
@@ -112,12 +112,12 @@ export const deleteCalendar = createServerFn({ method: "POST" })
   });
 
 export const getCalendarsForRecipe = createServerFn({ method: "GET" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(calendarsForRecipeSchema)
   .handler(async ({ data, context }) => findCalendarsWithEntriesForRecipe(context.user.id, data.recipeId));
 
 export const addRecipeToCalendarDay = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(addEntryToCalendarSchema)
   .handler(async ({ data, context }) => {
     const recipe = await findRecipeById(data.recipeId, context.user.id);
@@ -134,7 +134,7 @@ export const addRecipeToCalendarDay = createServerFn({ method: "POST" })
   });
 
 export const removeRecipeFromCalendarDay = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(removeEntryFromCalendarSchema)
   .handler(async ({ data, context }) => {
     const removed = await removeEntryFromCalendar(
@@ -148,7 +148,7 @@ export const removeRecipeFromCalendarDay = createServerFn({ method: "POST" })
   });
 
 export const moveCalendarEntry = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(moveEntryInCalendarSchema)
   .handler(async ({ data, context }) => {
     const result = await moveEntryInCalendar(

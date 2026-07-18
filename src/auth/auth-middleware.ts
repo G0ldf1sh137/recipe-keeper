@@ -32,10 +32,12 @@ export const requireAdminMiddleware = createMiddleware({ type: "function" })
     });
   });
 
-export const requireTranscriptionAccessMiddleware = createMiddleware({ type: "function" })
+// Gates any feature reserved for paying subscribers (AI import, grocery lists, pantry, calendars).
+// Backed by the same `users.isSubscriber` flag admins toggle via "Make subscriber" in the admin panel.
+export const requireSubscriberMiddleware = createMiddleware({ type: "function" })
   .middleware([requireAuthMiddleware])
   .server(async ({ next, context }) => {
-    if (!context.user.isAdmin && !context.user.canTranscribe) throw new Error("Forbidden");
+    if (!context.user.isAdmin && !context.user.isSubscriber) throw new Error("Forbidden");
     return next({
       context: { user: context.user, realUser: context.realUser, isImpersonating: context.isImpersonating },
     });

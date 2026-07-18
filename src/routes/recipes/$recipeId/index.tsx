@@ -50,15 +50,20 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
       getSessionUser(),
       getRatingSummary({ data: { recipeId: params.recipeId, shareToken: deps.shareToken } }),
     ]);
-    const [collections, groceryLists, calendars, note] = user
+    const isSubscriber = !!user && (user.isAdmin || user.isSubscriber);
+    const [collections, note] = user
       ? await Promise.all([
           getCollectionsForRecipe({ data: { recipeId: params.recipeId } }),
-          getGroceryListsForRecipe({ data: { recipeId: params.recipeId } }),
-          getCalendarsForRecipe({ data: { recipeId: params.recipeId } }),
           getMyNote({ data: { recipeId: params.recipeId } }),
         ])
-      : [[], [], [], null];
-    return { recipe, user, rating, collections, groceryLists, calendars, note };
+      : [[], null];
+    const [groceryLists, calendars] = isSubscriber
+      ? await Promise.all([
+          getGroceryListsForRecipe({ data: { recipeId: params.recipeId } }),
+          getCalendarsForRecipe({ data: { recipeId: params.recipeId } }),
+        ])
+      : [[], []];
+    return { recipe, user, rating, collections, groceryLists, calendars, note, isSubscriber };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -78,7 +83,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, user, rating, collections, groceryLists, calendars, note } = Route.useLoaderData();
+  const { recipe, user, rating, collections, groceryLists, calendars, note, isSubscriber } = Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
@@ -393,8 +398,13 @@ function RecipePage() {
         <h2 className="font-serif text-xl font-semibold text-ink">Add this recipe to...</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           <SaveToList recipeId={recipe.id} collections={collections} canSave={!!user} />
-          <AddToGroceryList recipeId={recipe.id} groceryLists={groceryLists} canSave={!!user} />
-          <AddToCalendar recipeId={recipe.id} calendars={calendars} canSave={!!user} />
+          <AddToGroceryList
+            recipeId={recipe.id}
+            groceryLists={groceryLists}
+            canSave={isSubscriber}
+            isLoggedIn={!!user}
+          />
+          <AddToCalendar recipeId={recipe.id} calendars={calendars} canSave={isSubscriber} isLoggedIn={!!user} />
         </div>
       </section>
 

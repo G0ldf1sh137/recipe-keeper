@@ -1,9 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { notFound } from "@tanstack/react-router";
-import { setUserAdminSchema, setUserCanTranscribeSchema, searchUsersSchema, deleteUserSchema } from "./schemas";
+import { setUserAdminSchema, setUserIsSubscriberSchema, searchUsersSchema, deleteUserSchema } from "./schemas";
 import {
   setUserAdminStatus,
-  setUserCanTranscribeStatus,
+  setUserIsSubscriberStatus,
   searchUsers as searchUsersDb,
   deleteUser as deleteUserDb,
 } from "./users.server";
@@ -26,11 +26,11 @@ export const setUserAdmin = createServerFn({ method: "POST" })
     return updated;
   });
 
-export const setUserCanTranscribe = createServerFn({ method: "POST" })
+export const setUserIsSubscriber = createServerFn({ method: "POST" })
   .middleware([requireAdminMiddleware])
-  .validator(setUserCanTranscribeSchema)
+  .validator(setUserIsSubscriberSchema)
   .handler(async ({ data }) => {
-    const updated = (await setUserCanTranscribeStatus(data.userId, data.canTranscribe)).at(0);
+    const updated = (await setUserIsSubscriberStatus(data.userId, data.isSubscriber)).at(0);
     if (!updated) throw notFound();
     return updated;
   });

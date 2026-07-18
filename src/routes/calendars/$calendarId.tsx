@@ -39,8 +39,9 @@ export const Route = createFileRoute("/calendars/$calendarId")({
       getCalendar({ data: { id: params.calendarId, shareToken: deps.shareToken } }),
       getSessionUser(),
     ]);
-    const groceryLists = user ? await listMyGroceryLists() : [];
-    return { calendar, entriesByDay, user, groceryLists };
+    const isSubscriber = !!user && (user.isAdmin || user.isSubscriber);
+    const groceryLists = isSubscriber ? await listMyGroceryLists() : [];
+    return { calendar, entriesByDay, user, groceryLists, isSubscriber };
   },
   component: CalendarPage,
   notFoundComponent: () => (
@@ -60,7 +61,7 @@ export const Route = createFileRoute("/calendars/$calendarId")({
 });
 
 function CalendarPage() {
-  const { calendar, entriesByDay, user, groceryLists } = Route.useLoaderData();
+  const { calendar, entriesByDay, user, groceryLists, isSubscriber } = Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const router = useRouter();
   const navigate = useNavigate();
@@ -270,7 +271,8 @@ function CalendarPage() {
         calendarId={calendar.id}
         shareToken={shareToken}
         groceryLists={groceryLists}
-        canSave={!!user}
+        canSave={isSubscriber}
+        isLoggedIn={!!user}
       />
     </div>
   );

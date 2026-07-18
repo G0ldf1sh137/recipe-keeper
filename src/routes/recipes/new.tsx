@@ -25,8 +25,8 @@ export const Route = createFileRoute("/recipes/new")({
       getUnitNames(),
       getTagNames(),
     ]);
-    const canTranscribe = context.user.isAdmin || context.user.canTranscribe;
-    return { knownIngredientNames, knownUnitNames, knownTagNames, canTranscribe };
+    const isSubscriber = context.user.isAdmin || context.user.isSubscriber;
+    return { knownIngredientNames, knownUnitNames, knownTagNames, isSubscriber };
   },
   component: NewRecipePage,
 });
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/recipes/new")({
 type ImportMode = "choose" | "photo" | "pdf" | "text" | "url" | "form";
 
 function NewRecipePage() {
-  const { knownIngredientNames, knownUnitNames, knownTagNames, canTranscribe } = Route.useLoaderData();
+  const { knownIngredientNames, knownUnitNames, knownTagNames, isSubscriber } = Route.useLoaderData();
   const navigate = useNavigate();
   const createRecipeFn = useServerFn(createRecipe);
 
@@ -77,7 +77,7 @@ function NewRecipePage() {
       <div className="mx-auto max-w-2xl p-4 sm:p-8">
         <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">New recipe</h1>
         <p className="mt-2 text-ink/60">How would you like to start?</p>
-        {!canTranscribe && (
+        {!isSubscriber && (
           <p className="mt-2 text-sm text-ink/50">
             AI import tools are disabled for your account — you can still start from scratch.
           </p>
@@ -86,7 +86,7 @@ function NewRecipePage() {
           <button
             type="button"
             onClick={() => setMode("photo")}
-            disabled={!canTranscribe}
+            disabled={!isSubscriber}
             className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             <span className="font-serif text-lg font-medium text-ink">📷 Import from photo</span>
@@ -95,7 +95,7 @@ function NewRecipePage() {
           <button
             type="button"
             onClick={() => setMode("pdf")}
-            disabled={!canTranscribe}
+            disabled={!isSubscriber}
             className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             <span className="font-serif text-lg font-medium text-ink">📄 Import from PDF</span>
@@ -104,7 +104,7 @@ function NewRecipePage() {
           <button
             type="button"
             onClick={() => setMode("text")}
-            disabled={!canTranscribe}
+            disabled={!isSubscriber}
             className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             <span className="font-serif text-lg font-medium text-ink">📋 Import from text</span>
@@ -113,7 +113,7 @@ function NewRecipePage() {
           <button
             type="button"
             onClick={() => setMode("url")}
-            disabled={!canTranscribe}
+            disabled={!isSubscriber}
             className="rounded-xl border-2 border-accent-200 bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             <span className="font-serif text-lg font-medium text-ink">🔗 Import from URL</span>
@@ -168,7 +168,7 @@ function NewRecipePage() {
                 onApply={applyTranscription}
                 knownIngredientNames={knownIngredientNames}
                 knownUnitNames={knownUnitNames}
-                canUse={canTranscribe}
+                canUse={isSubscriber}
               />
             )}
           </div>
@@ -186,7 +186,7 @@ function NewRecipePage() {
                 onApply={applyTranscription}
                 knownIngredientNames={knownIngredientNames}
                 knownUnitNames={knownUnitNames}
-                canUse={canTranscribe}
+                canUse={isSubscriber}
               />
             )}
           </div>
@@ -198,7 +198,7 @@ function NewRecipePage() {
               onApply={applyTranscription}
               knownIngredientNames={knownIngredientNames}
               knownUnitNames={knownUnitNames}
-              canUse={canTranscribe}
+              canUse={isSubscriber}
             />
           </div>
         )}
@@ -213,7 +213,7 @@ function NewRecipePage() {
                 value={scrapeUrl}
                 onChange={(e) => setScrapeUrl(e.target.value)}
                 placeholder="https://example.com/a-great-recipe"
-                disabled={!canTranscribe}
+                disabled={!isSubscriber}
               />
             </label>
             {isValidHttpUrl(scrapeUrl) && (
@@ -222,7 +222,7 @@ function NewRecipePage() {
                 onApply={applyTranscription}
                 knownIngredientNames={knownIngredientNames}
                 knownUnitNames={knownUnitNames}
-                canUse={canTranscribe}
+                canUse={isSubscriber}
               />
             )}
           </div>
@@ -242,7 +242,7 @@ function NewRecipePage() {
             onApply={applyTranscription}
             knownIngredientNames={knownIngredientNames}
             knownUnitNames={knownUnitNames}
-            canUse={canTranscribe}
+            canUse={isSubscriber}
           />
         </div>
       )}
@@ -254,7 +254,7 @@ function NewRecipePage() {
             onApply={applyTranscription}
             knownIngredientNames={knownIngredientNames}
             knownUnitNames={knownUnitNames}
-            canUse={canTranscribe}
+            canUse={isSubscriber}
           />
         </div>
       )}

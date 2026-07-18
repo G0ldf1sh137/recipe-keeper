@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { CalendarDays } from "lucide-react";
 import { createCalendar, addRecipeToCalendarDay, removeRecipeFromCalendarDay } from "./calendars.functions";
@@ -24,10 +24,12 @@ export function AddToCalendar({
   recipeId,
   calendars,
   canSave,
+  isLoggedIn = true,
 }: {
   recipeId: string;
   calendars: CalendarOption[];
   canSave: boolean;
+  isLoggedIn?: boolean;
 }) {
   const router = useRouter();
   const addFn = useServerFn(addRecipeToCalendarDay);
@@ -66,7 +68,16 @@ export function AddToCalendar({
   }
 
   if (!canSave) {
-    return (
+    return isLoggedIn ? (
+      <Link
+        to="/subscribers-only"
+        search={{ feature: "calendars" }}
+        className="flex items-center gap-1.5 rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-accent-50"
+      >
+        <CalendarDays size={16} />
+        Calendar
+      </Link>
+    ) : (
       <a
         href="/auth/google"
         className="flex items-center gap-1.5 rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-accent-50"

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
-import { deleteUser, searchUsers, setUserAdmin, setUserCanTranscribe } from "#/auth/admin.functions";
+import { deleteUser, searchUsers, setUserAdmin, setUserIsSubscriber } from "#/auth/admin.functions";
 import { startImpersonation } from "#/auth/impersonation.functions";
 import { listOpenReports, resolveReport } from "#/reports/reports.functions";
 import { deleteComment } from "#/comments/comments.functions";
@@ -25,7 +25,7 @@ function AdminPage() {
   const { reports, currentUserId } = Route.useLoaderData();
   const router = useRouter();
   const setUserAdminFn = useServerFn(setUserAdmin);
-  const setUserCanTranscribeFn = useServerFn(setUserCanTranscribe);
+  const setUserIsSubscriberFn = useServerFn(setUserIsSubscriber);
   const resolveReportFn = useServerFn(resolveReport);
   const deleteCommentFn = useServerFn(deleteComment);
   const searchUsersFn = useServerFn(searchUsers);
@@ -62,8 +62,8 @@ function AdminPage() {
     if (query.trim()) void searchUsersFn({ data: { q: query.trim() } }).then(setResults);
   }
 
-  async function handleToggleTranscribe(userId: string, canTranscribe: boolean) {
-    await setUserCanTranscribeFn({ data: { userId, canTranscribe: !canTranscribe } });
+  async function handleToggleSubscriber(userId: string, isSubscriber: boolean) {
+    await setUserIsSubscriberFn({ data: { userId, isSubscriber: !isSubscriber } });
     await router.invalidate();
     if (query.trim()) void searchUsersFn({ data: { q: query.trim() } }).then(setResults);
   }
@@ -209,14 +209,14 @@ function AdminPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => handleToggleTranscribe(user.id, user.canTranscribe)}
+                      onClick={() => handleToggleSubscriber(user.id, user.isSubscriber)}
                       className={
-                        user.canTranscribe
+                        user.isSubscriber
                           ? "rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50"
                           : "rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-700"
                       }
                     >
-                      {user.canTranscribe ? "Revoke subscriber" : "Make subscriber"}
+                      {user.isSubscriber ? "Revoke subscriber" : "Make subscriber"}
                     </button>
                     {user.id === currentUserId ? (
                       <span className="text-sm font-medium text-ink/50">You</span>

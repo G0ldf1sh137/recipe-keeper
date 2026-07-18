@@ -13,6 +13,9 @@ export const Route = createFileRoute("/calendars/")({
   beforeLoad: async () => {
     const user = await getSessionUser();
     if (!user) throw redirect({ to: "/login" });
+    if (!user.isAdmin && !user.isSubscriber) {
+      throw redirect({ to: "/subscribers-only", search: { feature: "calendars" } });
+    }
   },
   loader: () => listMyCalendars(),
   component: CalendarsPage,

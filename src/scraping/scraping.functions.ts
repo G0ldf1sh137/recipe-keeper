@@ -1,11 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireTranscriptionAccessMiddleware } from "#/auth/auth-middleware";
+import { requireSubscriberMiddleware } from "#/auth/auth-middleware";
 import { scrapeRecipeFromUrl } from "./scraping.server";
 import type { ScrapeResult } from "./scraping.server";
 
 export const scrapeRecipeUrl = createServerFn({ method: "POST" })
-  .middleware([requireTranscriptionAccessMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(
     z.object({
       url: z.string().url(),

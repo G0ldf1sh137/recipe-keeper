@@ -15,6 +15,9 @@ export const Route = createFileRoute("/grocery/$listId")({
   beforeLoad: async () => {
     const user = await getSessionUser();
     if (!user) throw redirect({ to: "/login" });
+    if (!user.isAdmin && !user.isSubscriber) {
+      throw redirect({ to: "/subscribers-only", search: { feature: "grocery" } });
+    }
   },
   loader: async ({ params }) => getGroceryList({ data: { id: params.listId } }),
   component: GroceryListPage,

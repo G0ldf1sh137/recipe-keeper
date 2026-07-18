@@ -63,8 +63,8 @@ export async function setUserAdminStatus(userId: string, isAdmin: boolean) {
   return db.update(users).set({ isAdmin }).where(eq(users.id, userId)).returning();
 }
 
-export async function setUserCanTranscribeStatus(userId: string, canTranscribe: boolean) {
-  return db.update(users).set({ canTranscribe }).where(eq(users.id, userId)).returning();
+export async function setUserIsSubscriberStatus(userId: string, isSubscriber: boolean) {
+  return db.update(users).set({ isSubscriber }).where(eq(users.id, userId)).returning();
 }
 
 export async function deleteUser(userId: string) {

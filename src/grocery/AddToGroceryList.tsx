@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { ShoppingCart } from "lucide-react";
 import { createGroceryList, toggleRecipeInGroceryList } from "./grocery.functions";
@@ -11,10 +11,12 @@ export function AddToGroceryList({
   recipeId,
   groceryLists,
   canSave,
+  isLoggedIn = true,
 }: {
   recipeId: string;
   groceryLists: GroceryListOption[];
   canSave: boolean;
+  isLoggedIn?: boolean;
 }) {
   const router = useRouter();
   const toggleFn = useServerFn(toggleRecipeInGroceryList);
@@ -49,7 +51,16 @@ export function AddToGroceryList({
   }
 
   if (!canSave) {
-    return (
+    return isLoggedIn ? (
+      <Link
+        to="/subscribers-only"
+        search={{ feature: "grocery" }}
+        className="flex items-center gap-1.5 rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-accent-50"
+      >
+        <ShoppingCart size={16} />
+        Grocery list
+      </Link>
+    ) : (
       <a
         href="/auth/google"
         className="flex items-center gap-1.5 rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-accent-50"

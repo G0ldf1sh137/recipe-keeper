@@ -20,8 +20,8 @@ export const Route = createFileRoute("/recipes/$recipeId/edit")({
     if (!recipe.canEdit) {
       throw redirect({ to: "/recipes/$recipeId", params: { recipeId: params.recipeId } });
     }
-    const canTranscribe = !!user && (user.isAdmin || user.canTranscribe);
-    return { recipe, knownIngredientNames, knownUnitNames, knownTagNames, canTranscribe };
+    const isSubscriber = !!user && (user.isAdmin || user.isSubscriber);
+    return { recipe, knownIngredientNames, knownUnitNames, knownTagNames, isSubscriber };
   },
   component: EditRecipePage,
   notFoundComponent: () => (
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/recipes/$recipeId/edit")({
 });
 
 function EditRecipePage() {
-  const { recipe, knownIngredientNames, knownUnitNames, knownTagNames, canTranscribe } = Route.useLoaderData();
+  const { recipe, knownIngredientNames, knownUnitNames, knownTagNames, isSubscriber } = Route.useLoaderData();
   const navigate = useNavigate();
   const updateRecipeFn = useServerFn(updateRecipe);
 
@@ -97,7 +97,7 @@ function EditRecipePage() {
             onApply={applyTranscription}
             knownIngredientNames={knownIngredientNames}
             knownUnitNames={knownUnitNames}
-            canUse={canTranscribe}
+            canUse={isSubscriber}
           />
         </div>
       )}

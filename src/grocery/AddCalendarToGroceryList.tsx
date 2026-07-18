@@ -10,11 +10,13 @@ export function AddCalendarToGroceryList({
   shareToken,
   groceryLists,
   canSave,
+  isLoggedIn = true,
 }: {
   calendarId: string;
   shareToken?: string;
   groceryLists: GroceryListOption[];
   canSave: boolean;
+  isLoggedIn?: boolean;
 }) {
   const addFn = useServerFn(addCalendarToGroceryList);
   const createFn = useServerFn(createGroceryList);
@@ -61,13 +63,27 @@ export function AddCalendarToGroceryList({
       <section className="mt-8">
         <h2 className="font-serif text-xl font-semibold text-ink">Add this week's recipes to a grocery list</h2>
         <p className="mt-3 text-sm text-ink/60">
-          <a
-            href="/auth/google"
-            className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-          >
-            Sign in with Google
-          </a>{" "}
-          to add these recipes' ingredients to a grocery list.
+          {isLoggedIn ? (
+            <>
+              <Link
+                to="/subscribers-only"
+                search={{ feature: "grocery" }}
+                className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+              >
+                Grocery lists are available to subscribers only.
+              </Link>
+            </>
+          ) : (
+            <>
+              <a
+                href="/auth/google"
+                className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+              >
+                Sign in with Google
+              </a>{" "}
+              to add these recipes' ingredients to a grocery list.
+            </>
+          )}
         </p>
       </section>
     );

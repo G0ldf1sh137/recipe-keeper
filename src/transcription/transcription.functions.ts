@@ -1,12 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireTranscriptionAccessMiddleware } from "#/auth/auth-middleware";
+import { requireSubscriberMiddleware } from "#/auth/auth-middleware";
 import { imageUrlSchema } from "#/recipes/schemas";
 import { transcribeRecipePhotos, transcribeRecipePdf, transcribeRecipeText } from "./transcription.server";
 import type { TranscriptionResult } from "./transcription.server";
 
 export const processRecipePhotos = createServerFn({ method: "POST" })
-  .middleware([requireTranscriptionAccessMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(
     z.object({
       photoUrls: z.array(imageUrlSchema).min(1),
@@ -19,7 +19,7 @@ export const processRecipePhotos = createServerFn({ method: "POST" })
   });
 
 export const processRecipePdf = createServerFn({ method: "POST" })
-  .middleware([requireTranscriptionAccessMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(
     z.object({
       pdfUrl: z.string().url(),
@@ -32,7 +32,7 @@ export const processRecipePdf = createServerFn({ method: "POST" })
   });
 
 export const processRecipeText = createServerFn({ method: "POST" })
-  .middleware([requireTranscriptionAccessMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(
     z.object({
       recipeText: z.string().trim().min(1),

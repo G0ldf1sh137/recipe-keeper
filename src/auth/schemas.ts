@@ -15,9 +15,9 @@ export const setUserAdminSchema = z.object({
   isAdmin: z.boolean(),
 });
 
-export const setUserCanTranscribeSchema = z.object({
+export const setUserIsSubscriberSchema = z.object({
   userId: z.string(),
-  canTranscribe: z.boolean(),
+  isSubscriber: z.boolean(),
 });
 
 export const startImpersonationSchema = z.object({

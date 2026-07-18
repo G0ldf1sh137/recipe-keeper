@@ -25,14 +25,14 @@ import {
   getGroceryListWithGroups,
   addCalendarIngredientsToGroceryList,
 } from "./grocery.server";
-import { requireAuthMiddleware } from "#/auth/auth-middleware";
+import { requireSubscriberMiddleware } from "#/auth/auth-middleware";
 
 export const listMyGroceryLists = createServerFn({ method: "GET" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .handler(async ({ context }) => findGroceryListsByOwner(context.user.id));
 
 export const getGroceryList = createServerFn({ method: "GET" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(getGroceryListSchema)
   .handler(async ({ data, context }) => {
     const result = await getGroceryListWithGroups(data.id, context.user.id, context.user.isAdmin);
@@ -43,12 +43,12 @@ export const getGroceryList = createServerFn({ method: "GET" })
   });
 
 export const createGroceryList = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(createGroceryListSchema)
   .handler(async ({ data, context }) => insertGroceryList(data.name, context.user.id));
 
 export const renameGroceryList = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(renameGroceryListSchema)
   .handler(async ({ data, context }) => {
     const updated = await renameOwnedGroceryList(data.id, context.user.id, data.name, context.user.isAdmin);
@@ -57,7 +57,7 @@ export const renameGroceryList = createServerFn({ method: "POST" })
   });
 
 export const deleteGroceryList = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(deleteGroceryListSchema)
   .handler(async ({ data, context }) => {
     const deleted = await deleteOwnedGroceryList(data.id, context.user.id, context.user.isAdmin);
@@ -66,12 +66,12 @@ export const deleteGroceryList = createServerFn({ method: "POST" })
   });
 
 export const getGroceryListsForRecipe = createServerFn({ method: "GET" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(groceryListsForRecipeSchema)
   .handler(async ({ data, context }) => findGroceryListsWithMembership(context.user.id, data.recipeId));
 
 export const toggleRecipeInGroceryList = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(toggleRecipeInGroceryListSchema)
   .handler(async ({ data, context }) => {
     const result = await toggleRecipeInGroceryListDb(
@@ -85,7 +85,7 @@ export const toggleRecipeInGroceryList = createServerFn({ method: "POST" })
   });
 
 export const addGroceryItem = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(addGroceryItemSchema)
   .handler(async ({ data, context }) => {
     const item = await addManualItem(
@@ -99,7 +99,7 @@ export const addGroceryItem = createServerFn({ method: "POST" })
   });
 
 export const deleteGroceryItem = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(deleteGroceryItemSchema)
   .handler(async ({ data, context }) => {
     const deleted = await deleteGroceryItemDb(data.listId, data.itemId, context.user.id, context.user.isAdmin);
@@ -108,7 +108,7 @@ export const deleteGroceryItem = createServerFn({ method: "POST" })
   });
 
 export const setGroupChecked = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(setGroupCheckedSchema)
   .handler(async ({ data, context }) => {
     const result = await setItemsChecked(
@@ -123,7 +123,7 @@ export const setGroupChecked = createServerFn({ method: "POST" })
   });
 
 export const addCalendarToGroceryList = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireSubscriberMiddleware])
   .validator(addCalendarToGroceryListSchema)
   .handler(async ({ data, context }) => {
     const result = await addCalendarIngredientsToGroceryList(

@@ -190,6 +190,13 @@
       "when": 1784335393102,
       "tag": "0026_whole_big_bertha",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1784341234567,
+      "tag": "0027_rename_can_transcribe_to_is_subscriber",
+      "breakpoints": true
     }
   ]
 }
