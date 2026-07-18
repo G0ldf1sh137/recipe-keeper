@@ -50,6 +50,9 @@ export async function inviteToHousehold(householdId: string, inviterId: string, 
 
   const invitee = await findUserByUsername(username);
   if (!invitee) throw new Error("No user found with that username.");
+  if (!invitee.isAdmin && !invitee.isSubscriber) {
+    throw new Error("That user needs a subscription to join a household.");
+  }
 
   const alreadyMember = await db.query.householdMembers.findFirst({
     where: and(eq(householdMembers.householdId, householdId), eq(householdMembers.userId, invitee.id)),

@@ -60,6 +60,16 @@ export async function listAllUsernames(): Promise<string[]> {
   return rows.map((row) => row.username).filter((username) => username != null);
 }
 
+// Only subscribers/admins, since only they can access the pantry a household invite grants access to.
+export async function listInvitableUsernames(): Promise<string[]> {
+  const rows = await db.query.users.findMany({
+    where: and(isNotNull(users.username), or(eq(users.isAdmin, true), eq(users.isSubscriber, true))),
+    columns: { username: true },
+    orderBy: (u, { asc }) => [asc(u.username)],
+  });
+  return rows.map((row) => row.username).filter((username) => username != null);
+}
+
 export async function setUserAdminStatus(userId: string, isAdmin: boolean) {
   return db.update(users).set({ isAdmin }).where(eq(users.id, userId)).returning();
 }

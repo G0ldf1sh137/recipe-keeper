@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireAuthMiddleware } from "#/auth/auth-middleware";
-import { listAllUsernames } from "#/auth/users.server";
+import { listInvitableUsernames } from "#/auth/users.server";
 import {
   createHouseholdSchema,
   inviteToHouseholdSchema,
@@ -77,7 +77,7 @@ export const transferOwnership = createServerFn({ method: "POST" })
 
 export const getKnownUsernames = createServerFn({ method: "GET" })
   .middleware([requireAuthMiddleware])
-  .handler(async () => listAllUsernames());
+  .handler(async () => listInvitableUsernames());
 
 export const getPendingInviteUsernames = createServerFn({ method: "GET" })
   .middleware([requireAuthMiddleware])

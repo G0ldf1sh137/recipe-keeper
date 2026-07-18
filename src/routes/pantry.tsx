@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { flushSync } from "react-dom";
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { Users } from "lucide-react";
 import { getSessionUser } from "#/auth/auth.functions";
 import { getIngredientNames } from "#/recipes/recipes.functions";
 import {
@@ -14,8 +15,20 @@ import {
   clearPantry,
 } from "#/pantry/pantry.functions";
 import type { PantryMatch } from "#/pantry/pantry.server";
-import { getMyHouseholdInfo } from "#/households/households.functions";
+import {
+  getMyHouseholdInfo,
+  getMyInvites,
+  createHousehold,
+  inviteToHousehold,
+  respondToInvite,
+  removeMember,
+  leaveHousehold,
+  transferOwnership,
+  getKnownUsernames,
+  getPendingInviteUsernames,
+} from "#/households/households.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
+import { DropdownButton } from "#/ui/DropdownButton";
 
 export const Route = createFileRoute("/pantry")({
   beforeLoad: async () => {
@@ -27,14 +40,32 @@ export const Route = createFileRoute("/pantry")({
     return { user };
   },
   loader: async ({ context }) => {
-    const [pantryItems, knownIngredientNames, matches, household, groups] = await Promise.all([
-      getPantryItems(),
-      getIngredientNames(),
-      getPantryMatches(),
-      getMyHouseholdInfo(),
-      getPantryGroups(),
-    ]);
-    return { pantryItems, knownIngredientNames, matches, household, groups, userId: context.user.id };
+    const [pantryItems, knownIngredientNames, matches, household, groups, invites, knownUsernames] =
+      await Promise.all([
+        getPantryItems(),
+        getIngredientNames(),
+        getPantryMatches(),
+        getMyHouseholdInfo(),
+        getPantryGroups(),
+        getMyInvites(),
+        getKnownUsernames(),
+      ]);
+    const pendingInviteUsernames =
+      household && household.ownerId === context.user.id
+        ? await getPendingInviteUsernames({ data: { householdId: household.id } })
+        : [];
+    return {
+      pantryItems,
+      knownIngredientNames,
+      matches,
+      household,
+      groups,
+      invites,
+      knownUsernames,
+      pendingInviteUsernames,
+      userId: context.user.id,
+      username: context.user.username,
+    };
   },
   component: PantryPage,
 });
@@ -58,6 +89,8 @@ const memberColors = [
 
 function PantryPage() {
   const loaderData = Route.useLoaderData();
+  const { household } = loaderData;
+  const router = useRouter();
   const addPantryItemFn = useServerFn(addPantryItem);
   const removePantryItemFn = useServerFn(removePantryItem);
   const getPantryMatchesFn = useServerFn(getPantryMatches);
@@ -65,6 +98,20 @@ function PantryPage() {
   const getPantryItemsFn = useServerFn(getPantryItems);
   const removeHouseholdPantryItemFn = useServerFn(removeHouseholdPantryItem);
   const clearPantryFn = useServerFn(clearPantry);
+  const createHouseholdFn = useServerFn(createHousehold);
+  const inviteToHouseholdFn = useServerFn(inviteToHousehold);
+  const respondToInviteFn = useServerFn(respondToInvite);
+  const removeMemberFn = useServerFn(removeMember);
+  const leaveHouseholdFn = useServerFn(leaveHousehold);
+  const transferOwnershipFn = useServerFn(transferOwnership);
+
+  const [householdName, setHouseholdName] = useState("");
+  const [householdError, setHouseholdError] = useState<string | null>(null);
+  const [householdSubmitting, setHouseholdSubmitting] = useState(false);
+  const [inviteUsername, setInviteUsername] = useState("");
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSent, setInviteSent] = useState(false);
+  const [inviteSubmitting, setInviteSubmitting] = useState(false);
 
   const [pantryNames, setPantryNames] = useState(loaderData.pantryItems);
   const [matches, setMatches] = useState(loaderData.matches);
@@ -140,27 +187,247 @@ function PantryPage() {
     setGroups(nextGroups);
   }
 
-  const isHouseholdOwner = loaderData.household?.ownerId === loaderData.userId;
+  async function handleCreateHousehold(e: React.FormEvent) {
+    e.preventDefault();
+    if (!householdName.trim()) return;
+    setHouseholdSubmitting(true);
+    setHouseholdError(null);
+    try {
+      await createHouseholdFn({ data: { name: householdName.trim() } });
+      setHouseholdName("");
+      await router.invalidate();
+      await refreshAfterChange();
+    } catch (err) {
+      setHouseholdError(err instanceof Error ? err.message : "Failed to create household.");
+    } finally {
+      setHouseholdSubmitting(false);
+    }
+  }
+
+  async function handleInvite(e: React.FormEvent) {
+    e.preventDefault();
+    if (!household || !inviteUsername.trim()) return;
+    setInviteSubmitting(true);
+    setInviteError(null);
+    setInviteSent(false);
+    try {
+      await inviteToHouseholdFn({
+        data: { householdId: household.id, username: inviteUsername.trim() },
+      });
+      setInviteUsername("");
+      setInviteSent(true);
+      await router.invalidate();
+    } catch (err) {
+      setInviteError(err instanceof Error ? err.message : "Failed to send invite.");
+    } finally {
+      setInviteSubmitting(false);
+    }
+  }
+
+  async function handleRespondToInvite(inviteId: string, accept: boolean) {
+    await respondToInviteFn({ data: { inviteId, accept } });
+    await router.invalidate();
+    await refreshAfterChange();
+  }
+
+  async function handleRemoveMember(memberUserId: string) {
+    if (!household) return;
+    await removeMemberFn({ data: { householdId: household.id, memberUserId } });
+    await router.invalidate();
+    await refreshAfterChange();
+  }
+
+  async function handleTransferOwnership(memberUserId: string, memberName: string) {
+    if (!household) return;
+    if (
+      !window.confirm(
+        `Make ${memberName} the owner of "${household.name}"? You'll become a regular member.`,
+      )
+    ) {
+      return;
+    }
+    await transferOwnershipFn({ data: { householdId: household.id, newOwnerId: memberUserId } });
+    await router.invalidate();
+    await refreshAfterChange();
+  }
+
+  async function handleLeaveOrDelete() {
+    if (!household) return;
+    const isOwner = household.ownerId === loaderData.userId;
+    const message = isOwner
+      ? `Delete "${household.name}"? This removes all members. This can't be undone.`
+      : `Leave "${household.name}"?`;
+    if (!window.confirm(message)) return;
+    await leaveHouseholdFn({ data: { householdId: household.id } });
+    await router.invalidate();
+    await refreshAfterChange();
+  }
+
+  const isHouseholdOwner = household?.ownerId === loaderData.userId;
   const pantryNamesLower = new Set((groups ? groups.flatMap((g) => g.items) : pantryNames).map((name) => name.toLowerCase()));
   const readyToMake = matches.filter((match) => match.totalIngredients === match.matchedIngredients);
   const closeMatches = matches.filter((match) => match.totalIngredients > match.matchedIngredients);
 
+  // Excludes yourself and anyone already a member or already-invited, since inviting either fails server-side.
+  const householdInviteUsernames = loaderData.knownUsernames.filter(
+    (name) =>
+      name !== loaderData.username &&
+      !household?.members.some((member) => member.username === name) &&
+      !loaderData.pendingInviteUsernames.includes(name),
+  );
+
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Pantry</h1>
-      <p className="mt-2 text-ink/60">List what you have, and we'll show you what you can make.</p>
-      {loaderData.household && (
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-ink/60">List what you have, and we'll show you what you can make.</p>
+        <DropdownButton
+          label="Household"
+          icon={<Users size={16} />}
+          badge={household ? household.members.length : undefined}
+        >
+          {household ? (
+            <>
+              <p className="text-ink/70">{household.name}</p>
+              <ul className="mt-2 flex flex-col gap-1">
+                {household.members.map((member) => (
+                  <li key={member.id} className="flex items-center justify-between text-ink/70">
+                    <span>
+                      {member.username ? (
+                        <Link
+                          to="/u/$username"
+                          params={{ username: member.username }}
+                          className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+                        >
+                          {member.name}
+                        </Link>
+                      ) : (
+                        member.name
+                      )}
+                      {member.username && ` (@${member.username})`}
+                      {member.id === loaderData.userId && " — you"}
+                      {member.id === household.ownerId && " — owner"}
+                    </span>
+                    {household.ownerId === loaderData.userId &&
+                      member.id !== household.ownerId && (
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => void handleTransferOwnership(member.id, member.name)}
+                            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+                          >
+                            Make owner
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleRemoveMember(member.id)}
+                            className="text-sm font-medium text-red-600 hover:text-red-700"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                  </li>
+                ))}
+              </ul>
+              {household.ownerId === loaderData.userId && (
+                <form onSubmit={(e) => void handleInvite(e)} className="mt-2 flex gap-2">
+                  <input
+                    className="min-w-[10rem] flex-1 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
+                    list="household-invite-usernames"
+                    value={inviteUsername}
+                    onChange={(e) => setInviteUsername(e.target.value)}
+                    placeholder="Invite by username"
+                  />
+                  <button
+                    type="submit"
+                    disabled={inviteSubmitting || !inviteUsername.trim()}
+                    className="rounded-lg bg-accent-600 px-4 py-2 font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
+                  >
+                    {inviteSubmitting ? "Inviting..." : "Invite"}
+                  </button>
+                </form>
+              )}
+              {inviteError && <p className="text-red-600">{inviteError}</p>}
+              {inviteSent && <p className="text-green-700">Invite sent.</p>}
+              <button
+                type="button"
+                onClick={() => void handleLeaveOrDelete()}
+                className="mt-2 self-start text-sm font-medium text-red-600 hover:text-red-700"
+              >
+                {household.ownerId === loaderData.userId ? "Delete household" : "Leave household"}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-ink/50">
+                Pool your pantry with people you live with — everyone's items count toward "what can we
+                make."
+              </p>
+              <form onSubmit={(e) => void handleCreateHousehold(e)} className="mt-2 flex gap-2">
+                <input
+                  className="min-w-[10rem] flex-1 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
+                  value={householdName}
+                  onChange={(e) => setHouseholdName(e.target.value)}
+                  placeholder="Household name"
+                />
+                <button
+                  type="submit"
+                  disabled={householdSubmitting || !householdName.trim()}
+                  className="rounded-lg bg-accent-600 px-4 py-2 font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
+                >
+                  {householdSubmitting ? "Creating..." : "Create"}
+                </button>
+              </form>
+              {householdError && <p className="text-red-600">{householdError}</p>}
+
+              {loaderData.invites.length > 0 && (
+                <div className="mt-4 flex flex-col gap-2">
+                  <h3 className="font-medium text-ink/70">Pending invites</h3>
+                  {loaderData.invites.map((invite) => (
+                    <div
+                      key={invite.id}
+                      className="flex items-center justify-between rounded-lg border border-accent-100 px-3 py-2"
+                    >
+                      <span className="text-ink/70">
+                        {invite.householdName} — invited by {invite.inviterName}
+                      </span>
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => void handleRespondToInvite(invite.id, true)}
+                          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleRespondToInvite(invite.id, false)}
+                          className="text-sm text-ink/50 hover:text-ink"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </DropdownButton>
+      </div>
+      {household && (
         <p className="mt-1 text-sm text-ink/50">
-          Showing combined pantry with {loaderData.household.name} — {loaderData.household.members.length}{" "}
-          member{loaderData.household.members.length === 1 ? "" : "s"}.{" "}
-          <Link
-            to="/settings"
-            className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-          >
-            Manage
-          </Link>
+          Showing combined pantry with {household.name} — {household.members.length}{" "}
+          member{household.members.length === 1 ? "" : "s"}.
         </p>
       )}
+
+      <datalist id="household-invite-usernames">
+        {householdInviteUsernames.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
 
       <form onSubmit={(e) => void handleAddItem(e)} className="mt-6 flex gap-2">
         <input
@@ -260,7 +527,7 @@ function PantryPage() {
 
       {matches.length === 0 ? (
         <p className="mt-6 text-ink/60">
-          {pantryNames.length === 0 && !loaderData.household
+          {pantryNames.length === 0 && !household
             ? "Add a few ingredients to see what you can make."
             : "No recipes match what's in your pantry yet."}
         </p>
