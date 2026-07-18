@@ -2,8 +2,10 @@ import { useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
-import { updateUsername } from "#/auth/username.functions";
+import { updateUsername, updateVisibilityDefaults } from "#/auth/username.functions";
 import { updateNotificationPreferences } from "#/notifications/notifications.functions";
+import { visibilityValues } from "#/db/schema";
+import type { Visibility } from "#/db/schema";
 import {
   getMyHouseholdInfo,
   getMyInvites,
@@ -43,6 +45,7 @@ function SettingsPage() {
   const router = useRouter();
   const updateUsernameFn = useServerFn(updateUsername);
   const updateNotificationPreferencesFn = useServerFn(updateNotificationPreferences);
+  const updateVisibilityDefaultsFn = useServerFn(updateVisibilityDefaults);
   const createHouseholdFn = useServerFn(createHousehold);
   const inviteToHouseholdFn = useServerFn(inviteToHousehold);
   const respondToInviteFn = useServerFn(respondToInvite);
@@ -68,6 +71,15 @@ function SettingsPage() {
   const [notifyOnFork, setNotifyOnFork] = useState(user.notifyOnFork);
   const [notificationsSaved, setNotificationsSaved] = useState(false);
   const [notificationsSubmitting, setNotificationsSubmitting] = useState(false);
+
+  const [defaultRecipeVisibility, setDefaultRecipeVisibility] = useState<Visibility>(
+    user.defaultRecipeVisibility,
+  );
+  const [defaultCollectionVisibility, setDefaultCollectionVisibility] = useState<Visibility>(
+    user.defaultCollectionVisibility,
+  );
+  const [visibilityDefaultsSaved, setVisibilityDefaultsSaved] = useState(false);
+  const [visibilityDefaultsSubmitting, setVisibilityDefaultsSubmitting] = useState(false);
 
   // Excludes yourself and anyone already a member or already-invited, since inviting either fails server-side.
   const householdInviteUsernames = knownUsernames.filter(
@@ -106,6 +118,18 @@ function SettingsPage() {
       setNotificationsSaved(true);
     } finally {
       setNotificationsSubmitting(false);
+    }
+  }
+
+  async function handleVisibilityDefaultsSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setVisibilityDefaultsSubmitting(true);
+    setVisibilityDefaultsSaved(false);
+    try {
+      await updateVisibilityDefaultsFn({ data: { defaultRecipeVisibility, defaultCollectionVisibility } });
+      setVisibilityDefaultsSaved(true);
+    } finally {
+      setVisibilityDefaultsSubmitting(false);
     }
   }
 
@@ -257,6 +281,47 @@ function SettingsPage() {
           className="mt-2 self-start rounded-lg bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-50"
         >
           {notificationsSubmitting ? "Saving..." : "Save"}
+        </button>
+      </form>
+
+      <form onSubmit={handleVisibilityDefaultsSubmit} className="mt-8 flex flex-col gap-2">
+        <h2 className="font-serif text-xl font-semibold text-ink">Default visibility</h2>
+        <p className="text-sm text-ink/50">Applies to new recipes and cookbooks only.</p>
+        <label className="flex flex-col gap-1">
+          <span className="font-medium text-ink/70">New recipes default to</span>
+          <select
+            className="rounded-lg border border-accent-100 bg-surface px-3 py-2 text-ink focus:border-accent-400 focus:outline-none"
+            value={defaultRecipeVisibility}
+            onChange={(e) => setDefaultRecipeVisibility(e.target.value as Visibility)}
+          >
+            {visibilityValues.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="font-medium text-ink/70">New cookbooks default to</span>
+          <select
+            className="rounded-lg border border-accent-100 bg-surface px-3 py-2 text-ink focus:border-accent-400 focus:outline-none"
+            value={defaultCollectionVisibility}
+            onChange={(e) => setDefaultCollectionVisibility(e.target.value as Visibility)}
+          >
+            {visibilityValues.map((v) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
+          </select>
+        </label>
+        {visibilityDefaultsSaved && <p className="text-green-700">Saved.</p>}
+        <button
+          type="submit"
+          disabled={visibilityDefaultsSubmitting}
+          className="mt-2 self-start rounded-lg bg-accent-600 px-4 py-2 font-medium text-white hover:bg-accent-700 disabled:opacity-50"
+        >
+          {visibilityDefaultsSubmitting ? "Saving..." : "Save"}
         </button>
       </form>
 

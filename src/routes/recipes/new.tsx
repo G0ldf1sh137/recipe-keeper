@@ -26,7 +26,13 @@ export const Route = createFileRoute("/recipes/new")({
       getTagNames(),
     ]);
     const isSubscriber = context.user.isAdmin || context.user.isSubscriber;
-    return { knownIngredientNames, knownUnitNames, knownTagNames, isSubscriber };
+    return {
+      knownIngredientNames,
+      knownUnitNames,
+      knownTagNames,
+      isSubscriber,
+      defaultRecipeVisibility: context.user.defaultRecipeVisibility,
+    };
   },
   component: NewRecipePage,
 });
@@ -34,12 +40,15 @@ export const Route = createFileRoute("/recipes/new")({
 type ImportMode = "choose" | "photo" | "pdf" | "text" | "url" | "form";
 
 function NewRecipePage() {
-  const { knownIngredientNames, knownUnitNames, knownTagNames, isSubscriber } = Route.useLoaderData();
+  const { knownIngredientNames, knownUnitNames, knownTagNames, isSubscriber, defaultRecipeVisibility } =
+    Route.useLoaderData();
   const navigate = useNavigate();
   const createRecipeFn = useServerFn(createRecipe);
 
   const [mode, setMode] = useState<ImportMode>("choose");
-  const [formValues, setFormValues] = useState<RecipeFormValues>(emptyRecipeFormValues());
+  const [formValues, setFormValues] = useState<RecipeFormValues>(
+    emptyRecipeFormValues(defaultRecipeVisibility),
+  );
   const [scrapeUrl, setScrapeUrl] = useState("");
   // Bumped to force RecipeForm to re-initialize its internal state from formValues
   // after a transcription is applied (RecipeForm otherwise only reads initialValues once).

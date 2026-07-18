@@ -1,6 +1,7 @@
 import { and, eq, ilike, isNotNull, ne, or } from "drizzle-orm";
 import { db } from "#/db/index";
 import { users } from "#/db/schema";
+import type { Visibility } from "#/db/schema";
 import type { GoogleUserInfo } from "./google.server";
 
 function slugify(input: string) {
@@ -65,6 +66,13 @@ export async function setUserAdminStatus(userId: string, isAdmin: boolean) {
 
 export async function setUserIsSubscriberStatus(userId: string, isSubscriber: boolean) {
   return db.update(users).set({ isSubscriber }).where(eq(users.id, userId)).returning();
+}
+
+export async function updateUserVisibilityDefaults(
+  userId: string,
+  prefs: { defaultRecipeVisibility: Visibility; defaultCollectionVisibility: Visibility },
+) {
+  return db.update(users).set(prefs).where(eq(users.id, userId)).returning();
 }
 
 export async function deleteUser(userId: string) {

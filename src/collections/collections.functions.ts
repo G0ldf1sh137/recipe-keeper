@@ -92,7 +92,9 @@ export const updateCollectionVisibility = createServerFn({ method: "POST" })
 export const createCollection = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
   .validator(createCollectionSchema)
-  .handler(async ({ data, context }) => insertCollection(data.name, context.user.id));
+  .handler(async ({ data, context }) =>
+    insertCollection(data.name, context.user.id, context.user.defaultCollectionVisibility),
+  );
 
 export const renameCollection = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])

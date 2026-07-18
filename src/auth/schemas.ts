@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { visibilityValues } from "#/db/schema";
+
+const visibilitySchema = z.enum(visibilityValues);
 
 export const usernameSchema = z
   .string()
@@ -30,4 +33,9 @@ export const searchUsersSchema = z.object({
 
 export const deleteUserSchema = z.object({
   userId: z.string().min(1),
+});
+
+export const updateVisibilityDefaultsSchema = z.object({
+  defaultRecipeVisibility: visibilitySchema,
+  defaultCollectionVisibility: visibilitySchema,
 });

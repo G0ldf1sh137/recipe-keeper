@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN "default_recipe_visibility" text DEFAULT 'public' NOT NULL;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "default_collection_visibility" text DEFAULT 'private' NOT NULL;

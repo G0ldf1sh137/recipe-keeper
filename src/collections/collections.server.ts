@@ -111,8 +111,8 @@ export async function findRecipesInCollection(collectionId: string) {
     .orderBy(collectionRecipes.position);
 }
 
-export async function insertCollection(name: string, ownerId: string) {
-  const [collection] = await db.insert(collections).values({ name, ownerId }).returning();
+export async function insertCollection(name: string, ownerId: string, visibility: Visibility) {
+  const [collection] = await db.insert(collections).values({ name, ownerId, visibility }).returning();
   return collection;
 }
 

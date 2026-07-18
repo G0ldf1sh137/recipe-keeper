@@ -43,7 +43,7 @@ export type RecipeFormSubmitValues = {
   fat: number | null;
 };
 
-export function emptyRecipeFormValues(): RecipeFormValues {
+export function emptyRecipeFormValues(defaultVisibility: Visibility = "public"): RecipeFormValues {
   return {
     title: "",
     description: "",
@@ -52,7 +52,7 @@ export function emptyRecipeFormValues(): RecipeFormValues {
     sourceUrl: null,
     sourcePdfUrl: null,
     tags: [],
-    visibility: "public",
+    visibility: defaultVisibility,
     ingredients: [{ qty: "", unit: "", name: "" }],
     steps: [{ text: "", imageUrls: [] }],
     yield: null,

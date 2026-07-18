@@ -40,6 +40,12 @@ export const users = pgTable("users", {
   notifyOnComment: boolean("notify_on_comment").notNull().default(true),
   notifyOnRating: boolean("notify_on_rating").notNull().default(true),
   notifyOnFork: boolean("notify_on_fork").notNull().default(true),
+  defaultRecipeVisibility: text("default_recipe_visibility", { enum: visibilityValues })
+    .notNull()
+    .default("public"),
+  defaultCollectionVisibility: text("default_collection_visibility", { enum: visibilityValues })
+    .notNull()
+    .default("private"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
