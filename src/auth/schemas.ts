@@ -19,6 +19,11 @@ export const setUserAdminSchema = z.object({
   isAdmin: z.boolean(),
 });
 
+export const setUserModeratorSchema = z.object({
+  userId: z.string(),
+  isModerator: z.boolean(),
+});
+
 export const setUserIsSubscriberSchema = z.object({
   userId: z.string(),
   isSubscriber: z.boolean(),

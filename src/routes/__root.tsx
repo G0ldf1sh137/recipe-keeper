@@ -282,7 +282,7 @@ function AuthHeader({
         >
           Settings
         </Link>
-        {currentUser.isAdmin && (
+        {(currentUser.isAdmin || currentUser.isModerator) && (
           <Link
             to="/admin"
             onClick={() => setMenuOpen(false)}

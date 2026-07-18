@@ -5,7 +5,7 @@ import { insertReport, findOpenReports, resolveReportStatus } from "./reports.se
 import { findRecipeById } from "#/recipes/recipes.server";
 import { findCommentById } from "#/comments/comments.server";
 import { findMessageById, findConversationForParticipant } from "#/messages/messages.server";
-import { requireAuthMiddleware, requireAdminMiddleware } from "#/auth/auth-middleware";
+import { requireAuthMiddleware, requireModeratorMiddleware } from "#/auth/auth-middleware";
 
 export const reportRecipe = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
@@ -46,11 +46,11 @@ export const reportMessage = createServerFn({ method: "POST" })
   });
 
 export const listOpenReports = createServerFn({ method: "GET" })
-  .middleware([requireAdminMiddleware])
+  .middleware([requireModeratorMiddleware])
   .handler(async () => findOpenReports());
 
 export const resolveReport = createServerFn({ method: "POST" })
-  .middleware([requireAdminMiddleware])
+  .middleware([requireModeratorMiddleware])
   .validator(resolveReportSchema)
   .handler(async ({ data, context }) => {
     const updated = await resolveReportStatus(data.reportId, context.user.id);

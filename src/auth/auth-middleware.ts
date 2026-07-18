@@ -32,6 +32,18 @@ export const requireAdminMiddleware = createMiddleware({ type: "function" })
     });
   });
 
+// Gates the reports/moderation actions in the admin panel to admins and moderators alike.
+// Moderators can't reach anything else gated by requireAdminMiddleware (user search, admin/
+// subscriber toggles, impersonation, account deletion).
+export const requireModeratorMiddleware = createMiddleware({ type: "function" })
+  .middleware([requireAuthMiddleware])
+  .server(async ({ next, context }) => {
+    if (!context.user.isAdmin && !context.user.isModerator) throw new Error("Forbidden");
+    return next({
+      context: { user: context.user, realUser: context.realUser, isImpersonating: context.isImpersonating },
+    });
+  });
+
 // Gates any feature reserved for paying subscribers (AI import, grocery lists, pantry, calendars).
 // Backed by the same `users.isSubscriber` flag admins toggle via "Make subscriber" in the admin panel.
 export const requireSubscriberMiddleware = createMiddleware({ type: "function" })

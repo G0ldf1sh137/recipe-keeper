@@ -260,6 +260,13 @@
       "when": 1784378358091,
       "tag": "0036_solid_otto_octavius",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1784383592863,
+      "tag": "0037_glossy_shadow_king",
+      "breakpoints": true
     }
   ]
 }

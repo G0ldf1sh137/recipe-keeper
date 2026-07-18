@@ -18,7 +18,7 @@ import {
   deleteMessageById,
 } from "./messages.server";
 import { findUserById, updateUserMessagingPreferences } from "#/auth/users.server";
-import { sessionMiddleware, requireAuthMiddleware, requireAdminMiddleware } from "#/auth/auth-middleware";
+import { sessionMiddleware, requireAuthMiddleware, requireModeratorMiddleware } from "#/auth/auth-middleware";
 
 export const startConversation = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
@@ -78,7 +78,7 @@ export const getUnreadMessageCount = createServerFn({ method: "GET" })
   });
 
 export const deleteMessage = createServerFn({ method: "POST" })
-  .middleware([requireAdminMiddleware])
+  .middleware([requireModeratorMiddleware])
   .validator(deleteMessageSchema)
   .handler(async ({ data }) => {
     const deleted = await deleteMessageById(data.messageId);

@@ -2,34 +2,37 @@ import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
-import { deleteUser, searchUsers, setUserAdmin, setUserIsSubscriber } from "#/auth/admin.functions";
+import { deleteUser, searchUsers, setUserAdmin, setUserModerator, setUserIsSubscriber } from "#/auth/admin.functions";
 import { startImpersonation } from "#/auth/impersonation.functions";
 import { listOpenReports, resolveReport } from "#/reports/reports.functions";
 import { deleteComment } from "#/comments/comments.functions";
 import { deleteMessage } from "#/messages/messages.functions";
+import { moderatorDeleteRecipe } from "#/recipes/recipes.functions";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
     const user = await getSessionUser();
     if (!user) throw redirect({ to: "/login" });
-    if (!user.isAdmin) throw redirect({ to: "/" });
+    if (!user.isAdmin && !user.isModerator) throw redirect({ to: "/" });
     return { user };
   },
   loader: async ({ context }) => {
     const reports = await listOpenReports();
-    return { reports, currentUserId: context.user.id };
+    return { reports, currentUserId: context.user.id, isAdmin: context.user.isAdmin };
   },
   component: AdminPage,
 });
 
 function AdminPage() {
-  const { reports, currentUserId } = Route.useLoaderData();
+  const { reports, currentUserId, isAdmin } = Route.useLoaderData();
   const router = useRouter();
   const setUserAdminFn = useServerFn(setUserAdmin);
+  const setUserModeratorFn = useServerFn(setUserModerator);
   const setUserIsSubscriberFn = useServerFn(setUserIsSubscriber);
   const resolveReportFn = useServerFn(resolveReport);
   const deleteCommentFn = useServerFn(deleteComment);
   const deleteMessageFn = useServerFn(deleteMessage);
+  const moderatorDeleteRecipeFn = useServerFn(moderatorDeleteRecipe);
   const searchUsersFn = useServerFn(searchUsers);
   const startImpersonationFn = useServerFn(startImpersonation);
   const deleteUserFn = useServerFn(deleteUser);
@@ -58,8 +61,14 @@ function AdminPage() {
     return () => clearTimeout(timeout);
   }, [query, searchUsersFn]);
 
-  async function handleToggle(userId: string, isAdmin: boolean) {
-    await setUserAdminFn({ data: { userId, isAdmin: !isAdmin } });
+  async function handleToggle(userId: string, targetIsAdmin: boolean) {
+    await setUserAdminFn({ data: { userId, isAdmin: !targetIsAdmin } });
+    await router.invalidate();
+    if (query.trim()) void searchUsersFn({ data: { q: query.trim() } }).then(setResults);
+  }
+
+  async function handleToggleModerator(userId: string, isModerator: boolean) {
+    await setUserModeratorFn({ data: { userId, isModerator: !isModerator } });
     await router.invalidate();
     if (query.trim()) void searchUsersFn({ data: { q: query.trim() } }).then(setResults);
   }
@@ -84,6 +93,12 @@ function AdminPage() {
   async function handleDeleteMessage(messageId: string) {
     if (!window.confirm("Delete this message? This can't be undone.")) return;
     await deleteMessageFn({ data: { messageId } });
+    await router.invalidate();
+  }
+
+  async function handleDeleteRecipe(recipeId: string) {
+    if (!window.confirm("Delete this recipe? This can't be undone.")) return;
+    await moderatorDeleteRecipeFn({ data: { id: recipeId } });
     await router.invalidate();
   }
 
@@ -183,13 +198,22 @@ function AdminPage() {
                       </button>
                     </>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleResolve(report.id)}
-                      className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-                    >
-                      Resolve
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteRecipe(report.recipe!.id)}
+                        className="text-sm font-medium text-red-600 hover:text-red-700"
+                      >
+                        Delete recipe
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleResolve(report.id)}
+                        className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+                      >
+                        Dismiss
+                      </button>
+                    </>
                   )}
                 </div>
               </li>
@@ -198,6 +222,7 @@ function AdminPage() {
         )}
       </section>
 
+      {isAdmin && (
       <section className="mt-8">
         <h2 className="font-serif text-xl font-semibold text-ink">Users</h2>
         <p className="mt-1 text-ink/60">
@@ -268,6 +293,17 @@ function AdminPage() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => handleToggleModerator(user.id, user.isModerator)}
+                          className={
+                            user.isModerator
+                              ? "rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50"
+                              : "rounded-lg bg-accent-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-700"
+                          }
+                        >
+                          {user.isModerator ? "Revoke moderator" : "Make moderator"}
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => void handleImpersonate(user.id)}
                           className="rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-accent-50"
                         >
@@ -289,6 +325,7 @@ function AdminPage() {
           )
         )}
       </section>
+      )}
     </div>
   );
 }

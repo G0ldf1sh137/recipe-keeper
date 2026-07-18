@@ -30,7 +30,7 @@ import {
 } from "./recipes.server";
 import { insertNotification } from "#/notifications/notifications.server";
 import { findFollow } from "#/follows/follows.server";
-import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
+import { sessionMiddleware, requireAuthMiddleware, requireModeratorMiddleware } from "#/auth/auth-middleware";
 
 export const listRecipes = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
@@ -143,6 +143,17 @@ export const deleteRecipe = createServerFn({ method: "POST" })
   .validator(deleteRecipeSchema)
   .handler(async ({ data, context }) => {
     const recipe = await deleteOwnedRecipe(data, context.user.id, context.user.isAdmin);
+    if (!recipe) throw notFound();
+    return recipe;
+  });
+
+// Distinct from deleteRecipe above: reachable by moderators (not just admins/owners), but
+// only from the admin reports panel — moderators have no general recipe-editing access.
+export const moderatorDeleteRecipe = createServerFn({ method: "POST" })
+  .middleware([requireModeratorMiddleware])
+  .validator(deleteRecipeSchema)
+  .handler(async ({ data, context }) => {
+    const recipe = await deleteOwnedRecipe(data, context.user.id, true);
     if (!recipe) throw notFound();
     return recipe;
   });

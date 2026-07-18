@@ -74,6 +74,10 @@ export async function setUserAdminStatus(userId: string, isAdmin: boolean) {
   return db.update(users).set({ isAdmin }).where(eq(users.id, userId)).returning();
 }
 
+export async function setUserModeratorStatus(userId: string, isModerator: boolean) {
+  return db.update(users).set({ isModerator }).where(eq(users.id, userId)).returning();
+}
+
 export async function setUserIsSubscriberStatus(userId: string, isSubscriber: boolean) {
   return db.update(users).set({ isSubscriber }).where(eq(users.id, userId)).returning();
 }

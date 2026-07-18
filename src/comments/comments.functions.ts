@@ -4,7 +4,7 @@ import { createCommentSchema, listCommentsSchema, deleteCommentSchema } from "./
 import { findCommentById, findCommentTreeForRecipe, insertComment, deleteCommentById } from "./comments.server";
 import { findRecipeById } from "#/recipes/recipes.server";
 import { insertNotification } from "#/notifications/notifications.server";
-import { sessionMiddleware, requireAuthMiddleware, requireAdminMiddleware } from "#/auth/auth-middleware";
+import { sessionMiddleware, requireAuthMiddleware, requireModeratorMiddleware } from "#/auth/auth-middleware";
 
 export const listComments = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
@@ -38,7 +38,7 @@ export const createComment = createServerFn({ method: "POST" })
   });
 
 export const deleteComment = createServerFn({ method: "POST" })
-  .middleware([requireAdminMiddleware])
+  .middleware([requireModeratorMiddleware])
   .validator(deleteCommentSchema)
   .handler(async ({ data }) => {
     const deleted = await deleteCommentById(data.commentId);
