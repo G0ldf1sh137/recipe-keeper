@@ -19,3 +19,7 @@ export const setUserCanTranscribeSchema = z.object({
   userId: z.string(),
   canTranscribe: z.boolean(),
 });
+
+export const startImpersonationSchema = z.object({
+  username: z.string().min(1),
+});

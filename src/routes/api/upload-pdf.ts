@@ -8,7 +8,8 @@ export const Route = createFileRoute("/api/upload-pdf")({
     handlers: {
       POST: async ({ request }) => {
         const token = readSessionToken();
-        const user = token ? await validateSessionToken(token) : null;
+        const resolved = token ? await validateSessionToken(token) : null;
+        const user = resolved?.user ?? null;
         if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
         let formData: FormData;

@@ -23,7 +23,7 @@ export async function createSession(userId: string) {
 export async function validateSessionToken(token: string) {
   const id = hashToken(token);
   const rows = await db
-    .select({ user: users, expiresAt: sessions.expiresAt })
+    .select({ user: users, expiresAt: sessions.expiresAt, impersonatingUserId: sessions.impersonatingUserId })
     .from(sessions)
     .innerJoin(users, eq(sessions.userId, users.id))
     .where(eq(sessions.id, id));
@@ -33,11 +33,24 @@ export async function validateSessionToken(token: string) {
     await db.delete(sessions).where(eq(sessions.id, id));
     return null;
   }
-  return row.user;
+  if (!row.impersonatingUserId) {
+    return { user: row.user, realUser: row.user, isImpersonating: false };
+  }
+  const target = await db.query.users.findFirst({ where: eq(users.id, row.impersonatingUserId) });
+  if (!target) {
+    // Impersonated user was deleted mid-session — self-heal and fall back to the real user.
+    await db.update(sessions).set({ impersonatingUserId: null }).where(eq(sessions.id, id));
+    return { user: row.user, realUser: row.user, isImpersonating: false };
+  }
+  return { user: target, realUser: row.user, isImpersonating: true };
 }
 
 export async function invalidateSessionToken(token: string) {
   await db.delete(sessions).where(eq(sessions.id, hashToken(token)));
+}
+
+export async function setImpersonatedUser(token: string, targetUserId: string | null) {
+  await db.update(sessions).set({ impersonatingUserId: targetUserId }).where(eq(sessions.id, hashToken(token)));
 }
 
 export async function invalidateAllSessionsForUser(userId: string) {

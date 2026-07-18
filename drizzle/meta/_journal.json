@@ -183,6 +183,13 @@
       "when": 1784332027975,
       "tag": "0025_special_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1784335393102,
+      "tag": "0026_whole_big_bertha",
+      "breakpoints": true
     }
   ]
 }

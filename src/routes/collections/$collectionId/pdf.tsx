@@ -27,7 +27,8 @@ export const Route = createFileRoute("/collections/$collectionId/pdf")({
         const shareToken = url.searchParams.get("st") ?? undefined;
 
         const token = readSessionToken();
-        const user = token ? await validateSessionToken(token) : null;
+        const resolved = token ? await validateSessionToken(token) : null;
+        const user = resolved?.user ?? null;
 
         const collection = await findCollectionForViewer(params.collectionId, user?.id, shareToken);
         if (!collection) return new Response("Not found", { status: 404 });

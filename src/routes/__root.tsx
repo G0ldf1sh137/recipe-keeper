@@ -5,6 +5,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { useServerFn } from '@tanstack/react-start'
 import { Bell } from 'lucide-react'
 import { getSessionUser, logout } from '#/auth/auth.functions'
+import { getImpersonationStatus, endImpersonation } from '#/auth/impersonation.functions'
 import { getThemePreference } from '#/theme/theme.functions'
 import { ThemeToggle } from '#/theme/ThemeToggle'
 import { getUnreadNotificationCount } from '#/notifications/notifications.functions'
@@ -46,18 +47,19 @@ export const Route = createRootRoute({
     ],
   }),
   loader: async () => {
-    const [user, theme, unreadCount] = await Promise.all([
+    const [user, theme, unreadCount, impersonationStatus] = await Promise.all([
       getSessionUser(),
       getThemePreference(),
       getUnreadNotificationCount(),
+      getImpersonationStatus(),
     ])
-    return { user, theme, unreadCount }
+    return { user, theme, unreadCount, impersonationStatus }
   },
   shellComponent: RootDocument,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { user, theme, unreadCount } = Route.useLoaderData()
+  const { user, theme, unreadCount, impersonationStatus } = Route.useLoaderData()
   const router = useRouter()
   const isCookMode = /^\/recipes\/[^/]+\/cook$/.test(router.state.location.pathname)
 
@@ -76,7 +78,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         )}
       </head>
       <body>
-        {!isCookMode && <AuthHeader user={user} theme={theme} unreadCount={unreadCount} />}
+        {!isCookMode && (
+          <AuthHeader user={user} theme={theme} unreadCount={unreadCount} impersonationStatus={impersonationStatus} />
+        )}
         {children}
         <TanStackDevtools
           config={{
@@ -112,14 +116,18 @@ function AuthHeader({
   user,
   theme,
   unreadCount,
+  impersonationStatus,
 }: {
   user: Awaited<ReturnType<typeof getSessionUser>>
   theme: Awaited<ReturnType<typeof getThemePreference>>
   unreadCount: number
+  impersonationStatus: Awaited<ReturnType<typeof getImpersonationStatus>>
 }) {
   const router = useRouter()
   const logoutFn = useServerFn(logout)
+  const endImpersonationFn = useServerFn(endImpersonation)
   const [pending, setPending] = useState(false)
+  const [endingImpersonation, setEndingImpersonation] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
   async function handleLogout() {
@@ -130,6 +138,19 @@ function AuthHeader({
     } finally {
       setPending(false)
       setMenuOpen(false)
+    }
+  }
+
+  async function handleEndImpersonation() {
+    setEndingImpersonation(true)
+    try {
+      await endImpersonationFn()
+      // Full reload, not router.invalidate() — any page's local state seeded from the
+      // impersonated user (e.g. settings.tsx's username/notification fields) needs a fresh
+      // mount to pick up the restored admin identity.
+      window.location.reload()
+    } catch {
+      setEndingImpersonation(false)
     }
   }
 
@@ -249,6 +270,22 @@ function AuthHeader({
           </div>
         )}
       </header>
+      {user && impersonationStatus.isImpersonating && (
+        <div className="flex flex-wrap items-center justify-center gap-2 border-b-2 border-yellow-300 bg-yellow-50 px-4 py-2 text-sm text-yellow-900">
+          <span>
+            Viewing as <strong>{user.name}</strong>
+            {impersonationStatus.realUserName && ` (impersonated by ${impersonationStatus.realUserName})`}
+          </span>
+          <button
+            type="button"
+            onClick={() => void handleEndImpersonation()}
+            disabled={endingImpersonation}
+            className="font-medium underline hover:no-underline disabled:opacity-50"
+          >
+            {endingImpersonation ? 'Ending...' : 'End impersonation'}
+          </button>
+        </div>
+      )}
       <div className="ribbon-divider" />
     </>
   )

@@ -21,7 +21,8 @@ export const Route = createFileRoute("/recipes/$recipeId/pdf")({
         const shareToken = url.searchParams.get("st") ?? undefined;
 
         const token = readSessionToken();
-        const user = token ? await validateSessionToken(token) : null;
+        const resolved = token ? await validateSessionToken(token) : null;
+        const user = resolved?.user ?? null;
 
         const recipe = await findRecipeById(params.recipeId, user?.id, shareToken);
         if (!recipe) return new Response("Not found", { status: 404 });
