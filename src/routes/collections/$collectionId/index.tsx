@@ -1,17 +1,23 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import {
   getCollection,
   renameCollection,
   deleteCollection,
   toggleRecipeInCollection,
+  reorderCollectionRecipes,
   createCollectionShare,
   revokeCollectionShare,
   updateCollectionVisibility,
 } from "#/collections/collections.functions";
+import { CollectionRecipeRow } from "#/collections/CollectionRecipeRow";
 import { ShareControl } from "#/sharing/ShareControl";
+import { Toast } from "#/ui/Toast";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
@@ -39,20 +45,35 @@ export const Route = createFileRoute("/collections/$collectionId/")({
   ),
 });
 
+type CollectionItem = ReturnType<typeof Route.useLoaderData>["items"][number];
+
 function CollectionPage() {
-  const { collection, items } = Route.useLoaderData();
+  const { collection, items: loaderItems } = Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const router = useRouter();
   const navigate = useNavigate();
   const renameFn = useServerFn(renameCollection);
   const deleteFn = useServerFn(deleteCollection);
   const toggleFn = useServerFn(toggleRecipeInCollection);
+  const reorderFn = useServerFn(reorderCollectionRecipes);
   const createShareFn = useServerFn(createCollectionShare);
   const revokeShareFn = useServerFn(revokeCollectionShare);
   const updateVisibilityFn = useServerFn(updateCollectionVisibility);
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(collection.name);
+  const [items, setItems] = useState(loaderItems);
+  const [toast, setToast] = useState<{ recipeId: string; title: string } | null>(null);
+  const pendingRemovalsRef = useRef(new Map<string, { item: CollectionItem; index: number; timeoutId: number }>());
+
+  useEffect(() => {
+    setItems(loaderItems);
+  }, [loaderItems]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   async function handleRename(e: React.FormEvent) {
     e.preventDefault();
@@ -68,9 +89,47 @@ function CollectionPage() {
     await navigate({ to: "/collections" });
   }
 
-  async function handleRemove(recipeId: string) {
-    await toggleFn({ data: { collectionId: collection.id, recipeId } });
-    await router.invalidate();
+  function handleRemove(recipeId: string) {
+    const index = items.findIndex((i) => i.id === recipeId);
+    if (index === -1) return;
+    const item = items[index];
+    setItems((prev) => prev.filter((i) => i.id !== recipeId));
+
+    const timeoutId = window.setTimeout(() => {
+      pendingRemovalsRef.current.delete(recipeId);
+      void toggleFn({ data: { collectionId: collection.id, recipeId } });
+      setToast((current) => (current?.recipeId === recipeId ? null : current));
+    }, 5000);
+    pendingRemovalsRef.current.set(recipeId, { item, index, timeoutId });
+    setToast({ recipeId, title: item.title });
+  }
+
+  function handleUndoRemove() {
+    if (!toast) return;
+    const pending = pendingRemovalsRef.current.get(toast.recipeId);
+    if (!pending) return;
+    window.clearTimeout(pending.timeoutId);
+    pendingRemovalsRef.current.delete(toast.recipeId);
+    setItems((prev) => {
+      const next = [...prev];
+      next.splice(Math.min(pending.index, next.length), 0, pending.item);
+      return next;
+    });
+    setToast(null);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setItems((prev) => {
+      const oldIndex = prev.findIndex((i) => i.id === active.id);
+      const newIndex = prev.findIndex((i) => i.id === over.id);
+      const next = arrayMove(prev, oldIndex, newIndex);
+      void reorderFn({ data: { collectionId: collection.id, recipeIds: next.map((i) => i.id) } }).catch(() =>
+        router.invalidate(),
+      );
+      return next;
+    });
   }
 
   async function handleVisibilityChange(visibility: Visibility) {
@@ -212,31 +271,28 @@ function CollectionPage() {
       {items.length === 0 ? (
         <p className="mt-6 text-ink/60">No recipes saved to this list yet.</p>
       ) : (
-        <ul className="mt-6 flex flex-col gap-3">
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center justify-between rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm"
-            >
-              <Link
-                to="/recipes/$recipeId"
-                params={{ recipeId: item.id }}
-                className="font-serif text-lg font-medium text-ink"
-              >
-                {item.title}
-              </Link>
-              {collection.canManage && (
-                <button
-                  type="button"
-                  onClick={() => handleRemove(item.id)}
-                  className="text-sm font-medium text-red-600 hover:text-red-700"
-                >
-                  Remove
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+            <ul className="mt-6 flex flex-col gap-3">
+              {items.map((item) => (
+                <CollectionRecipeRow
+                  key={item.id}
+                  item={item}
+                  canManage={collection.canManage}
+                  onRemove={handleRemove}
+                />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
+      )}
+
+      {toast && (
+        <Toast
+          message={`Removed "${toast.title}" from this list.`}
+          actionLabel="Undo"
+          onAction={handleUndoRemove}
+        />
       )}
     </div>
   );

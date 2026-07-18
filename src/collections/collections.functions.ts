@@ -8,6 +8,7 @@ import {
   collectionsForRecipeSchema,
   collectionShareSchema,
   toggleRecipeInCollectionSchema,
+  reorderRecipesInCollectionSchema,
   updateCollectionVisibilitySchema,
   listPublicCollectionsSchema,
 } from "./schemas";
@@ -22,6 +23,7 @@ import {
   renameOwnedCollection,
   deleteOwnedCollection,
   findCollectionsWithMembership,
+  reorderRecipesInCollection,
   revokeShareForCollection,
   toggleMembership,
   updateCollectionVisibility as updateOwnedCollectionVisibility,
@@ -125,6 +127,20 @@ export const toggleRecipeInCollection = createServerFn({ method: "POST" })
       data.collectionId,
       data.recipeId,
       context.user.id,
+      context.user.isAdmin,
+    );
+    if (!result) throw notFound();
+    return result;
+  });
+
+export const reorderCollectionRecipes = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .validator(reorderRecipesInCollectionSchema)
+  .handler(async ({ data, context }) => {
+    const result = await reorderRecipesInCollection(
+      data.collectionId,
+      context.user.id,
+      data.recipeIds,
       context.user.isAdmin,
     );
     if (!result) throw notFound();

@@ -31,7 +31,7 @@ const featureGroups = [
   {
     title: "Cookbooks & meal planning",
     description:
-      "Organize recipes into cookbooks, schedule them across a weekly calendar, and bulk-add a calendar's recipes to a grocery list in one click.",
+      "Organize recipes into cookbooks, drag to reorder them (with swipe-to-remove and an undo), schedule them across a weekly calendar, and bulk-add a calendar's recipes to a grocery list in one click.",
   },
   {
     title: "Grocery lists",

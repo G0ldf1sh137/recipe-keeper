@@ -100,6 +100,7 @@ export const collectionRecipes = pgTable(
       .notNull()
       .references(() => recipes.id, { onDelete: "cascade" }),
     addedAt: timestamp("added_at", { mode: "date" }).notNull().defaultNow(),
+    position: integer("position").notNull().default(0),
   },
   (table) => [primaryKey({ columns: [table.collectionId, table.recipeId] })],
 );

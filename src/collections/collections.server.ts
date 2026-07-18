@@ -108,7 +108,7 @@ export async function findRecipesInCollection(collectionId: string) {
     .from(collectionRecipes)
     .innerJoin(recipes, eq(collectionRecipes.recipeId, recipes.id))
     .where(eq(collectionRecipes.collectionId, collectionId))
-    .orderBy(collectionRecipes.addedAt);
+    .orderBy(collectionRecipes.position);
 }
 
 export async function insertCollection(name: string, ownerId: string) {
@@ -169,8 +169,34 @@ export async function toggleMembership(
     return { inCollection: false };
   }
 
-  await db.insert(collectionRecipes).values({ collectionId, recipeId });
+  const [{ maxPosition }] = await db
+    .select({ maxPosition: sql<number>`coalesce(max(${collectionRecipes.position}), -1)` })
+    .from(collectionRecipes)
+    .where(eq(collectionRecipes.collectionId, collectionId));
+  await db.insert(collectionRecipes).values({ collectionId, recipeId, position: maxPosition + 1 });
   return { inCollection: true };
+}
+
+export async function reorderRecipesInCollection(
+  collectionId: string,
+  ownerId: string,
+  recipeIds: string[],
+  isAdmin = false,
+) {
+  const collection = await findCollectionById(collectionId, ownerId, isAdmin);
+  if (!collection) return undefined;
+
+  await db.transaction(async (tx) => {
+    await Promise.all(
+      recipeIds.map((recipeId, position) =>
+        tx
+          .update(collectionRecipes)
+          .set({ position })
+          .where(and(eq(collectionRecipes.collectionId, collectionId), eq(collectionRecipes.recipeId, recipeId))),
+      ),
+    );
+  });
+  return { ok: true };
 }
 
 export async function updateCollectionVisibility(
