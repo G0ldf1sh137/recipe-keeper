@@ -435,8 +435,8 @@ export async function deleteOwnedRecipe(
   return deleted;
 }
 
-export async function forkRecipe(recipeId: string, ownerId: string, shareToken?: string) {
-  const original = await findRecipeById(recipeId, ownerId, shareToken);
+export async function forkRecipe(recipeId: string, ownerId: string, shareToken?: string, isAdmin = false) {
+  const original = await findRecipeById(recipeId, ownerId, shareToken, isAdmin);
   if (!original) return undefined;
 
   const [forked] = await db

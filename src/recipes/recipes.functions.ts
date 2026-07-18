@@ -108,7 +108,7 @@ export const forkRecipe = createServerFn({ method: "POST" })
   .middleware([requireNotBannedMiddleware])
   .validator(forkRecipeSchema)
   .handler(async ({ data, context }) => {
-    const result = await forkRecipeDb(data.recipeId, context.user.id, data.shareToken);
+    const result = await forkRecipeDb(data.recipeId, context.user.id, data.shareToken, context.user.isAdmin);
     if (!result) throw notFound();
     await insertNotification({
       recipientId: result.originalOwnerId,

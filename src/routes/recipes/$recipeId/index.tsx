@@ -165,7 +165,7 @@ function RecipePage() {
     setForking(true);
     try {
       const fork = await forkRecipeFn({ data: { recipeId: recipe.id, shareToken } });
-      await navigate({ to: "/recipes/$recipeId", params: { recipeId: fork.id } });
+      await navigate({ to: "/recipes/$recipeId/edit", params: { recipeId: fork.id } });
     } finally {
       setForking(false);
     }
