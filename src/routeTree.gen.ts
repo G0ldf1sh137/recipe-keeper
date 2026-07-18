@@ -45,6 +45,7 @@ import { Route as RecipesRecipeIdEditRouteImport } from './routes/recipes/$recip
 import { Route as RecipesRecipeIdCookRouteImport } from './routes/recipes/$recipeId/cook'
 import { Route as CollectionsCollectionIdPdfRouteImport } from './routes/collections/$collectionId/pdf'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth/google/callback'
+import { Route as ApiWebhooksStripeRouteImport } from './routes/api/webhooks/stripe'
 
 const SubscribersOnlyRoute = SubscribersOnlyRouteImport.update({
   id: '/subscribers-only',
@@ -228,6 +229,11 @@ const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
   path: '/auth/google/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksStripeRoute = ApiWebhooksStripeRouteImport.update({
+  id: '/api/webhooks/stripe',
+  path: '/api/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -255,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/messages/': typeof MessagesIndexRoute
   '/notifications/': typeof NotificationsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/collections/$collectionId/pdf': typeof CollectionsCollectionIdPdfRoute
   '/recipes/$recipeId/cook': typeof RecipesRecipeIdCookRoute
@@ -293,6 +300,7 @@ export interface FileRoutesByTo {
   '/messages': typeof MessagesIndexRoute
   '/notifications': typeof NotificationsIndexRoute
   '/recipes': typeof RecipesIndexRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/collections/$collectionId/pdf': typeof CollectionsCollectionIdPdfRoute
   '/recipes/$recipeId/cook': typeof RecipesRecipeIdCookRoute
@@ -332,6 +340,7 @@ export interface FileRoutesById {
   '/messages/': typeof MessagesIndexRoute
   '/notifications/': typeof NotificationsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
+  '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/collections/$collectionId/pdf': typeof CollectionsCollectionIdPdfRoute
   '/recipes/$recipeId/cook': typeof RecipesRecipeIdCookRoute
@@ -372,6 +381,7 @@ export interface FileRouteTypes {
     | '/messages/'
     | '/notifications/'
     | '/recipes/'
+    | '/api/webhooks/stripe'
     | '/auth/google/callback'
     | '/collections/$collectionId/pdf'
     | '/recipes/$recipeId/cook'
@@ -410,6 +420,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notifications'
     | '/recipes'
+    | '/api/webhooks/stripe'
     | '/auth/google/callback'
     | '/collections/$collectionId/pdf'
     | '/recipes/$recipeId/cook'
@@ -448,6 +459,7 @@ export interface FileRouteTypes {
     | '/messages/'
     | '/notifications/'
     | '/recipes/'
+    | '/api/webhooks/stripe'
     | '/auth/google/callback'
     | '/collections/$collectionId/pdf'
     | '/recipes/$recipeId/cook'
@@ -487,6 +499,7 @@ export interface RootRouteChildren {
   MessagesIndexRoute: typeof MessagesIndexRoute
   NotificationsIndexRoute: typeof NotificationsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
+  ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
   CollectionsCollectionIdPdfRoute: typeof CollectionsCollectionIdPdfRoute
   RecipesRecipeIdCookRoute: typeof RecipesRecipeIdCookRoute
@@ -754,6 +767,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthGoogleCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks/stripe': {
+      id: '/api/webhooks/stripe'
+      path: '/api/webhooks/stripe'
+      fullPath: '/api/webhooks/stripe'
+      preLoaderRoute: typeof ApiWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -783,6 +803,7 @@ const rootRouteChildren: RootRouteChildren = {
   MessagesIndexRoute: MessagesIndexRoute,
   NotificationsIndexRoute: NotificationsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
+  ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
   CollectionsCollectionIdPdfRoute: CollectionsCollectionIdPdfRoute,
   RecipesRecipeIdCookRoute: RecipesRecipeIdCookRoute,

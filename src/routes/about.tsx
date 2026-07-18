@@ -44,6 +44,11 @@ const featureGroups = [
       "List the ingredients you have on hand and see which recipes you can make right now, plus close matches showing exactly what you're missing. Pool your pantry with a household — invite people you live with so everyone's items count toward what you can make together.",
   },
   {
+    title: "Subscription",
+    description:
+      "Grocery lists, pantry mode, Meal Weeks, and AI import are subscriber features — subscribe for $5/month right from Settings, and manage or cancel anytime from the same page.",
+  },
+  {
     title: "Search & discovery",
     description:
       "Search recipes by title, tag, or ingredient in one box, browse every tag in use, browse public cookbooks from other users, and see recipes similar to the one you're viewing.",

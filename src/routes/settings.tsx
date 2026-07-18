@@ -14,6 +14,7 @@ import { updateMessagingPreferences } from "#/messages/messages.functions";
 import { AvatarUpload } from "#/uploads/AvatarUpload";
 import { getColorThemePreference } from "#/theme/theme.functions";
 import { ColorThemeSwitcher } from "#/theme/ColorThemeSwitcher";
+import { startBillingPortal, startCheckout } from "#/billing/billing.functions";
 import { visibilityValues, weekStartDayValues } from "#/db/schema";
 import type { Visibility, WeekStartDay } from "#/db/schema";
 
@@ -41,6 +42,40 @@ function SettingsPage() {
   const updateVisibilityDefaultsFn = useServerFn(updateVisibilityDefaults);
   const updateMessagingPreferencesFn = useServerFn(updateMessagingPreferences);
   const updateWeekStartDayFn = useServerFn(updateWeekStartDay);
+  const startCheckoutFn = useServerFn(startCheckout);
+  const startBillingPortalFn = useServerFn(startBillingPortal);
+
+  const [billingPending, setBillingPending] = useState(false);
+  const [billingError, setBillingError] = useState<string | null>(null);
+
+  async function handleSubscribe() {
+    setBillingPending(true);
+    setBillingError(null);
+    try {
+      const result = await startCheckoutFn();
+      if (result.error) {
+        setBillingError(result.error);
+        setBillingPending(false);
+        return;
+      }
+      window.location.href = result.url;
+    } catch {
+      setBillingError("Could not start checkout. Please try again.");
+      setBillingPending(false);
+    }
+  }
+
+  async function handleManageBilling() {
+    setBillingPending(true);
+    setBillingError(null);
+    try {
+      const result = await startBillingPortalFn();
+      window.location.href = result.url;
+    } catch {
+      setBillingError("Could not open billing portal. Please try again.");
+      setBillingPending(false);
+    }
+  }
 
   const [avatarOverrideUrl, setAvatarOverrideUrl] = useState(user.avatarOverrideUrl);
 
@@ -130,6 +165,42 @@ function SettingsPage() {
           onChange={handleAvatarChange}
         />
         <p className="text-sm text-ink/60">{user.email}</p>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-2">
+        <h2 className="font-serif text-xl font-semibold text-ink">Subscription</h2>
+        {billingError && <p className="text-red-600 dark:text-red-400">{billingError}</p>}
+        {user.isSubscriber && user.stripeSubscriptionId ? (
+          <>
+            <p className="text-sm text-ink/70">
+              You're subscribed ($5/month).
+              {user.stripeCurrentPeriodEnd &&
+                ` Renews ${user.stripeCurrentPeriodEnd.toLocaleDateString()}.`}
+            </p>
+            <button
+              type="button"
+              onClick={() => void handleManageBilling()}
+              disabled={billingPending}
+              className="self-start rounded-lg border-2 border-accent-300 px-4 py-2 font-medium text-ink transition-colors hover:bg-accent-50 disabled:opacity-50"
+            >
+              {billingPending ? "Loading..." : "Manage billing"}
+            </button>
+          </>
+        ) : user.isSubscriber ? (
+          <p className="text-sm text-ink/70">You have subscriber access (granted by an admin).</p>
+        ) : (
+          <>
+            <p className="text-sm text-ink/70">Subscribe for $5/month to unlock grocery lists, pantry, Meal Weeks, and AI import.</p>
+            <button
+              type="button"
+              onClick={() => void handleSubscribe()}
+              disabled={billingPending}
+              className="self-start rounded-lg bg-accent-600 px-4 py-2 font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
+            >
+              {billingPending ? "Redirecting..." : "Subscribe for $5/month"}
+            </button>
+          </>
+        )}
       </div>
 
       <div className="mt-6 flex flex-col gap-2">

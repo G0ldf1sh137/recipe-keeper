@@ -53,6 +53,10 @@ export const users = pgTable("users", {
     .notNull()
     .default("private"),
   weekStartDay: text("week_start_day", { enum: weekStartDayValues }).notNull().default("sun"),
+  stripeCustomerId: text("stripe_customer_id").unique(),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripeSubscriptionStatus: text("stripe_subscription_status"),
+  stripeCurrentPeriodEnd: timestamp("stripe_current_period_end", { mode: "date" }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
