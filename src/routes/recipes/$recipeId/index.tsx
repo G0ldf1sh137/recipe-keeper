@@ -381,7 +381,7 @@ function RecipePage() {
             const alt = `${recipe.title} photo ${i + 1}`;
             return (
               <button
-                key={url}
+                key={i}
                 type="button"
                 onClick={() => setZoomedImage({ src: url, alt })}
                 className={recipe.photoUrls.length === 1 ? "col-span-2" : ""}
@@ -463,7 +463,7 @@ function RecipePage() {
                   {step.imageUrls.map((url, j) => {
                     const alt = `Step ${i + 1} photo ${j + 1}`;
                     return (
-                      <button key={url} type="button" onClick={() => setZoomedImage({ src: url, alt })}>
+                      <button key={j} type="button" onClick={() => setZoomedImage({ src: url, alt })}>
                         <img
                           src={url}
                           alt={alt}
@@ -490,7 +490,13 @@ function RecipePage() {
             canSave={isSubscriber}
             isLoggedIn={!!user}
           />
-          <AddToCalendar recipeId={recipe.id} calendars={calendars} canSave={isSubscriber} isLoggedIn={!!user} />
+          <AddToCalendar
+            recipeId={recipe.id}
+            calendars={calendars}
+            canSave={isSubscriber}
+            isLoggedIn={!!user}
+            weekStartDay={user?.weekStartDay ?? "sun"}
+          />
         </div>
       </section>
 

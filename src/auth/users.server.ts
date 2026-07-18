@@ -1,7 +1,7 @@
 import { and, eq, ilike, isNotNull, ne, or } from "drizzle-orm";
 import { db } from "#/db/index";
 import { users } from "#/db/schema";
-import type { Visibility } from "#/db/schema";
+import type { Visibility, WeekStartDay } from "#/db/schema";
 import type { GoogleUserInfo } from "./google.server";
 
 function slugify(input: string) {
@@ -83,6 +83,10 @@ export async function updateUserVisibilityDefaults(
   prefs: { defaultRecipeVisibility: Visibility; defaultCollectionVisibility: Visibility },
 ) {
   return db.update(users).set(prefs).where(eq(users.id, userId)).returning();
+}
+
+export async function updateUserWeekStartDay(userId: string, weekStartDay: WeekStartDay) {
+  return db.update(users).set({ weekStartDay }).where(eq(users.id, userId)).returning();
 }
 
 export async function updateUserName(userId: string, name: string) {

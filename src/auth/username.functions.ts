@@ -4,12 +4,14 @@ import {
   updateNameSchema,
   updateUsernameSchema,
   updateVisibilityDefaultsSchema,
+  updateWeekStartDaySchema,
 } from "./schemas";
 import {
   updateUserAvatarOverride,
   updateUserName,
   updateUserUsername,
   updateUserVisibilityDefaults,
+  updateUserWeekStartDay,
 } from "./users.server";
 import { requireAuthMiddleware } from "./auth-middleware";
 
@@ -23,6 +25,14 @@ export const updateVisibilityDefaults = createServerFn({ method: "POST" })
   .validator(updateVisibilityDefaultsSchema)
   .handler(async ({ data, context }) => {
     const [updated] = await updateUserVisibilityDefaults(context.user.id, data);
+    return updated;
+  });
+
+export const updateWeekStartDay = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .validator(updateWeekStartDaySchema)
+  .handler(async ({ data, context }) => {
+    const [updated] = await updateUserWeekStartDay(context.user.id, data.weekStartDay);
     return updated;
   });
 

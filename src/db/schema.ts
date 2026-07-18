@@ -17,6 +17,9 @@ const timestamps = {
 export const visibilityValues = ["private", "public"] as const;
 export type Visibility = (typeof visibilityValues)[number];
 
+export const weekStartDayValues = ["sun", "mon"] as const;
+export type WeekStartDay = (typeof weekStartDayValues)[number];
+
 export type Ingredient = {
   qty: string;
   unit: string;
@@ -49,6 +52,7 @@ export const users = pgTable("users", {
   defaultCollectionVisibility: text("default_collection_visibility", { enum: visibilityValues })
     .notNull()
     .default("private"),
+  weekStartDay: text("week_start_day", { enum: weekStartDayValues }).notNull().default("sun"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 

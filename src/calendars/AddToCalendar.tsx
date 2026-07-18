@@ -3,9 +3,9 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { CalendarDays } from "lucide-react";
 import { createCalendar, addRecipeToCalendarDay, removeRecipeFromCalendarDay } from "./calendars.functions";
-import { dayOfWeekValues } from "#/db/schema";
-import type { DayOfWeek } from "#/db/schema";
+import type { DayOfWeek, WeekStartDay } from "#/db/schema";
 import { DropdownButton } from "#/ui/DropdownButton";
+import { orderedDayOfWeekValues } from "./weekOrder";
 
 const dayLabels: Record<DayOfWeek, string> = {
   mon: "Mon",
@@ -25,11 +25,13 @@ export function AddToCalendar({
   calendars,
   canSave,
   isLoggedIn = true,
+  weekStartDay = "sun",
 }: {
   recipeId: string;
   calendars: CalendarOption[];
   canSave: boolean;
   isLoggedIn?: boolean;
+  weekStartDay?: WeekStartDay;
 }) {
   const router = useRouter();
   const addFn = useServerFn(addRecipeToCalendarDay);
@@ -98,7 +100,7 @@ export function AddToCalendar({
             <div key={calendar.id}>
               <p className="text-sm font-medium text-ink/70">{calendar.name}</p>
               <div className="mt-1 flex flex-wrap gap-1">
-                {dayOfWeekValues.map((day) => {
+                {orderedDayOfWeekValues(weekStartDay).map((day) => {
                   const entry = calendar.entries.find((e) => e.dayOfWeek === day);
                   return (
                     <button

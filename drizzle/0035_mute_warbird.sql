@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "week_start_day" text DEFAULT 'sun' NOT NULL;

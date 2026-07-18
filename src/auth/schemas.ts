@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { visibilityValues } from "#/db/schema";
+import { visibilityValues, weekStartDayValues } from "#/db/schema";
 
 const visibilitySchema = z.enum(visibilityValues);
+const weekStartDaySchema = z.enum(weekStartDayValues);
 
 export const usernameSchema = z
   .string()
@@ -38,6 +39,10 @@ export const deleteUserSchema = z.object({
 export const updateVisibilityDefaultsSchema = z.object({
   defaultRecipeVisibility: visibilitySchema,
   defaultCollectionVisibility: visibilitySchema,
+});
+
+export const updateWeekStartDaySchema = z.object({
+  weekStartDay: weekStartDaySchema,
 });
 
 export const updateNameSchema = z.object({

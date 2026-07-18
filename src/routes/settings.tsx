@@ -7,12 +7,18 @@ import {
   updateName,
   updateUsername,
   updateVisibilityDefaults,
+  updateWeekStartDay,
 } from "#/auth/username.functions";
 import { updateNotificationPreferences } from "#/notifications/notifications.functions";
 import { updateMessagingPreferences } from "#/messages/messages.functions";
 import { AvatarUpload } from "#/uploads/AvatarUpload";
-import { visibilityValues } from "#/db/schema";
-import type { Visibility } from "#/db/schema";
+import { visibilityValues, weekStartDayValues } from "#/db/schema";
+import type { Visibility, WeekStartDay } from "#/db/schema";
+
+const weekStartDayLabels: Record<WeekStartDay, string> = {
+  sun: "Sunday",
+  mon: "Monday",
+};
 
 export const Route = createFileRoute("/settings")({
   beforeLoad: async () => {
@@ -32,6 +38,7 @@ function SettingsPage() {
   const updateNotificationPreferencesFn = useServerFn(updateNotificationPreferences);
   const updateVisibilityDefaultsFn = useServerFn(updateVisibilityDefaults);
   const updateMessagingPreferencesFn = useServerFn(updateMessagingPreferences);
+  const updateWeekStartDayFn = useServerFn(updateWeekStartDay);
 
   const [avatarOverrideUrl, setAvatarOverrideUrl] = useState(user.avatarOverrideUrl);
 
@@ -55,6 +62,8 @@ function SettingsPage() {
   const [defaultCollectionVisibility, setDefaultCollectionVisibility] = useState<Visibility>(
     user.defaultCollectionVisibility,
   );
+
+  const [weekStartDay, setWeekStartDay] = useState<WeekStartDay>(user.weekStartDay);
 
   const [saved, setSaved] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -98,6 +107,7 @@ function SettingsPage() {
     });
     await updateVisibilityDefaultsFn({ data: { defaultRecipeVisibility, defaultCollectionVisibility } });
     await updateMessagingPreferencesFn({ data: { restrictMessagesToFollowing } });
+    await updateWeekStartDayFn({ data: { weekStartDay } });
 
     if (!hasError) {
       setSaved(true);
@@ -257,6 +267,24 @@ function SettingsPage() {
               {visibilityValues.map((v) => (
                 <option key={v} value={v}>
                   {v}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h2 className="font-serif text-xl font-semibold text-ink">Meal Week</h2>
+          <label className="flex flex-col gap-1">
+            <span className="font-medium text-ink/70">Week starts on</span>
+            <select
+              className="rounded-lg border border-accent-100 bg-surface px-3 py-2 text-ink focus:border-accent-400 focus:outline-none"
+              value={weekStartDay}
+              onChange={(e) => setWeekStartDay(e.target.value as WeekStartDay)}
+            >
+              {weekStartDayValues.map((day) => (
+                <option key={day} value={day}>
+                  {weekStartDayLabels[day]}
                 </option>
               ))}
             </select>

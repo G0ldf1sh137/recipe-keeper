@@ -16,6 +16,7 @@ import {
   updateCalendarVisibility,
 } from "#/calendars/calendars.functions";
 import { CalendarDayColumn } from "#/calendars/CalendarDayColumn";
+import { orderedDayOfWeekValues } from "#/calendars/weekOrder";
 import { ShareControl } from "#/sharing/ShareControl";
 import { Toast } from "#/ui/Toast";
 import { getSessionUser } from "#/auth/auth.functions";
@@ -98,6 +99,7 @@ function sumDayMacros(entries: CalendarEntry[]) {
 
 function CalendarPage() {
   const { calendar, entriesByDay: loaderEntriesByDay, user, groceryLists, isSubscriber } = Route.useLoaderData();
+  const weekStartDay = user?.weekStartDay ?? "sun";
   const { st: shareToken } = Route.useSearch();
   const router = useRouter();
   const navigate = useNavigate();
@@ -363,7 +365,7 @@ function CalendarPage() {
           onDragCancel={handleDragCancel}
         >
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-7">
-            {dayOfWeekValues.map((day) => (
+            {orderedDayOfWeekValues(weekStartDay).map((day) => (
               <CalendarDayColumn
                 key={day}
                 day={day}
