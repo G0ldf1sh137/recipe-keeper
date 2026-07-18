@@ -12,6 +12,7 @@ import type { Visibility } from "#/db/schema";
 const recipesSearchSchema = z.object({
   visibility: z.enum(visibilityValues).optional(),
   q: z.string().min(1).optional(),
+  sortBy: z.enum(["recent", "topRated", "mostComments"]).optional(),
 });
 
 export const Route = createFileRoute("/recipes/")({
@@ -104,6 +105,15 @@ function RecipesListPage() {
     });
   }
 
+  function handleSortChange(value: string) {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        sortBy: (value || undefined) as "recent" | "topRated" | "mostComments" | undefined,
+      }),
+    });
+  }
+
   const hasFilters = Boolean(search.visibility || search.q);
 
   async function handleRandom() {
@@ -168,6 +178,19 @@ function RecipesListPage() {
           </select>
         </label>
 
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium text-ink/70">Sort by</span>
+          <select
+            className="rounded-lg border border-accent-100 bg-surface px-3 py-2 text-ink focus:border-accent-400 focus:outline-none"
+            value={search.sortBy ?? ""}
+            onChange={(e) => handleSortChange(e.target.value)}
+          >
+            <option value="">Most recent</option>
+            <option value="topRated">Highest rated</option>
+            <option value="mostComments">Most comments</option>
+          </select>
+        </label>
+
         <button
           type="submit"
           className="rounded-lg border-2 border-accent-300 px-4 py-2 font-medium text-ink transition-colors hover:bg-accent-50"
@@ -178,6 +201,7 @@ function RecipesListPage() {
         {hasFilters && (
           <Link
             to="/recipes"
+            search={{ sortBy: search.sortBy }}
             className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
           >
             Clear filters

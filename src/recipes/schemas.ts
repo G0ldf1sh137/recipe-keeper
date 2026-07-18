@@ -82,6 +82,7 @@ export const listRecipesSchema = z.object({
   ownerId: z.string().min(1).optional(),
   visibility: visibilitySchema.optional(),
   q: z.string().min(1).optional(),
+  sortBy: z.enum(["recent", "topRated", "mostComments"]).default("recent"),
   limit: z.coerce.number().min(1).max(100).default(24),
   offset: z.coerce.number().min(0).default(0),
 });

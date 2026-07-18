@@ -1,6 +1,6 @@
-import { and, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
+import { and, asc as ascOrder, desc as descOrder, eq, getTableColumns, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
-import { recipes, shares, users, ingredientNames, unitNames, tagNames } from "#/db/schema";
+import { recipes, shares, users, ingredientNames, unitNames, tagNames, ratings, comments } from "#/db/schema";
 import { deleteImageUrls } from "#/uploads/uploads.server";
 import type { createRecipeSchema, deleteRecipeSchema, updateRecipeSchema } from "./schemas";
 import type { z } from "zod";
@@ -10,6 +10,7 @@ type RecipeFilters = {
   ownerId?: string;
   visibility?: Visibility;
   q?: string;
+  sortBy?: "recent" | "topRated" | "mostComments";
   limit?: number;
   offset?: number;
 };
@@ -127,17 +128,62 @@ function buildRecipeFilterConditions(filters: RecipeFilters, viewerId: string | 
   return conditions;
 }
 
-export async function findRecipes(filters: RecipeFilters, viewerId: string | undefined) {
+// A recipe needs at least this many ratings before it's ranked by its average —
+// otherwise a single 5-star vote could outrank a recipe with dozens of solid reviews.
+const MIN_RATINGS_FOR_TOP_RATED = 3;
+
+function paginateRows<T>(rows: T[], limit: number | undefined) {
+  if (!limit) return { recipes: rows, hasMore: false };
+  return { recipes: rows.slice(0, limit), hasMore: rows.length > limit };
+}
+
+export async function findRecipes(
+  filters: RecipeFilters,
+  viewerId: string | undefined,
+): Promise<{ recipes: (typeof recipes.$inferSelect)[]; hasMore: boolean }> {
   const conditions = buildRecipeFilterConditions(filters, viewerId);
   const offset: number = filters.offset ?? 0;
   const limit: number | undefined = filters.limit;
+  const sortBy = filters.sortBy ?? "recent";
+
+  if (sortBy === "topRated") {
+    const query = db
+      .select(getTableColumns(recipes))
+      .from(recipes)
+      .leftJoin(ratings, eq(ratings.recipeId, recipes.id))
+      .where(and(...conditions))
+      .groupBy(recipes.id)
+      .orderBy(
+        descOrder(sql`(count(${ratings.value}) >= ${MIN_RATINGS_FOR_TOP_RATED})`),
+        descOrder(sql`avg(${ratings.value})`),
+        descOrder(sql`count(${ratings.value})`),
+        descOrder(recipes.createdAt),
+        ascOrder(recipes.id),
+      )
+      .$dynamic();
+    const rows = limit ? await query.limit(limit + 1).offset(offset) : await query;
+    return paginateRows(rows, limit);
+  }
+
+  if (sortBy === "mostComments") {
+    const query = db
+      .select(getTableColumns(recipes))
+      .from(recipes)
+      .leftJoin(comments, eq(comments.recipeId, recipes.id))
+      .where(and(...conditions))
+      .groupBy(recipes.id)
+      .orderBy(descOrder(sql`count(${comments.id})`), descOrder(recipes.createdAt), ascOrder(recipes.id))
+      .$dynamic();
+    const rows = limit ? await query.limit(limit + 1).offset(offset) : await query;
+    return paginateRows(rows, limit);
+  }
+
   const rows = await db.query.recipes.findMany({
     where: and(...conditions),
     orderBy: (r, { desc, asc }) => [desc(r.createdAt), asc(r.id)],
     ...(limit ? { limit: limit + 1, offset } : {}),
   });
-  if (!limit) return { recipes: rows, hasMore: false };
-  return { recipes: rows.slice(0, limit), hasMore: rows.length > limit };
+  return paginateRows(rows, limit);
 }
 
 export async function findRandomRecipeId(filters: RecipeFilters, viewerId: string | undefined) {
