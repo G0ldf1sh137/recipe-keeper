@@ -6,7 +6,7 @@ const featureGroups = [
   {
     title: "Recipe basics",
     description:
-      "Write up a recipe with ingredients, step-by-step instructions, photos, tags, and optional nutrition info (yield, calories, protein, carbs, fat).",
+      "Write up a recipe with ingredients, step-by-step instructions, photos (click any photo to see it full-size), tags, and optional nutrition info (yield, calories, protein, carbs, fat).",
   },
   {
     title: "AI-powered import",

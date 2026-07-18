@@ -32,6 +32,7 @@ import { ReportButton } from "#/reports/ReportButton";
 import { scaleQuantity } from "#/recipes/quantity";
 import { useRecipeScale } from "#/recipes/useRecipeScale";
 import { ScaleToggle } from "#/recipes/ScaleToggle";
+import { ImageModal } from "#/ui/ImageModal";
 
 const recipeSearchSchema = z.object({ st: z.string().optional() });
 
@@ -101,6 +102,7 @@ function RecipePage() {
   const [deleting, setDeleting] = useState(false);
   const [forking, setForking] = useState(false);
   const { scale, setScale, customInput, handleCustomInputChange, activeFactor, isUnscaled } = useRecipeScale();
+  const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null);
 
   const [related, setRelated] = useState<Awaited<ReturnType<typeof getRelatedRecipes>> | null>(null);
   const [similarRatings, setSimilarRatings] = useState<Awaited<ReturnType<typeof getRatingSummaries>>>({});
@@ -334,16 +336,19 @@ function RecipePage() {
 
       {recipe.photoUrls.length > 0 && (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {recipe.photoUrls.map((url, i) => (
-            <img
-              key={url}
-              src={url}
-              alt={`${recipe.title} photo ${i + 1}`}
-              className={`w-full rounded-xl object-cover shadow-sm ${
-                recipe.photoUrls.length === 1 ? "col-span-2" : ""
-              }`}
-            />
-          ))}
+          {recipe.photoUrls.map((url, i) => {
+            const alt = `${recipe.title} photo ${i + 1}`;
+            return (
+              <button
+                key={url}
+                type="button"
+                onClick={() => setZoomedImage({ src: url, alt })}
+                className={recipe.photoUrls.length === 1 ? "col-span-2" : ""}
+              >
+                <img src={url} alt={alt} className="w-full cursor-zoom-in rounded-xl object-cover shadow-sm" />
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -391,14 +396,18 @@ function RecipePage() {
               {step.text}
               {step.imageUrls.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {step.imageUrls.map((url, j) => (
-                    <img
-                      key={url}
-                      src={url}
-                      alt={`Step ${i + 1} photo ${j + 1}`}
-                      className="max-h-48 rounded-lg object-cover shadow-sm"
-                    />
-                  ))}
+                  {step.imageUrls.map((url, j) => {
+                    const alt = `Step ${i + 1} photo ${j + 1}`;
+                    return (
+                      <button key={url} type="button" onClick={() => setZoomedImage({ src: url, alt })}>
+                        <img
+                          src={url}
+                          alt={alt}
+                          className="max-h-48 cursor-zoom-in rounded-lg object-cover shadow-sm"
+                        />
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </li>
@@ -471,6 +480,8 @@ function RecipePage() {
         currentUserId={user?.id}
         isAdmin={!!user?.isAdmin}
       />
+
+      <ImageModal image={zoomedImage} onClose={() => setZoomedImage(null)} />
     </div>
   );
 }
