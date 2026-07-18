@@ -1,11 +1,12 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "#/db/index";
-import { reports, recipes, comments, users } from "#/db/schema";
+import { reports, recipes, comments, messages, users } from "#/db/schema";
 
 export async function insertReport(input: {
   reporterId: string;
   recipeId?: string;
   commentId?: string;
+  messageId?: string;
   reason: string;
 }) {
   const [report] = await db.insert(reports).values(input).returning();
@@ -19,6 +20,7 @@ export type ReportRow = {
   reporter: { id: string; name: string };
   recipe: { id: string; title: string } | null;
   comment: { id: string; body: string; recipeId: string } | null;
+  message: { id: string; body: string } | null;
 };
 
 export async function findOpenReports(): Promise<ReportRow[]> {
@@ -34,11 +36,14 @@ export async function findOpenReports(): Promise<ReportRow[]> {
       commentId: comments.id,
       commentBody: comments.body,
       commentRecipeId: comments.recipeId,
+      messageId: messages.id,
+      messageBody: messages.body,
     })
     .from(reports)
     .innerJoin(users, eq(reports.reporterId, users.id))
     .leftJoin(recipes, eq(reports.recipeId, recipes.id))
     .leftJoin(comments, eq(reports.commentId, comments.id))
+    .leftJoin(messages, eq(reports.messageId, messages.id))
     .where(eq(reports.status, "open"))
     .orderBy(desc(reports.createdAt));
 
@@ -51,6 +56,7 @@ export async function findOpenReports(): Promise<ReportRow[]> {
     comment: row.commentId
       ? { id: row.commentId, body: row.commentBody!, recipeId: row.commentRecipeId! }
       : null,
+    message: row.messageId ? { id: row.messageId, body: row.messageBody! } : null,
   }));
 }
 

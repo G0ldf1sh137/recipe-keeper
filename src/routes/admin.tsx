@@ -6,6 +6,7 @@ import { deleteUser, searchUsers, setUserAdmin, setUserIsSubscriber } from "#/au
 import { startImpersonation } from "#/auth/impersonation.functions";
 import { listOpenReports, resolveReport } from "#/reports/reports.functions";
 import { deleteComment } from "#/comments/comments.functions";
+import { deleteMessage } from "#/messages/messages.functions";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
@@ -28,6 +29,7 @@ function AdminPage() {
   const setUserIsSubscriberFn = useServerFn(setUserIsSubscriber);
   const resolveReportFn = useServerFn(resolveReport);
   const deleteCommentFn = useServerFn(deleteComment);
+  const deleteMessageFn = useServerFn(deleteMessage);
   const searchUsersFn = useServerFn(searchUsers);
   const startImpersonationFn = useServerFn(startImpersonation);
   const deleteUserFn = useServerFn(deleteUser);
@@ -76,6 +78,12 @@ function AdminPage() {
   async function handleDeleteComment(commentId: string) {
     if (!window.confirm("Delete this comment? This can't be undone.")) return;
     await deleteCommentFn({ data: { commentId } });
+    await router.invalidate();
+  }
+
+  async function handleDeleteMessage(messageId: string) {
+    if (!window.confirm("Delete this message? This can't be undone.")) return;
+    await deleteMessageFn({ data: { messageId } });
     await router.invalidate();
   }
 
@@ -135,6 +143,9 @@ function AdminPage() {
                     </Link>
                   </div>
                 )}
+                {report.message && (
+                  <p className="mt-1 whitespace-pre-wrap text-ink/80">"{report.message.body}"</p>
+                )}
                 <p className="mt-2 text-sm text-ink/70">Reason: {report.reason}</p>
                 <div className="mt-2 flex gap-3">
                   {report.comment ? (
@@ -145,6 +156,23 @@ function AdminPage() {
                         className="text-sm font-medium text-red-600 hover:text-red-700"
                       >
                         Delete comment
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleResolve(report.id)}
+                        className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+                      >
+                        Dismiss
+                      </button>
+                    </>
+                  ) : report.message ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteMessage(report.message!.id)}
+                        className="text-sm font-medium text-red-600 hover:text-red-700"
+                      >
+                        Delete message
                       </button>
                       <button
                         type="button"

@@ -3,12 +3,13 @@ import { HeadContent, Scripts, createRootRoute, Link, useRouter } from '@tanstac
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { useServerFn } from '@tanstack/react-start'
-import { Bell } from 'lucide-react'
+import { Bell, MessageCircle } from 'lucide-react'
 import { getSessionUser, logout } from '#/auth/auth.functions'
 import { getImpersonationStatus, endImpersonation } from '#/auth/impersonation.functions'
 import { getThemePreference } from '#/theme/theme.functions'
 import { ThemeToggle } from '#/theme/ThemeToggle'
 import { getUnreadNotificationCount } from '#/notifications/notifications.functions'
+import { getUnreadMessageCount } from '#/messages/messages.functions'
 
 import appCss from '../styles.css?url'
 
@@ -47,19 +48,20 @@ export const Route = createRootRoute({
     ],
   }),
   loader: async () => {
-    const [user, theme, unreadCount, impersonationStatus] = await Promise.all([
+    const [user, theme, unreadCount, unreadMessageCount, impersonationStatus] = await Promise.all([
       getSessionUser(),
       getThemePreference(),
       getUnreadNotificationCount(),
+      getUnreadMessageCount(),
       getImpersonationStatus(),
     ])
-    return { user, theme, unreadCount, impersonationStatus }
+    return { user, theme, unreadCount, unreadMessageCount, impersonationStatus }
   },
   shellComponent: RootDocument,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { user, theme, unreadCount, impersonationStatus } = Route.useLoaderData()
+  const { user, theme, unreadCount, unreadMessageCount, impersonationStatus } = Route.useLoaderData()
   const router = useRouter()
   const isCookMode = /^\/recipes\/[^/]+\/cook$/.test(router.state.location.pathname)
 
@@ -79,7 +81,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {!isCookMode && (
-          <AuthHeader user={user} theme={theme} unreadCount={unreadCount} impersonationStatus={impersonationStatus} />
+          <AuthHeader
+            user={user}
+            theme={theme}
+            unreadCount={unreadCount}
+            unreadMessageCount={unreadMessageCount}
+            impersonationStatus={impersonationStatus}
+          />
         )}
         {children}
         <TanStackDevtools
@@ -179,15 +187,30 @@ function NotificationBell({ unreadCount, onNavigate }: { unreadCount: number; on
   )
 }
 
+function MessagesBell({ unreadCount, onNavigate }: { unreadCount: number; onNavigate?: () => void }) {
+  return (
+    <Link to="/messages" onClick={onNavigate} className="relative text-accent-600 hover:text-accent-700 dark:hover:text-accent-400">
+      <MessageCircle size={20} />
+      {unreadCount > 0 && (
+        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+      )}
+    </Link>
+  )
+}
+
 function AuthHeader({
   user,
   theme,
   unreadCount,
+  unreadMessageCount,
   impersonationStatus,
 }: {
   user: Awaited<ReturnType<typeof getSessionUser>>
   theme: Awaited<ReturnType<typeof getThemePreference>>
   unreadCount: number
+  unreadMessageCount: number
   impersonationStatus: Awaited<ReturnType<typeof getImpersonationStatus>>
 }) {
   const router = useRouter()
@@ -311,6 +334,7 @@ function AuthHeader({
           {user ? (
             <>
               <NotificationBell unreadCount={unreadCount} />
+              <MessagesBell unreadCount={unreadMessageCount} />
               <div className="hidden items-center gap-3 sm:flex">{renderNavLinks(user)}</div>
               <button
                 type="button"

@@ -59,6 +59,11 @@ const featureGroups = [
       "Rate and comment on recipes, fork someone else's recipe to make your own version, follow other users from their profile or any of their recipes, and get notified when someone comments on, rates, forks, or follows you — with per-event controls in Settings if you'd rather not hear about all four.",
   },
   {
+    title: "Direct messages",
+    description:
+      "Send another user a private message from their profile page, with its own inbox and unread-count icon separate from your recipe-activity notifications. You can restrict messages to only people you follow in Settings, and report an abusive message for review.",
+  },
+  {
     title: "Personal notes",
     description: "Keep a private note on any recipe — only you can see it, not even the recipe's owner.",
   },

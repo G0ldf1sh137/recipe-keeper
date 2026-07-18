@@ -93,6 +93,13 @@ export async function updateUserAvatarOverride(userId: string, avatarOverrideUrl
   return db.update(users).set({ avatarOverrideUrl }).where(eq(users.id, userId)).returning();
 }
 
+export async function updateUserMessagingPreferences(
+  userId: string,
+  prefs: { restrictMessagesToFollowing: boolean },
+) {
+  return db.update(users).set(prefs).where(eq(users.id, userId)).returning();
+}
+
 export async function deleteUser(userId: string) {
   return db.delete(users).where(eq(users.id, userId)).returning();
 }

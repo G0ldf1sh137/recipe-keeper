@@ -47,3 +47,7 @@ export const updateNameSchema = z.object({
 export const updateAvatarOverrideSchema = z.object({
   avatarOverrideUrl: z.string().url().nullable(),
 });
+
+export const devLoginSchema = z.object({
+  username: z.string().trim().min(1),
+});

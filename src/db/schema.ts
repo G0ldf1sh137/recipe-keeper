@@ -42,6 +42,7 @@ export const users = pgTable("users", {
   notifyOnRating: boolean("notify_on_rating").notNull().default(true),
   notifyOnFork: boolean("notify_on_fork").notNull().default(true),
   notifyOnFollow: boolean("notify_on_follow").notNull().default(true),
+  restrictMessagesToFollowing: boolean("restrict_messages_to_following").notNull().default(false),
   defaultRecipeVisibility: text("default_recipe_visibility", { enum: visibilityValues })
     .notNull()
     .default("public"),
@@ -140,6 +141,34 @@ export const follows = pgTable(
   },
   (table) => [primaryKey({ columns: [table.followerId, table.followingId] })],
 );
+
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: id(),
+    user1Id: text("user1_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    user2Id: text("user2_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("conversations_pair_idx").on(table.user1Id, table.user2Id)],
+);
+
+export const messages = pgTable("messages", {
+  id: id(),
+  conversationId: text("conversation_id")
+    .notNull()
+    .references(() => conversations.id, { onDelete: "cascade" }),
+  senderId: text("sender_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  readAt: timestamp("read_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
 
 export const dayOfWeekValues = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 export type DayOfWeek = (typeof dayOfWeekValues)[number];
@@ -299,6 +328,7 @@ export const reports = pgTable("reports", {
     .references(() => users.id, { onDelete: "cascade" }),
   recipeId: text("recipe_id").references(() => recipes.id, { onDelete: "cascade" }),
   commentId: text("comment_id").references(() => comments.id, { onDelete: "cascade" }),
+  messageId: text("message_id").references(() => messages.id, { onDelete: "cascade" }),
   reason: text("reason").notNull(),
   status: text("status", { enum: reportStatusValues }).notNull().default("open"),
   resolvedBy: text("resolved_by").references(() => users.id, { onDelete: "set null" }),

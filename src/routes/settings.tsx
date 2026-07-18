@@ -9,6 +9,7 @@ import {
   updateVisibilityDefaults,
 } from "#/auth/username.functions";
 import { updateNotificationPreferences } from "#/notifications/notifications.functions";
+import { updateMessagingPreferences } from "#/messages/messages.functions";
 import { AvatarUpload } from "#/uploads/AvatarUpload";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
@@ -30,6 +31,7 @@ function SettingsPage() {
   const updateAvatarOverrideFn = useServerFn(updateAvatarOverride);
   const updateNotificationPreferencesFn = useServerFn(updateNotificationPreferences);
   const updateVisibilityDefaultsFn = useServerFn(updateVisibilityDefaults);
+  const updateMessagingPreferencesFn = useServerFn(updateMessagingPreferences);
 
   const [avatarOverrideUrl, setAvatarOverrideUrl] = useState(user.avatarOverrideUrl);
 
@@ -43,6 +45,9 @@ function SettingsPage() {
   const [notifyOnRating, setNotifyOnRating] = useState(user.notifyOnRating);
   const [notifyOnFork, setNotifyOnFork] = useState(user.notifyOnFork);
   const [notifyOnFollow, setNotifyOnFollow] = useState(user.notifyOnFollow);
+  const [restrictMessagesToFollowing, setRestrictMessagesToFollowing] = useState(
+    user.restrictMessagesToFollowing,
+  );
 
   const [defaultRecipeVisibility, setDefaultRecipeVisibility] = useState<Visibility>(
     user.defaultRecipeVisibility,
@@ -92,6 +97,7 @@ function SettingsPage() {
       data: { notifyOnComment, notifyOnRating, notifyOnFork, notifyOnFollow },
     });
     await updateVisibilityDefaultsFn({ data: { defaultRecipeVisibility, defaultCollectionVisibility } });
+    await updateMessagingPreferencesFn({ data: { restrictMessagesToFollowing } });
 
     if (!hasError) {
       setSaved(true);
@@ -208,6 +214,19 @@ function SettingsPage() {
               onChange={(e) => setNotifyOnFollow(e.target.checked)}
             />
             follows me
+          </label>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h2 className="font-serif text-xl font-semibold text-ink">Messaging</h2>
+          <label className="flex items-center gap-2 text-ink/70">
+            <input
+              type="checkbox"
+              className="accent-accent-600"
+              checked={restrictMessagesToFollowing}
+              onChange={(e) => setRestrictMessagesToFollowing(e.target.checked)}
+            />
+            Only allow messages from people I follow
           </label>
         </div>
 

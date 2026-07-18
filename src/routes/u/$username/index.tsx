@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { getProfile } from "#/profile/profile.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
 import { FollowButton } from "#/follows/FollowButton";
+import { MessageButton } from "#/messages/MessageButton";
 
 export const Route = createFileRoute("/u/$username/")({
   loader: async ({ params }) => getProfile({ data: { username: params.username } }),
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/u/$username/")({
 });
 
 function ProfilePage() {
-  const { user, recipes, collections, followerCount, followingCount, canFollow, isFollowing } =
+  const { user, recipes, collections, followerCount, followingCount, canFollow, isFollowing, canMessage } =
     Route.useLoaderData();
   const [query, setQuery] = useState("");
 
@@ -45,6 +46,7 @@ function ProfilePage() {
           <p className="text-sm text-ink/60">@{user.username}</p>
         </div>
         {canFollow && <FollowButton targetUserId={user.id} initiallyFollowing={isFollowing} />}
+        {canMessage && <MessageButton targetUserId={user.id} />}
       </div>
 
       <p className="mt-2 text-sm text-ink/60">

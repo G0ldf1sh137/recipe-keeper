@@ -8,6 +8,7 @@ export async function getPublicProfile(username: string, viewerId: string | unde
   if (!user) return undefined;
 
   const canFollow = !!viewerId && viewerId !== user.id;
+  const canMessage = !!viewerId && viewerId !== user.id;
 
   const [{ recipes }, collections, followerCount, followingCount, existingFollow] = await Promise.all([
     findRecipes({ ownerId: user.id, visibility: "public" }, undefined),
@@ -31,5 +32,6 @@ export async function getPublicProfile(username: string, viewerId: string | unde
     followingCount,
     canFollow,
     isFollowing,
+    canMessage,
   };
 }

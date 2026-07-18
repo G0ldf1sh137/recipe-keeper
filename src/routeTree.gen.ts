@@ -18,13 +18,16 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
 import { Route as NotificationsIndexRouteImport } from './routes/notifications/index'
+import { Route as MessagesIndexRouteImport } from './routes/messages/index'
 import { Route as GroceryIndexRouteImport } from './routes/grocery/index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections/index'
 import { Route as CalendarsIndexRouteImport } from './routes/calendars/index'
 import { Route as SharedTokenRouteImport } from './routes/shared/$token'
 import { Route as RecipesTagsRouteImport } from './routes/recipes/tags'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
+import { Route as MessagesConversationIdRouteImport } from './routes/messages/$conversationId'
 import { Route as GroceryListIdRouteImport } from './routes/grocery/$listId'
+import { Route as DevLoginRouteImport } from './routes/dev/login'
 import { Route as CollectionsSavedRouteImport } from './routes/collections/saved'
 import { Route as CollectionsBrowseRouteImport } from './routes/collections/browse'
 import { Route as CalendarsCalendarIdRouteImport } from './routes/calendars/$calendarId'
@@ -88,6 +91,11 @@ const NotificationsIndexRoute = NotificationsIndexRouteImport.update({
   path: '/notifications/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MessagesIndexRoute = MessagesIndexRouteImport.update({
+  id: '/messages/',
+  path: '/messages/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GroceryIndexRoute = GroceryIndexRouteImport.update({
   id: '/grocery/',
   path: '/grocery/',
@@ -118,9 +126,19 @@ const RecipesNewRoute = RecipesNewRouteImport.update({
   path: '/recipes/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MessagesConversationIdRoute = MessagesConversationIdRouteImport.update({
+  id: '/messages/$conversationId',
+  path: '/messages/$conversationId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GroceryListIdRoute = GroceryListIdRouteImport.update({
   id: '/grocery/$listId',
   path: '/grocery/$listId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DevLoginRoute = DevLoginRouteImport.update({
+  id: '/dev/login',
+  path: '/dev/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CollectionsSavedRoute = CollectionsSavedRouteImport.update({
@@ -225,13 +243,16 @@ export interface FileRoutesByFullPath {
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/browse': typeof CollectionsBrowseRoute
   '/collections/saved': typeof CollectionsSavedRoute
+  '/dev/login': typeof DevLoginRoute
   '/grocery/$listId': typeof GroceryListIdRoute
+  '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
   '/calendars/': typeof CalendarsIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/grocery/': typeof GroceryIndexRoute
+  '/messages/': typeof MessagesIndexRoute
   '/notifications/': typeof NotificationsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -260,13 +281,16 @@ export interface FileRoutesByTo {
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/browse': typeof CollectionsBrowseRoute
   '/collections/saved': typeof CollectionsSavedRoute
+  '/dev/login': typeof DevLoginRoute
   '/grocery/$listId': typeof GroceryListIdRoute
+  '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
   '/calendars': typeof CalendarsIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/grocery': typeof GroceryIndexRoute
+  '/messages': typeof MessagesIndexRoute
   '/notifications': typeof NotificationsIndexRoute
   '/recipes': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -296,13 +320,16 @@ export interface FileRoutesById {
   '/calendars/$calendarId': typeof CalendarsCalendarIdRoute
   '/collections/browse': typeof CollectionsBrowseRoute
   '/collections/saved': typeof CollectionsSavedRoute
+  '/dev/login': typeof DevLoginRoute
   '/grocery/$listId': typeof GroceryListIdRoute
+  '/messages/$conversationId': typeof MessagesConversationIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
   '/calendars/': typeof CalendarsIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/grocery/': typeof GroceryIndexRoute
+  '/messages/': typeof MessagesIndexRoute
   '/notifications/': typeof NotificationsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -333,13 +360,16 @@ export interface FileRouteTypes {
     | '/calendars/$calendarId'
     | '/collections/browse'
     | '/collections/saved'
+    | '/dev/login'
     | '/grocery/$listId'
+    | '/messages/$conversationId'
     | '/recipes/new'
     | '/recipes/tags'
     | '/shared/$token'
     | '/calendars/'
     | '/collections/'
     | '/grocery/'
+    | '/messages/'
     | '/notifications/'
     | '/recipes/'
     | '/auth/google/callback'
@@ -368,13 +398,16 @@ export interface FileRouteTypes {
     | '/calendars/$calendarId'
     | '/collections/browse'
     | '/collections/saved'
+    | '/dev/login'
     | '/grocery/$listId'
+    | '/messages/$conversationId'
     | '/recipes/new'
     | '/recipes/tags'
     | '/shared/$token'
     | '/calendars'
     | '/collections'
     | '/grocery'
+    | '/messages'
     | '/notifications'
     | '/recipes'
     | '/auth/google/callback'
@@ -403,13 +436,16 @@ export interface FileRouteTypes {
     | '/calendars/$calendarId'
     | '/collections/browse'
     | '/collections/saved'
+    | '/dev/login'
     | '/grocery/$listId'
+    | '/messages/$conversationId'
     | '/recipes/new'
     | '/recipes/tags'
     | '/shared/$token'
     | '/calendars/'
     | '/collections/'
     | '/grocery/'
+    | '/messages/'
     | '/notifications/'
     | '/recipes/'
     | '/auth/google/callback'
@@ -439,13 +475,16 @@ export interface RootRouteChildren {
   CalendarsCalendarIdRoute: typeof CalendarsCalendarIdRoute
   CollectionsBrowseRoute: typeof CollectionsBrowseRoute
   CollectionsSavedRoute: typeof CollectionsSavedRoute
+  DevLoginRoute: typeof DevLoginRoute
   GroceryListIdRoute: typeof GroceryListIdRoute
+  MessagesConversationIdRoute: typeof MessagesConversationIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
   RecipesTagsRoute: typeof RecipesTagsRoute
   SharedTokenRoute: typeof SharedTokenRoute
   CalendarsIndexRoute: typeof CalendarsIndexRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
   GroceryIndexRoute: typeof GroceryIndexRoute
+  MessagesIndexRoute: typeof MessagesIndexRoute
   NotificationsIndexRoute: typeof NotificationsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
@@ -526,6 +565,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotificationsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/messages/': {
+      id: '/messages/'
+      path: '/messages'
+      fullPath: '/messages/'
+      preLoaderRoute: typeof MessagesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/grocery/': {
       id: '/grocery/'
       path: '/grocery'
@@ -568,11 +614,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/messages/$conversationId': {
+      id: '/messages/$conversationId'
+      path: '/messages/$conversationId'
+      fullPath: '/messages/$conversationId'
+      preLoaderRoute: typeof MessagesConversationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/grocery/$listId': {
       id: '/grocery/$listId'
       path: '/grocery/$listId'
       fullPath: '/grocery/$listId'
       preLoaderRoute: typeof GroceryListIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dev/login': {
+      id: '/dev/login'
+      path: '/dev/login'
+      fullPath: '/dev/login'
+      preLoaderRoute: typeof DevLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/collections/saved': {
@@ -711,13 +771,16 @@ const rootRouteChildren: RootRouteChildren = {
   CalendarsCalendarIdRoute: CalendarsCalendarIdRoute,
   CollectionsBrowseRoute: CollectionsBrowseRoute,
   CollectionsSavedRoute: CollectionsSavedRoute,
+  DevLoginRoute: DevLoginRoute,
   GroceryListIdRoute: GroceryListIdRoute,
+  MessagesConversationIdRoute: MessagesConversationIdRoute,
   RecipesNewRoute: RecipesNewRoute,
   RecipesTagsRoute: RecipesTagsRoute,
   SharedTokenRoute: SharedTokenRoute,
   CalendarsIndexRoute: CalendarsIndexRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
   GroceryIndexRoute: GroceryIndexRoute,
+  MessagesIndexRoute: MessagesIndexRoute,
   NotificationsIndexRoute: NotificationsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
