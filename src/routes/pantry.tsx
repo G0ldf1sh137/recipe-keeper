@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { createFileRoute, redirect, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -28,6 +28,7 @@ import {
   getPendingInviteUsernames,
 } from "#/households/households.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
+import { RecipeCardSkeleton } from "#/recipes/RecipeCardSkeleton";
 import { DropdownButton } from "#/ui/DropdownButton";
 
 export const Route = createFileRoute("/pantry")({
@@ -40,16 +41,14 @@ export const Route = createFileRoute("/pantry")({
     return { user };
   },
   loader: async ({ context }) => {
-    const [pantryItems, knownIngredientNames, matches, household, groups, invites, knownUsernames] =
-      await Promise.all([
-        getPantryItems(),
-        getIngredientNames(),
-        getPantryMatches(),
-        getMyHouseholdInfo(),
-        getPantryGroups(),
-        getMyInvites(),
-        getKnownUsernames(),
-      ]);
+    const [pantryItems, knownIngredientNames, household, groups, invites, knownUsernames] = await Promise.all([
+      getPantryItems(),
+      getIngredientNames(),
+      getMyHouseholdInfo(),
+      getPantryGroups(),
+      getMyInvites(),
+      getKnownUsernames(),
+    ]);
     const pendingInviteUsernames =
       household && household.ownerId === context.user.id
         ? await getPendingInviteUsernames({ data: { householdId: household.id } })
@@ -57,7 +56,6 @@ export const Route = createFileRoute("/pantry")({
     return {
       pantryItems,
       knownIngredientNames,
-      matches,
       household,
       groups,
       invites,
@@ -114,9 +112,23 @@ function PantryPage() {
   const [inviteSubmitting, setInviteSubmitting] = useState(false);
 
   const [pantryNames, setPantryNames] = useState(loaderData.pantryItems);
-  const [matches, setMatches] = useState(loaderData.matches);
+  const [matches, setMatches] = useState<PantryMatch[] | null>(null);
   const [groups, setGroups] = useState(loaderData.groups);
   const [draft, setDraft] = useState("");
+
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    cancelledRef.current = false;
+    setMatches(null);
+    void getPantryMatchesFn().then((result) => {
+      if (cancelledRef.current) return;
+      setMatches(result);
+    });
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [getPantryMatchesFn]);
 
   function applyMatches(nextMatches: PantryMatch[]) {
     if (!("startViewTransition" in document)) {
@@ -265,8 +277,8 @@ function PantryPage() {
 
   const isHouseholdOwner = household?.ownerId === loaderData.userId;
   const pantryNamesLower = new Set((groups ? groups.flatMap((g) => g.items) : pantryNames).map((name) => name.toLowerCase()));
-  const readyToMake = matches.filter((match) => match.totalIngredients === match.matchedIngredients);
-  const closeMatches = matches.filter((match) => match.totalIngredients > match.matchedIngredients);
+  const readyToMake = (matches ?? []).filter((match) => match.totalIngredients === match.matchedIngredients);
+  const closeMatches = (matches ?? []).filter((match) => match.totalIngredients > match.matchedIngredients);
 
   // Excludes yourself and anyone already a member or already-invited, since inviting either fails server-side.
   const householdInviteUsernames = loaderData.knownUsernames.filter(
@@ -525,7 +537,18 @@ function PantryPage() {
         )
       )}
 
-      {matches.length === 0 ? (
+      {matches === null ? (
+        <section className="mt-8">
+          <h2 className="font-serif text-xl font-semibold text-ink">Checking your pantry...</h2>
+          <ul className="mt-3 flex flex-col gap-3">
+            {[0, 1, 2].map((i) => (
+              <li key={i}>
+                <RecipeCardSkeleton />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : matches.length === 0 ? (
         <p className="mt-6 text-ink/60">
           {pantryNames.length === 0 && !household
             ? "Add a few ingredients to see what you can make."

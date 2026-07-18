@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
@@ -7,9 +7,10 @@ import {
   renameGroceryList,
   deleteGroceryList,
   addGroceryItem,
-  deleteGroceryItem,
   setGroupChecked,
 } from "#/grocery/grocery.functions";
+import { addPantryItem } from "#/pantry/pantry.functions";
+import { Toast } from "#/ui/Toast";
 
 export const Route = createFileRoute("/grocery/$listId")({
   beforeLoad: async () => {
@@ -38,14 +39,14 @@ export const Route = createFileRoute("/grocery/$listId")({
 });
 
 function GroceryListPage() {
-  const { list, groups } = Route.useLoaderData();
+  const { list, groups: loaderGroups } = Route.useLoaderData();
   const router = useRouter();
   const navigate = useNavigate();
   const renameFn = useServerFn(renameGroceryList);
   const deleteFn = useServerFn(deleteGroceryList);
   const addItemFn = useServerFn(addGroceryItem);
-  const deleteItemFn = useServerFn(deleteGroceryItem);
   const setCheckedFn = useServerFn(setGroupChecked);
+  const addPantryItemFn = useServerFn(addPantryItem);
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(list.name);
@@ -53,6 +54,13 @@ function GroceryListPage() {
   const [itemUnit, setItemUnit] = useState("");
   const [itemName, setItemName] = useState("");
   const [adding, setAdding] = useState(false);
+  const [groups, setGroups] = useState(loaderGroups);
+  const [showUndoToast, setShowUndoToast] = useState(false);
+  const pendingClearRef = useRef<{ previousGroups: typeof loaderGroups; timeoutId: number } | null>(null);
+
+  useEffect(() => {
+    setGroups(loaderGroups);
+  }, [loaderGroups]);
 
   async function handleRename(e: React.FormEvent) {
     e.preventDefault();
@@ -88,12 +96,38 @@ function GroceryListPage() {
     await router.invalidate();
   }
 
-  async function handleClearChecked() {
-    const checkedIds = groups.flatMap((g) => g.lines.filter((l) => l.checked).flatMap((l) => l.itemIds));
-    for (const id of checkedIds) {
-      await deleteItemFn({ data: { listId: list.id, itemId: id } });
-    }
-    await router.invalidate();
+  function handleAddCheckedToPantry() {
+    const checkedGroups = groups.filter((g) => g.lines.some((l) => l.checked));
+    if (checkedGroups.length === 0) return;
+    const pantryNames = checkedGroups.map((g) => g.name);
+
+    // Checked items are things the user just bought, so they're now on hand —
+    // optimistically move them into "Already in your pantry" immediately (they
+    // stay on the list, matching how a real pantry addition would re-categorize
+    // them once the loader refetches); the actual pantry write is delayed 5s so
+    // "Undo" can cancel it.
+    const previousGroups = groups;
+    setGroups((prev) => prev.map((g) => (pantryNames.includes(g.name) ? { ...g, inPantry: true } : g)));
+
+    window.clearTimeout(pendingClearRef.current?.timeoutId);
+    const timeoutId = window.setTimeout(async () => {
+      pendingClearRef.current = null;
+      setShowUndoToast(false);
+      await Promise.all(pantryNames.map((ingredientName) => addPantryItemFn({ data: { name: ingredientName } })));
+      await router.invalidate();
+    }, 5000);
+
+    pendingClearRef.current = { previousGroups, timeoutId };
+    setShowUndoToast(true);
+  }
+
+  function handleUndoAddToPantry() {
+    const pending = pendingClearRef.current;
+    if (!pending) return;
+    window.clearTimeout(pending.timeoutId);
+    pendingClearRef.current = null;
+    setGroups(pending.previousGroups);
+    setShowUndoToast(false);
   }
 
   // Fully-checked groups sink to the bottom, keeping still-needed items in view.
@@ -250,11 +284,15 @@ function GroceryListPage() {
       {groups.some((g) => g.lines.some((l) => l.checked)) && (
         <button
           type="button"
-          onClick={handleClearChecked}
+          onClick={handleAddCheckedToPantry}
           className="mt-4 text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
         >
-          Clear checked items
+          Add checked items to pantry
         </button>
+      )}
+
+      {showUndoToast && (
+        <Toast message="Ingredients added to pantry." actionLabel="Undo" onAction={handleUndoAddToPantry} />
       )}
     </div>
   );
