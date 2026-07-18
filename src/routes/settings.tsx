@@ -42,6 +42,7 @@ function SettingsPage() {
   const [notifyOnComment, setNotifyOnComment] = useState(user.notifyOnComment);
   const [notifyOnRating, setNotifyOnRating] = useState(user.notifyOnRating);
   const [notifyOnFork, setNotifyOnFork] = useState(user.notifyOnFork);
+  const [notifyOnFollow, setNotifyOnFollow] = useState(user.notifyOnFollow);
 
   const [defaultRecipeVisibility, setDefaultRecipeVisibility] = useState<Visibility>(
     user.defaultRecipeVisibility,
@@ -87,7 +88,9 @@ function SettingsPage() {
       hasError = true;
     }
 
-    await updateNotificationPreferencesFn({ data: { notifyOnComment, notifyOnRating, notifyOnFork } });
+    await updateNotificationPreferencesFn({
+      data: { notifyOnComment, notifyOnRating, notifyOnFork, notifyOnFollow },
+    });
     await updateVisibilityDefaultsFn({ data: { defaultRecipeVisibility, defaultCollectionVisibility } });
 
     if (!hasError) {
@@ -196,6 +199,15 @@ function SettingsPage() {
               onChange={(e) => setNotifyOnFork(e.target.checked)}
             />
             forks one of my recipes
+          </label>
+          <label className="flex items-center gap-2 text-ink/70">
+            <input
+              type="checkbox"
+              className="accent-accent-600"
+              checked={notifyOnFollow}
+              onChange={(e) => setNotifyOnFollow(e.target.checked)}
+            />
+            follows me
           </label>
         </div>
 

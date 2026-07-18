@@ -21,7 +21,6 @@ import { Route as NotificationsIndexRouteImport } from './routes/notifications/i
 import { Route as GroceryIndexRouteImport } from './routes/grocery/index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections/index'
 import { Route as CalendarsIndexRouteImport } from './routes/calendars/index'
-import { Route as UUsernameRouteImport } from './routes/u/$username'
 import { Route as SharedTokenRouteImport } from './routes/shared/$token'
 import { Route as RecipesTagsRouteImport } from './routes/recipes/tags'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
@@ -32,9 +31,12 @@ import { Route as CalendarsCalendarIdRouteImport } from './routes/calendars/$cal
 import { Route as ApiUploadPdfRouteImport } from './routes/api/upload-pdf'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as ApiRotateImageRouteImport } from './routes/api/rotate-image'
+import { Route as UUsernameIndexRouteImport } from './routes/u/$username/index'
 import { Route as RecipesRecipeIdIndexRouteImport } from './routes/recipes/$recipeId/index'
 import { Route as CollectionsCollectionIdIndexRouteImport } from './routes/collections/$collectionId/index'
 import { Route as AuthGoogleIndexRouteImport } from './routes/auth/google/index'
+import { Route as UUsernameFollowingRouteImport } from './routes/u/$username/following'
+import { Route as UUsernameFollowersRouteImport } from './routes/u/$username/followers'
 import { Route as RecipesRecipeIdPdfRouteImport } from './routes/recipes/$recipeId/pdf'
 import { Route as RecipesRecipeIdEditRouteImport } from './routes/recipes/$recipeId/edit'
 import { Route as RecipesRecipeIdCookRouteImport } from './routes/recipes/$recipeId/cook'
@@ -101,11 +103,6 @@ const CalendarsIndexRoute = CalendarsIndexRouteImport.update({
   path: '/calendars/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UUsernameRoute = UUsernameRouteImport.update({
-  id: '/u/$username',
-  path: '/u/$username',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const SharedTokenRoute = SharedTokenRouteImport.update({
   id: '/shared/$token',
   path: '/shared/$token',
@@ -156,6 +153,11 @@ const ApiRotateImageRoute = ApiRotateImageRouteImport.update({
   path: '/api/rotate-image',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UUsernameIndexRoute = UUsernameIndexRouteImport.update({
+  id: '/u/$username/',
+  path: '/u/$username/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipesRecipeIdIndexRoute = RecipesRecipeIdIndexRouteImport.update({
   id: '/recipes/$recipeId/',
   path: '/recipes/$recipeId/',
@@ -170,6 +172,16 @@ const CollectionsCollectionIdIndexRoute =
 const AuthGoogleIndexRoute = AuthGoogleIndexRouteImport.update({
   id: '/auth/google/',
   path: '/auth/google/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UUsernameFollowingRoute = UUsernameFollowingRouteImport.update({
+  id: '/u/$username/following',
+  path: '/u/$username/following',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UUsernameFollowersRoute = UUsernameFollowersRouteImport.update({
+  id: '/u/$username/followers',
+  path: '/u/$username/followers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesRecipeIdPdfRoute = RecipesRecipeIdPdfRouteImport.update({
@@ -217,7 +229,6 @@ export interface FileRoutesByFullPath {
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
-  '/u/$username': typeof UUsernameRoute
   '/calendars/': typeof CalendarsIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/grocery/': typeof GroceryIndexRoute
@@ -228,9 +239,12 @@ export interface FileRoutesByFullPath {
   '/recipes/$recipeId/cook': typeof RecipesRecipeIdCookRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
   '/recipes/$recipeId/pdf': typeof RecipesRecipeIdPdfRoute
+  '/u/$username/followers': typeof UUsernameFollowersRoute
+  '/u/$username/following': typeof UUsernameFollowingRoute
   '/auth/google/': typeof AuthGoogleIndexRoute
   '/collections/$collectionId/': typeof CollectionsCollectionIdIndexRoute
   '/recipes/$recipeId/': typeof RecipesRecipeIdIndexRoute
+  '/u/$username/': typeof UUsernameIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -250,7 +264,6 @@ export interface FileRoutesByTo {
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
-  '/u/$username': typeof UUsernameRoute
   '/calendars': typeof CalendarsIndexRoute
   '/collections': typeof CollectionsIndexRoute
   '/grocery': typeof GroceryIndexRoute
@@ -261,9 +274,12 @@ export interface FileRoutesByTo {
   '/recipes/$recipeId/cook': typeof RecipesRecipeIdCookRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
   '/recipes/$recipeId/pdf': typeof RecipesRecipeIdPdfRoute
+  '/u/$username/followers': typeof UUsernameFollowersRoute
+  '/u/$username/following': typeof UUsernameFollowingRoute
   '/auth/google': typeof AuthGoogleIndexRoute
   '/collections/$collectionId': typeof CollectionsCollectionIdIndexRoute
   '/recipes/$recipeId': typeof RecipesRecipeIdIndexRoute
+  '/u/$username': typeof UUsernameIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -284,7 +300,6 @@ export interface FileRoutesById {
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
-  '/u/$username': typeof UUsernameRoute
   '/calendars/': typeof CalendarsIndexRoute
   '/collections/': typeof CollectionsIndexRoute
   '/grocery/': typeof GroceryIndexRoute
@@ -295,9 +310,12 @@ export interface FileRoutesById {
   '/recipes/$recipeId/cook': typeof RecipesRecipeIdCookRoute
   '/recipes/$recipeId/edit': typeof RecipesRecipeIdEditRoute
   '/recipes/$recipeId/pdf': typeof RecipesRecipeIdPdfRoute
+  '/u/$username/followers': typeof UUsernameFollowersRoute
+  '/u/$username/following': typeof UUsernameFollowingRoute
   '/auth/google/': typeof AuthGoogleIndexRoute
   '/collections/$collectionId/': typeof CollectionsCollectionIdIndexRoute
   '/recipes/$recipeId/': typeof RecipesRecipeIdIndexRoute
+  '/u/$username/': typeof UUsernameIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -319,7 +337,6 @@ export interface FileRouteTypes {
     | '/recipes/new'
     | '/recipes/tags'
     | '/shared/$token'
-    | '/u/$username'
     | '/calendars/'
     | '/collections/'
     | '/grocery/'
@@ -330,9 +347,12 @@ export interface FileRouteTypes {
     | '/recipes/$recipeId/cook'
     | '/recipes/$recipeId/edit'
     | '/recipes/$recipeId/pdf'
+    | '/u/$username/followers'
+    | '/u/$username/following'
     | '/auth/google/'
     | '/collections/$collectionId/'
     | '/recipes/$recipeId/'
+    | '/u/$username/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -352,7 +372,6 @@ export interface FileRouteTypes {
     | '/recipes/new'
     | '/recipes/tags'
     | '/shared/$token'
-    | '/u/$username'
     | '/calendars'
     | '/collections'
     | '/grocery'
@@ -363,9 +382,12 @@ export interface FileRouteTypes {
     | '/recipes/$recipeId/cook'
     | '/recipes/$recipeId/edit'
     | '/recipes/$recipeId/pdf'
+    | '/u/$username/followers'
+    | '/u/$username/following'
     | '/auth/google'
     | '/collections/$collectionId'
     | '/recipes/$recipeId'
+    | '/u/$username'
   id:
     | '__root__'
     | '/'
@@ -385,7 +407,6 @@ export interface FileRouteTypes {
     | '/recipes/new'
     | '/recipes/tags'
     | '/shared/$token'
-    | '/u/$username'
     | '/calendars/'
     | '/collections/'
     | '/grocery/'
@@ -396,9 +417,12 @@ export interface FileRouteTypes {
     | '/recipes/$recipeId/cook'
     | '/recipes/$recipeId/edit'
     | '/recipes/$recipeId/pdf'
+    | '/u/$username/followers'
+    | '/u/$username/following'
     | '/auth/google/'
     | '/collections/$collectionId/'
     | '/recipes/$recipeId/'
+    | '/u/$username/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -419,7 +443,6 @@ export interface RootRouteChildren {
   RecipesNewRoute: typeof RecipesNewRoute
   RecipesTagsRoute: typeof RecipesTagsRoute
   SharedTokenRoute: typeof SharedTokenRoute
-  UUsernameRoute: typeof UUsernameRoute
   CalendarsIndexRoute: typeof CalendarsIndexRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
   GroceryIndexRoute: typeof GroceryIndexRoute
@@ -430,9 +453,12 @@ export interface RootRouteChildren {
   RecipesRecipeIdCookRoute: typeof RecipesRecipeIdCookRoute
   RecipesRecipeIdEditRoute: typeof RecipesRecipeIdEditRoute
   RecipesRecipeIdPdfRoute: typeof RecipesRecipeIdPdfRoute
+  UUsernameFollowersRoute: typeof UUsernameFollowersRoute
+  UUsernameFollowingRoute: typeof UUsernameFollowingRoute
   AuthGoogleIndexRoute: typeof AuthGoogleIndexRoute
   CollectionsCollectionIdIndexRoute: typeof CollectionsCollectionIdIndexRoute
   RecipesRecipeIdIndexRoute: typeof RecipesRecipeIdIndexRoute
+  UUsernameIndexRoute: typeof UUsernameIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -521,13 +547,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalendarsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/u/$username': {
-      id: '/u/$username'
-      path: '/u/$username'
-      fullPath: '/u/$username'
-      preLoaderRoute: typeof UUsernameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/shared/$token': {
       id: '/shared/$token'
       path: '/shared/$token'
@@ -598,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRotateImageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$username/': {
+      id: '/u/$username/'
+      path: '/u/$username'
+      fullPath: '/u/$username/'
+      preLoaderRoute: typeof UUsernameIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipes/$recipeId/': {
       id: '/recipes/$recipeId/'
       path: '/recipes/$recipeId'
@@ -617,6 +643,20 @@ declare module '@tanstack/react-router' {
       path: '/auth/google'
       fullPath: '/auth/google/'
       preLoaderRoute: typeof AuthGoogleIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$username/following': {
+      id: '/u/$username/following'
+      path: '/u/$username/following'
+      fullPath: '/u/$username/following'
+      preLoaderRoute: typeof UUsernameFollowingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$username/followers': {
+      id: '/u/$username/followers'
+      path: '/u/$username/followers'
+      fullPath: '/u/$username/followers'
+      preLoaderRoute: typeof UUsernameFollowersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/$recipeId/pdf': {
@@ -675,7 +715,6 @@ const rootRouteChildren: RootRouteChildren = {
   RecipesNewRoute: RecipesNewRoute,
   RecipesTagsRoute: RecipesTagsRoute,
   SharedTokenRoute: SharedTokenRoute,
-  UUsernameRoute: UUsernameRoute,
   CalendarsIndexRoute: CalendarsIndexRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
   GroceryIndexRoute: GroceryIndexRoute,
@@ -686,9 +725,12 @@ const rootRouteChildren: RootRouteChildren = {
   RecipesRecipeIdCookRoute: RecipesRecipeIdCookRoute,
   RecipesRecipeIdEditRoute: RecipesRecipeIdEditRoute,
   RecipesRecipeIdPdfRoute: RecipesRecipeIdPdfRoute,
+  UUsernameFollowersRoute: UUsernameFollowersRoute,
+  UUsernameFollowingRoute: UUsernameFollowingRoute,
   AuthGoogleIndexRoute: AuthGoogleIndexRoute,
   CollectionsCollectionIdIndexRoute: CollectionsCollectionIdIndexRoute,
   RecipesRecipeIdIndexRoute: RecipesRecipeIdIndexRoute,
+  UUsernameIndexRoute: UUsernameIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

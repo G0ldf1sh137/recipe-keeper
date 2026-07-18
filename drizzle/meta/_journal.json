@@ -232,6 +232,13 @@
       "when": 1784362499252,
       "tag": "0032_warm_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1784364557552,
+      "tag": "0033_wakeful_puma",
+      "breakpoints": true
     }
   ]
 }

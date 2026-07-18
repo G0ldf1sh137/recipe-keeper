@@ -18,6 +18,7 @@ import { getRatingSummary, getRatingSummaries } from "#/ratings/ratings.function
 import { RecipeRating } from "#/ratings/RecipeRating";
 import { getMakeCount } from "#/makes/makes.functions";
 import { MadeItButton } from "#/makes/MadeItButton";
+import { FollowButton } from "#/follows/FollowButton";
 import { getCollectionsForRecipe } from "#/collections/collections.functions";
 import { SaveToList } from "#/collections/SaveToList";
 import { getGroceryListsForRecipe, getGroceryItemPresence } from "#/grocery/grocery.functions";
@@ -300,6 +301,9 @@ function RecipePage() {
           </Link>
         ) : (
           <p className="text-sm text-ink/60">by {recipe.owner.name}</p>
+        )}
+        {recipe.canFollowOwner && (
+          <FollowButton targetUserId={recipe.ownerId} initiallyFollowing={recipe.isFollowingOwner} />
         )}
       </div>
       {recipe.forkedFrom && (

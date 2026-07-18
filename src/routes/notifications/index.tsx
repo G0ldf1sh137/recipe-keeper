@@ -33,6 +33,8 @@ function notificationText(notification: NotificationRow) {
       return `${notification.actor.name} rated your recipe "${notification.recipe?.title}"`;
     case "householdInvite":
       return `${notification.actor.name} invited you to join their household`;
+    case "follow":
+      return `${notification.actor.name} started following you`;
   }
 }
 
@@ -95,6 +97,14 @@ function NotificationsPage() {
                 <Link
                   to="/recipes/$recipeId"
                   params={{ recipeId: notification.recipe.id }}
+                  className="text-ink hover:text-accent-700 dark:hover:text-accent-400"
+                >
+                  {notificationText(notification)}
+                </Link>
+              ) : notification.type === "follow" && notification.actor.username ? (
+                <Link
+                  to="/u/$username"
+                  params={{ username: notification.actor.username }}
                   className="text-ink hover:text-accent-700 dark:hover:text-accent-400"
                 >
                   {notificationText(notification)}

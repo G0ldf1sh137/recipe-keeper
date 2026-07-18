@@ -2,8 +2,9 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getProfile } from "#/profile/profile.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
+import { FollowButton } from "#/follows/FollowButton";
 
-export const Route = createFileRoute("/u/$username")({
+export const Route = createFileRoute("/u/$username/")({
   loader: async ({ params }) => getProfile({ data: { username: params.username } }),
   component: ProfilePage,
   notFoundComponent: () => (
@@ -23,7 +24,8 @@ export const Route = createFileRoute("/u/$username")({
 });
 
 function ProfilePage() {
-  const { user, recipes, collections } = Route.useLoaderData();
+  const { user, recipes, collections, followerCount, followingCount, canFollow, isFollowing } =
+    Route.useLoaderData();
   const [query, setQuery] = useState("");
 
   const q = query.trim().toLowerCase();
@@ -42,7 +44,26 @@ function ProfilePage() {
           <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">{user.name}</h1>
           <p className="text-sm text-ink/60">@{user.username}</p>
         </div>
+        {canFollow && <FollowButton targetUserId={user.id} initiallyFollowing={isFollowing} />}
       </div>
+
+      <p className="mt-2 text-sm text-ink/60">
+        <Link
+          to="/u/$username/followers"
+          params={{ username: user.username! }}
+          className="hover:text-accent-600 dark:hover:text-accent-400"
+        >
+          {followerCount} follower{followerCount === 1 ? "" : "s"}
+        </Link>{" "}
+        ·{" "}
+        <Link
+          to="/u/$username/following"
+          params={{ username: user.username! }}
+          className="hover:text-accent-600 dark:hover:text-accent-400"
+        >
+          {followingCount} following
+        </Link>
+      </p>
 
       {(recipes.length > 0 || collections.length > 0) && (
         <input

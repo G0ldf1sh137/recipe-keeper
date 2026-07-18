@@ -29,6 +29,7 @@ import {
   updateOwnedRecipe,
 } from "./recipes.server";
 import { insertNotification } from "#/notifications/notifications.server";
+import { findFollow } from "#/follows/follows.server";
 import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
 
 export const listRecipes = createServerFn({ method: "GET" })
@@ -54,12 +55,18 @@ export const getRecipe = createServerFn({ method: "GET" })
     const forkedFrom = recipe.parentRecipeId
       ? (await findRecipeById(recipe.parentRecipeId, context.user?.id)) ?? null
       : null;
+    const canFollowOwner = !!context.user && context.user.id !== recipe.ownerId;
+    const isFollowingOwner = canFollowOwner
+      ? !!(await findFollow(context.user!.id, recipe.ownerId))
+      : false;
     return {
       ...recipe,
       isOwner,
       canEdit,
       shareUrl: shareToken ? `/shared/${shareToken}` : null,
       forkedFrom,
+      canFollowOwner,
+      isFollowingOwner,
     };
   });
 

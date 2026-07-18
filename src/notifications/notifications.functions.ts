@@ -52,6 +52,7 @@ export const updateNotificationPreferences = createServerFn({ method: "POST" })
       notifyOnComment: z.boolean(),
       notifyOnRating: z.boolean(),
       notifyOnFork: z.boolean(),
+      notifyOnFollow: z.boolean(),
     }),
   )
   .handler(async ({ data, context }) => {

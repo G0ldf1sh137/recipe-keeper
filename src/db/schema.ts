@@ -41,6 +41,7 @@ export const users = pgTable("users", {
   notifyOnComment: boolean("notify_on_comment").notNull().default(true),
   notifyOnRating: boolean("notify_on_rating").notNull().default(true),
   notifyOnFork: boolean("notify_on_fork").notNull().default(true),
+  notifyOnFollow: boolean("notify_on_follow").notNull().default(true),
   defaultRecipeVisibility: text("default_recipe_visibility", { enum: visibilityValues })
     .notNull()
     .default("public"),
@@ -124,6 +125,20 @@ export const collectionBookmarks = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [primaryKey({ columns: [table.userId, table.collectionId] })],
+);
+
+export const follows = pgTable(
+  "follows",
+  {
+    followerId: text("follower_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    followingId: text("following_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.followerId, table.followingId] })],
 );
 
 export const dayOfWeekValues = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
@@ -255,7 +270,7 @@ export const groceryListItems = pgTable("grocery_list_items", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const notificationTypeValues = ["comment", "fork", "rating", "householdInvite"] as const;
+export const notificationTypeValues = ["comment", "fork", "rating", "householdInvite", "follow"] as const;
 export type NotificationType = (typeof notificationTypeValues)[number];
 
 export const notifications = pgTable("notifications", {

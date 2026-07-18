@@ -56,7 +56,7 @@ const featureGroups = [
   {
     title: "Community",
     description:
-      "Rate and comment on recipes, fork someone else's recipe to make your own version, and get notified when someone comments on, rates, or forks your recipe — with per-event controls in Settings if you'd rather not hear about all three.",
+      "Rate and comment on recipes, fork someone else's recipe to make your own version, follow other users from their profile or any of their recipes, and get notified when someone comments on, rates, forks, or follows you — with per-event controls in Settings if you'd rather not hear about all four.",
   },
   {
     title: "Personal notes",

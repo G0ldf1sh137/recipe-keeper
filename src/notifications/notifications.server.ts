@@ -8,11 +8,11 @@ export type NotificationRow = {
   type: NotificationType;
   readAt: Date | null;
   createdAt: Date;
-  actor: { id: string; name: string; avatarUrl: string | null };
+  actor: { id: string; name: string; avatarUrl: string | null; username: string | null };
   recipe: { id: string; title: string } | null;
 };
 
-type PreferenceColumn = "notifyOnComment" | "notifyOnRating" | "notifyOnFork";
+type PreferenceColumn = "notifyOnComment" | "notifyOnRating" | "notifyOnFork" | "notifyOnFollow";
 
 // Only recipe-based notification types have an opt-out preference; types
 // absent here (e.g. householdInvite) always notify — they're actionable
@@ -21,6 +21,7 @@ const notificationPreferenceColumns: Partial<Record<NotificationType, Preference
   comment: "notifyOnComment",
   rating: "notifyOnRating",
   fork: "notifyOnFork",
+  follow: "notifyOnFollow",
 };
 
 export async function insertNotification(input: {
@@ -34,7 +35,12 @@ export async function insertNotification(input: {
   if (preferenceColumn) {
     const recipient = await db.query.users.findFirst({
       where: eq(users.id, input.recipientId),
-      columns: { notifyOnComment: true, notifyOnRating: true, notifyOnFork: true },
+      columns: {
+        notifyOnComment: true,
+        notifyOnRating: true,
+        notifyOnFork: true,
+        notifyOnFollow: true,
+      },
     });
     if (!recipient?.[preferenceColumn]) return;
   }
@@ -43,7 +49,12 @@ export async function insertNotification(input: {
 
 export async function updateNotificationPreferences(
   userId: string,
-  prefs: { notifyOnComment: boolean; notifyOnRating: boolean; notifyOnFork: boolean },
+  prefs: {
+    notifyOnComment: boolean;
+    notifyOnRating: boolean;
+    notifyOnFork: boolean;
+    notifyOnFollow: boolean;
+  },
 ) {
   return db.update(users).set(prefs).where(eq(users.id, userId)).returning();
 }
@@ -55,7 +66,7 @@ export async function findNotificationsForUser(userId: string): Promise<Notifica
       type: notifications.type,
       readAt: notifications.readAt,
       createdAt: notifications.createdAt,
-      actor: { id: users.id, name: users.name, avatarUrl: users.avatarUrl },
+      actor: { id: users.id, name: users.name, avatarUrl: users.avatarUrl, username: users.username },
       recipe: { id: recipes.id, title: recipes.title },
     })
     .from(notifications)
