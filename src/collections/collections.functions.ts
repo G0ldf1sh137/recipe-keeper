@@ -11,11 +11,14 @@ import {
   reorderRecipesInCollectionSchema,
   updateCollectionVisibilitySchema,
   listPublicCollectionsSchema,
+  toggleCollectionBookmarkSchema,
 } from "./schemas";
 import {
   createShareForCollection,
   findCollectionsByOwner,
   findCollectionForViewer,
+  findCollectionBookmark,
+  findBookmarkedCollections,
   findPublicCollections,
   findRecipesInCollection,
   findShareTokenForCollection,
@@ -25,6 +28,7 @@ import {
   findCollectionsWithMembership,
   reorderRecipesInCollection,
   revokeShareForCollection,
+  toggleCollectionBookmark as toggleCollectionBookmarkDb,
   toggleMembership,
   updateCollectionVisibility as updateOwnedCollectionVisibility,
 } from "./collections.server";
@@ -49,13 +53,37 @@ export const getCollection = createServerFn({ method: "GET" })
     if (!collection) throw notFound();
     const isOwner = collection.ownerId === context.user?.id;
     const canManage = isOwner || isAdmin;
+    const canBookmark = !!context.user && !isOwner;
+    const isBookmarked = canBookmark
+      ? !!(await findCollectionBookmark(context.user!.id, collection.id))
+      : false;
     const shareToken = isOwner ? await findShareTokenForCollection(collection.id, context.user!.id) : null;
     const items = await findRecipesInCollection(data.id);
     return {
-      collection: { ...collection, isOwner, canManage, shareUrl: shareToken ? `/shared/${shareToken}` : null },
+      collection: {
+        ...collection,
+        isOwner,
+        canManage,
+        canBookmark,
+        isBookmarked,
+        shareUrl: shareToken ? `/shared/${shareToken}` : null,
+      },
       items,
     };
   });
+
+export const toggleCollectionBookmark = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .validator(toggleCollectionBookmarkSchema)
+  .handler(async ({ data, context }) => {
+    const result = await toggleCollectionBookmarkDb(context.user.id, data.collectionId);
+    if (!result) throw notFound();
+    return result;
+  });
+
+export const listSavedCollections = createServerFn({ method: "GET" })
+  .middleware([requireAuthMiddleware])
+  .handler(async ({ context }) => findBookmarkedCollections(context.user.id));
 
 export const createCollectionShare = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])

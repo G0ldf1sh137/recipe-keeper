@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { HeadContent, Scripts, createRootRoute, Link, useRouter } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
@@ -99,6 +99,73 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
+function CookbooksNavLink({ onNavigate }: { onNavigate: () => void }) {
+  const [open, setOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    function handlePointerDown(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  function handleSelect() {
+    setOpen(false)
+    onNavigate()
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+      >
+        Cookbooks
+      </button>
+      {open && (
+        <div className="absolute z-10 mt-2 w-44 rounded-lg border-2 border-accent-200 bg-paper p-2 shadow-lg">
+          <Link
+            to="/collections"
+            onClick={handleSelect}
+            className="block rounded-md px-2 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50"
+          >
+            My Cookbooks
+          </Link>
+          <Link
+            to="/collections/browse"
+            onClick={handleSelect}
+            className="block rounded-md px-2 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50"
+          >
+            Browse Cookbooks
+          </Link>
+          <Link
+            to="/collections/saved"
+            onClick={handleSelect}
+            className="block rounded-md px-2 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50"
+          >
+            Saved Cookbooks
+          </Link>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function NotificationBell({ unreadCount, onNavigate }: { unreadCount: number; onNavigate?: () => void }) {
   return (
     <Link to="/notifications" onClick={onNavigate} className="relative text-accent-600 hover:text-accent-700 dark:hover:text-accent-400">
@@ -157,13 +224,7 @@ function AuthHeader({
   function renderNavLinks(currentUser: NonNullable<typeof user>) {
     return (
       <>
-        <Link
-          to="/collections"
-          onClick={() => setMenuOpen(false)}
-          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-        >
-          Your cookbooks
-        </Link>
+        <CookbooksNavLink onNavigate={() => setMenuOpen(false)} />
         <Link
           to="/grocery"
           onClick={() => setMenuOpen(false)}

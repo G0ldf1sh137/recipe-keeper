@@ -1,6 +1,6 @@
 import { and, desc, eq, ilike, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
-import { collections, collectionRecipes, recipes, shares, users } from "#/db/schema";
+import { collections, collectionRecipes, collectionBookmarks, recipes, shares, users } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
 export async function findCollectionsByOwner(ownerId: string) {
@@ -33,13 +33,11 @@ export async function findPublicCollectionsByOwner(ownerId: string) {
     .orderBy(collections.createdAt);
 }
 
-// Global browse: every public collection, plus the viewer's own regardless
-// of visibility — same "public or own" rule used everywhere else in the app.
+// Global browse: public cookbooks owned by someone other than the viewer —
+// this page is for discovering other people's cookbooks, not your own.
 export async function findPublicCollections(viewerId: string | undefined, q?: string) {
-  const visible = viewerId
-    ? or(eq(collections.visibility, "public"), eq(collections.ownerId, viewerId))
-    : eq(collections.visibility, "public");
-  const conditions = [visible];
+  const conditions = [eq(collections.visibility, "public")];
+  if (viewerId) conditions.push(ne(collections.ownerId, viewerId));
   if (q) conditions.push(ilike(collections.name, `%${q}%`));
 
   return db
@@ -238,4 +236,50 @@ export async function revokeShareForCollection(collectionId: string, ownerId: st
   if (!collection) return undefined;
   await db.delete(shares).where(eq(shares.collectionId, collectionId));
   return true;
+}
+
+export async function findCollectionBookmark(userId: string, collectionId: string) {
+  return db.query.collectionBookmarks.findFirst({
+    where: and(eq(collectionBookmarks.userId, userId), eq(collectionBookmarks.collectionId, collectionId)),
+  });
+}
+
+export async function toggleCollectionBookmark(userId: string, collectionId: string) {
+  const collection = await db.query.collections.findFirst({ where: eq(collections.id, collectionId) });
+  if (!collection) return undefined;
+  if (collection.ownerId === userId) throw new Error("You can't bookmark your own cookbook.");
+
+  const existing = await findCollectionBookmark(userId, collectionId);
+  if (existing) {
+    await db
+      .delete(collectionBookmarks)
+      .where(and(eq(collectionBookmarks.userId, userId), eq(collectionBookmarks.collectionId, collectionId)));
+    return { isBookmarked: false };
+  }
+
+  await db.insert(collectionBookmarks).values({ userId, collectionId });
+  return { isBookmarked: true };
+}
+
+// Only public cookbooks — if an owner later makes a bookmarked cookbook
+// private, it should drop out of the bookmarker's saved list, same as the
+// "public or own" visibility rule used everywhere else in the app.
+export async function findBookmarkedCollections(userId: string) {
+  return db
+    .select({
+      id: collections.id,
+      name: collections.name,
+      visibility: collections.visibility,
+      createdAt: collectionBookmarks.createdAt,
+      recipeCount: sql<number>`count(${collectionRecipes.recipeId})::int`,
+      ownerName: users.name,
+      ownerUsername: users.username,
+    })
+    .from(collectionBookmarks)
+    .innerJoin(collections, eq(collectionBookmarks.collectionId, collections.id))
+    .innerJoin(users, eq(collections.ownerId, users.id))
+    .leftJoin(collectionRecipes, eq(collectionRecipes.collectionId, collections.id))
+    .where(and(eq(collectionBookmarks.userId, userId), eq(collections.visibility, "public")))
+    .groupBy(collections.id, users.name, users.username, collectionBookmarks.createdAt)
+    .orderBy(desc(collectionBookmarks.createdAt));
 }

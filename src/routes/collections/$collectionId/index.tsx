@@ -14,6 +14,7 @@ import {
   createCollectionShare,
   revokeCollectionShare,
   updateCollectionVisibility,
+  toggleCollectionBookmark,
 } from "#/collections/collections.functions";
 import { CollectionRecipeRow } from "#/collections/CollectionRecipeRow";
 import { ShareControl } from "#/sharing/ShareControl";
@@ -59,11 +60,14 @@ function CollectionPage() {
   const createShareFn = useServerFn(createCollectionShare);
   const revokeShareFn = useServerFn(revokeCollectionShare);
   const updateVisibilityFn = useServerFn(updateCollectionVisibility);
+  const toggleBookmarkFn = useServerFn(toggleCollectionBookmark);
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(collection.name);
   const [items, setItems] = useState(loaderItems);
   const [toast, setToast] = useState<{ recipeId: string; title: string } | null>(null);
+  const [isBookmarked, setIsBookmarked] = useState(collection.isBookmarked);
+  const [bookmarking, setBookmarking] = useState(false);
   const pendingRemovalsRef = useRef(new Map<string, { item: CollectionItem; index: number; timeoutId: number }>());
 
   useEffect(() => {
@@ -152,6 +156,16 @@ function CollectionPage() {
     void navigate({ to: "/recipes/$recipeId", params: { recipeId: item.id } });
   }
 
+  async function handleToggleBookmark() {
+    setBookmarking(true);
+    try {
+      const result = await toggleBookmarkFn({ data: { collectionId: collection.id } });
+      setIsBookmarked(result.isBookmarked);
+    } finally {
+      setBookmarking(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <Link
@@ -207,6 +221,16 @@ function CollectionPage() {
                     Print to PDF
                   </a>
                 </>
+              )}
+              {collection.canBookmark && (
+                <button
+                  type="button"
+                  onClick={handleToggleBookmark}
+                  disabled={bookmarking}
+                  className="text-sm font-medium text-accent-600 hover:text-accent-700 disabled:opacity-50 dark:hover:text-accent-400"
+                >
+                  {isBookmarked ? "✓ Saved" : "Save cookbook"}
+                </button>
               )}
               {collection.canManage && (
                 <>

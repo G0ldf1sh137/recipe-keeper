@@ -111,6 +111,20 @@ export const collectionRecipes = pgTable(
   (table) => [primaryKey({ columns: [table.collectionId, table.recipeId] })],
 );
 
+export const collectionBookmarks = pgTable(
+  "collection_bookmarks",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    collectionId: text("collection_id")
+      .notNull()
+      .references(() => collections.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.collectionId] })],
+);
+
 export const dayOfWeekValues = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 export type DayOfWeek = (typeof dayOfWeekValues)[number];
 
