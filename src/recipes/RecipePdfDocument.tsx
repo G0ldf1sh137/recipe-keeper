@@ -15,10 +15,14 @@ export type RecipePdfData = {
   carbs: number | null;
   fat: number | null;
   sourceUrl: string | null;
+  qrCodeDataUrl: string;
 };
 
 const styles = StyleSheet.create({
   page: { padding: 36, fontSize: 11, fontFamily: "Helvetica" },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  headerText: { flex: 1, paddingRight: 12 },
+  qrCode: { width: 70, height: 70 },
   title: { fontSize: 22, fontFamily: "Helvetica-Bold", marginBottom: 4 },
   byline: { fontSize: 10, color: "#666666", marginBottom: 8 },
   description: { marginBottom: 8, lineHeight: 1.4 },
@@ -65,8 +69,13 @@ export function RecipePdfPage({ recipe }: { recipe: RecipePdfData }) {
 
   return (
     <Page size="LETTER" style={styles.page}>
-      <Text style={styles.title}>{recipe.title}</Text>
-      <Text style={styles.byline}>by {recipe.ownerName}</Text>
+      <View style={styles.headerRow}>
+        <View style={styles.headerText}>
+          <Text style={styles.title}>{recipe.title}</Text>
+          <Text style={styles.byline}>by {recipe.ownerName}</Text>
+        </View>
+        <Image src={recipe.qrCodeDataUrl} style={styles.qrCode} />
+      </View>
 
       {recipe.description && <Text style={styles.description}>{recipe.description}</Text>}
       {metaParts.length > 0 && <Text style={styles.metaLine}>{metaParts.join(" · ")}</Text>}

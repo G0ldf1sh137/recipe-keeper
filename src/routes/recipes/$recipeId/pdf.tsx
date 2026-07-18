@@ -4,6 +4,7 @@ import { readSessionToken } from "#/auth/cookies.server";
 import { validateSessionToken } from "#/auth/session.server";
 import { findRecipeById } from "#/recipes/recipes.server";
 import { RecipePdfDocument } from "#/recipes/RecipePdfDocument";
+import { generateQrCode } from "#/recipes/qrcode.server";
 
 function slugify(title: string): string {
   const slug = title
@@ -27,6 +28,9 @@ export const Route = createFileRoute("/recipes/$recipeId/pdf")({
         const recipe = await findRecipeById(params.recipeId, user?.id, shareToken);
         if (!recipe) return new Response("Not found", { status: 404 });
 
+        const recipeUrl = `${url.origin}/recipes/${recipe.id}${shareToken ? `?st=${shareToken}` : ""}`;
+        const qrCodeDataUrl = await generateQrCode(recipeUrl);
+
         const buffer = await renderToBuffer(
           <RecipePdfDocument
             recipe={{
@@ -43,6 +47,7 @@ export const Route = createFileRoute("/recipes/$recipeId/pdf")({
               carbs: recipe.carbs,
               fat: recipe.fat,
               sourceUrl: recipe.sourceUrl,
+              qrCodeDataUrl,
             }}
           />,
         );
