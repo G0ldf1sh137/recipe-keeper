@@ -8,6 +8,7 @@ import {
   removeMemberSchema,
   leaveHouseholdSchema,
   transferOwnershipSchema,
+  getPendingInviteUsernamesSchema,
 } from "./schemas";
 import {
   getMyHousehold,
@@ -18,6 +19,7 @@ import {
   removeMember as removeMemberDb,
   leaveHousehold as leaveHouseholdDb,
   transferOwnership as transferOwnershipDb,
+  listPendingInviteUsernames,
 } from "./households.server";
 
 export const getMyHouseholdInfo = createServerFn({ method: "GET" })
@@ -76,3 +78,14 @@ export const transferOwnership = createServerFn({ method: "POST" })
 export const getKnownUsernames = createServerFn({ method: "GET" })
   .middleware([requireAuthMiddleware])
   .handler(async () => listAllUsernames());
+
+export const getPendingInviteUsernames = createServerFn({ method: "GET" })
+  .middleware([requireAuthMiddleware])
+  .validator(getPendingInviteUsernamesSchema)
+  .handler(async ({ data, context }) => {
+    const household = await getMyHousehold(context.user.id);
+    if (!household || household.id !== data.householdId || household.ownerId !== context.user.id) {
+      throw new Error("Only the household owner can view pending invites.");
+    }
+    return listPendingInviteUsernames(data.householdId);
+  });

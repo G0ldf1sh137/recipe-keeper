@@ -27,3 +27,7 @@ export const transferOwnershipSchema = z.object({
   householdId: z.string(),
   newOwnerId: z.string(),
 });
+
+export const getPendingInviteUsernamesSchema = z.object({
+  householdId: z.string(),
+});

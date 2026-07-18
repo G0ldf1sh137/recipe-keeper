@@ -15,6 +15,7 @@ import {
   leaveHousehold,
   transferOwnership,
   getKnownUsernames,
+  getPendingInviteUsernames,
 } from "#/households/households.functions";
 
 export const Route = createFileRoute("/settings")({
@@ -30,13 +31,18 @@ export const Route = createFileRoute("/settings")({
       getKnownUsernames(),
       getImpersonationStatus(),
     ]);
-    return { user: context.user, household, invites, knownUsernames, impersonationStatus };
+    const pendingInviteUsernames =
+      household && household.ownerId === context.user.id
+        ? await getPendingInviteUsernames({ data: { householdId: household.id } })
+        : [];
+    return { user: context.user, household, invites, knownUsernames, impersonationStatus, pendingInviteUsernames };
   },
   component: SettingsPage,
 });
 
 function SettingsPage() {
-  const { user, household, invites, knownUsernames, impersonationStatus } = Route.useLoaderData();
+  const { user, household, invites, knownUsernames, impersonationStatus, pendingInviteUsernames } =
+    Route.useLoaderData();
   const router = useRouter();
   const updateUsernameFn = useServerFn(updateUsername);
   const updateNotificationPreferencesFn = useServerFn(updateNotificationPreferences);
@@ -70,6 +76,16 @@ function SettingsPage() {
   const [notifyOnFork, setNotifyOnFork] = useState(user.notifyOnFork);
   const [notificationsSaved, setNotificationsSaved] = useState(false);
   const [notificationsSubmitting, setNotificationsSubmitting] = useState(false);
+
+  // Excludes yourself and anyone already a member or already-invited, since inviting either fails server-side.
+  const householdInviteUsernames = knownUsernames.filter(
+    (name) =>
+      name !== user.username &&
+      !household?.members.some((member) => member.username === name) &&
+      !pendingInviteUsernames.includes(name),
+  );
+  // Excludes yourself, since impersonating your own account isn't a meaningful action.
+  const impersonateUsernames = knownUsernames.filter((name) => name !== user.username);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -129,6 +145,7 @@ function SettingsPage() {
       await inviteToHouseholdFn({ data: { householdId: household.id, username: inviteUsername.trim() } });
       setInviteUsername("");
       setInviteSent(true);
+      await router.invalidate();
     } catch (err) {
       setInviteError(err instanceof Error ? err.message : "Failed to send invite.");
     } finally {
@@ -321,7 +338,7 @@ function SettingsPage() {
               <form onSubmit={(e) => void handleInvite(e)} className="mt-2 flex gap-2">
                 <input
                   className="min-w-[10rem] flex-1 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
-                  list="known-usernames"
+                  list="household-invite-usernames"
                   value={inviteUsername}
                   onChange={(e) => setInviteUsername(e.target.value)}
                   placeholder="Invite by username"
@@ -402,8 +419,13 @@ function SettingsPage() {
         )}
       </div>
 
-      <datalist id="known-usernames">
-        {knownUsernames.map((name) => (
+      <datalist id="household-invite-usernames">
+        {householdInviteUsernames.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
+      <datalist id="impersonate-usernames">
+        {impersonateUsernames.map((name) => (
           <option key={name} value={name} />
         ))}
       </datalist>
@@ -418,7 +440,7 @@ function SettingsPage() {
           <form onSubmit={(e) => void handleImpersonate(e)} className="flex gap-2">
             <input
               className="min-w-[10rem] flex-1 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
-              list="known-usernames"
+              list="impersonate-usernames"
               value={impersonateUsername}
               onChange={(e) => setImpersonateUsername(e.target.value)}
               placeholder="Username to impersonate"

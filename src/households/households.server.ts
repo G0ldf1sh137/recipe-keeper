@@ -65,6 +65,15 @@ export async function inviteToHousehold(householdId: string, inviterId: string, 
   await insertNotification({ recipientId: invitee.id, actorId: inviterId, recipeId: null, type: "householdInvite" });
 }
 
+export async function listPendingInviteUsernames(householdId: string): Promise<string[]> {
+  const rows = await db
+    .select({ username: users.username })
+    .from(householdInvites)
+    .innerJoin(users, eq(householdInvites.invitedUserId, users.id))
+    .where(eq(householdInvites.householdId, householdId));
+  return rows.map((row) => row.username).filter((username) => username != null);
+}
+
 export type PendingInvite = { id: string; householdName: string; inviterName: string };
 
 export async function listMyInvites(userId: string): Promise<PendingInvite[]> {
