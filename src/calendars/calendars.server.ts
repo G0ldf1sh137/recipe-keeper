@@ -59,6 +59,10 @@ export async function findEntriesForCalendar(calendarId: string) {
       photoUrls: recipes.photoUrls,
       coverPhotoUrl: recipes.coverPhotoUrl,
       visibility: recipes.visibility,
+      calories: recipes.calories,
+      protein: recipes.protein,
+      carbs: recipes.carbs,
+      fat: recipes.fat,
       createdAt: calendarEntries.createdAt,
     })
     .from(calendarEntries)

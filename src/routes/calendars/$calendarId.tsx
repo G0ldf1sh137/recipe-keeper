@@ -78,6 +78,24 @@ function findContainer(
   return undefined;
 }
 
+function sumDayMacros(entries: CalendarEntry[]) {
+  let calories = 0;
+  let protein = 0;
+  let carbs = 0;
+  let fat = 0;
+  let incomplete = false;
+  for (const entry of entries) {
+    if (entry.calories === null || entry.protein === null || entry.carbs === null || entry.fat === null) {
+      incomplete = true;
+    }
+    calories += entry.calories ?? 0;
+    protein += entry.protein ?? 0;
+    carbs += entry.carbs ?? 0;
+    fat += entry.fat ?? 0;
+  }
+  return { calories, protein, carbs, fat, incomplete };
+}
+
 function CalendarPage() {
   const { calendar, entriesByDay: loaderEntriesByDay, user, groceryLists, isSubscriber } = Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
@@ -337,6 +355,7 @@ function CalendarPage() {
               day={day}
               dayLabel={dayLabels[day]}
               entries={entriesByDay[day]}
+              totals={sumDayMacros(entriesByDay[day])}
               canManage={calendar.canManage}
               onRemove={handleRemove}
             />
