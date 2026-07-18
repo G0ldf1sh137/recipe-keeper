@@ -132,7 +132,7 @@ export function ProcessUrl({
           {result.recipe.photoUrls.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {result.recipe.photoUrls.map((photoUrl) => (
-                <img key={photoUrl} src={photoUrl} alt="" className="h-20 w-20 rounded-lg object-cover" />
+                <img key={photoUrl} src={photoUrl} alt="" loading="lazy" className="h-20 w-20 rounded-lg object-cover" />
               ))}
             </div>
           )}

@@ -89,6 +89,7 @@ export function MultiImageUpload({
               <img
                 src={url}
                 alt=""
+                loading="lazy"
                 className={`${previewClassName} ${url === coverUrl ? "ring-2 ring-accent-500 ring-offset-1" : ""}`}
               />
               <button

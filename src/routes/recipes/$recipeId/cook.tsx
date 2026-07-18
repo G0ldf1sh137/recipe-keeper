@@ -405,6 +405,7 @@ function CookModePage() {
                       key={url}
                       src={url}
                       alt={`Step ${stepIndex + 1} photo ${i + 1}`}
+                      loading="lazy"
                       className="max-h-64 rounded-lg object-cover shadow-sm"
                     />
                   ))}

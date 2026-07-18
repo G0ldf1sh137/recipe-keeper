@@ -20,7 +20,7 @@ export function RecipeCard({ recipe, rating }: RecipeCardProps) {
     <div className="flex items-center gap-3 rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
       {imageUrl && (
         <Link to="/recipes/$recipeId" params={{ recipeId: recipe.id }} className="shrink-0">
-          <img src={imageUrl} alt="" className="h-14 w-14 rounded-lg object-cover" />
+          <img src={imageUrl} alt="" loading="lazy" className="h-14 w-14 rounded-lg object-cover" />
         </Link>
       )}
       <div className="min-w-0 flex-1">
