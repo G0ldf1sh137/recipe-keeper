@@ -51,14 +51,14 @@ export const Route = createFileRoute("/calendars/$calendarId")({
   component: CalendarPage,
   notFoundComponent: () => (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
-      <h1 className="font-serif text-2xl font-semibold text-ink">Calendar not found</h1>
+      <h1 className="font-serif text-2xl font-semibold text-ink">Meal Week not found</h1>
       <p className="mt-2 text-ink/60">
-        This calendar doesn't exist, or isn't shared with you.{" "}
+        This Meal Week doesn't exist, or isn't shared with you.{" "}
         <Link
           to="/calendars"
           className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
         >
-          Back to your calendars
+          Back to your Meal Weeks
         </Link>
       </p>
     </div>
@@ -252,7 +252,7 @@ function CalendarPage() {
         to="/calendars"
         className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
       >
-        ← Your calendars
+        ← Your Meal Weeks
       </Link>
 
       <div className="mt-4 flex items-center justify-between">
@@ -308,7 +308,7 @@ function CalendarPage() {
 
       {!calendar.isOwner && calendar.canManage && (
         <p className="mt-3 rounded-lg bg-accent-50 px-3 py-2 text-sm font-medium text-accent-700">
-          Viewing as admin — you aren't the owner of this calendar.
+          Viewing as admin — you aren't the owner of this Meal Week.
         </p>
       )}
 
@@ -345,7 +345,7 @@ function CalendarPage() {
 
       {hasNoEntries ? (
         <p className="mt-6 text-ink/60">
-          This calendar doesn't have any recipes yet.{" "}
+          This Meal Week doesn't have any recipes yet.{" "}
           <Link
             to="/recipes"
             className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
@@ -379,7 +379,7 @@ function CalendarPage() {
       )}
 
       {toast && (
-        <Toast message={`Removed "${toast.title}" from this calendar.`} actionLabel="Undo" onAction={handleUndoRemove} />
+        <Toast message={`Removed "${toast.title}" from this Meal Week.`} actionLabel="Undo" onAction={handleUndoRemove} />
       )}
 
       {!hasNoEntries && (

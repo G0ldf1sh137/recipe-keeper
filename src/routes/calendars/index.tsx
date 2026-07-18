@@ -71,14 +71,14 @@ function CalendarsPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
-      <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Your calendars</h1>
+      <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Your Meal Weeks</h1>
 
       <form onSubmit={handleCreate} className="mt-6 flex gap-3">
         <input
           className="flex-1 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="New calendar name"
+          placeholder="New Meal Week name"
         />
         <button
           type="submit"
@@ -94,14 +94,14 @@ function CalendarsPage() {
           className="mt-6 w-full rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search your calendars"
+          placeholder="Search your Meal Weeks"
         />
       )}
 
       {calendars.length === 0 ? (
-        <p className="mt-6 text-ink/60">No calendars yet. Create one to start planning your week.</p>
+        <p className="mt-6 text-ink/60">No Meal Weeks yet. Create one to start planning your week.</p>
       ) : filteredCalendars.length === 0 ? (
-        <p className="mt-6 text-ink/60">No calendars match "{query}".</p>
+        <p className="mt-6 text-ink/60">No Meal Weeks match "{query}".</p>
       ) : (
         <ul className="mt-6 flex flex-col gap-3">
           {filteredCalendars.map((calendar) => (

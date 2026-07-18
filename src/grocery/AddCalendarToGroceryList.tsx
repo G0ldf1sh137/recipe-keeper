@@ -25,7 +25,7 @@ export function AddCalendarToGroceryList({
   const [results, setResults] = useState<Partial<Record<string, { message: string; listId: string }>>>({});
 
   function resultMessage(addedEntryCount: number, totalEntries: number) {
-    if (totalEntries === 0) return "This calendar has no recipes yet.";
+    if (totalEntries === 0) return "This Meal Week has no recipes yet.";
     return `Added ingredients for ${addedEntryCount} of ${totalEntries} planned meals.`;
   }
 

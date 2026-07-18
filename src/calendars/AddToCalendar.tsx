@@ -75,7 +75,7 @@ export function AddToCalendar({
         className="flex items-center gap-1.5 rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-accent-50"
       >
         <CalendarDays size={16} />
-        Calendar
+        Meal Week
       </Link>
     ) : (
       <a
@@ -83,7 +83,7 @@ export function AddToCalendar({
         className="flex items-center gap-1.5 rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-accent-50"
       >
         <CalendarDays size={16} />
-        Calendar
+        Meal Week
       </a>
     );
   }
@@ -91,7 +91,7 @@ export function AddToCalendar({
   const savedCount = calendars.filter((c) => c.entries.length > 0).length;
 
   return (
-    <DropdownButton label="Calendar" icon={<CalendarDays size={16} />} badge={savedCount || undefined}>
+    <DropdownButton label="Meal Week" icon={<CalendarDays size={16} />} badge={savedCount || undefined}>
       {calendars.length > 0 && (
         <div className="flex flex-col gap-3">
           {calendars.map((calendar) => (
@@ -128,7 +128,7 @@ export function AddToCalendar({
             className="flex-1 rounded-lg border border-accent-100 px-2 py-1 text-sm focus:border-accent-400 focus:outline-none"
             value={newCalendarName}
             onChange={(e) => setNewCalendarName(e.target.value)}
-            placeholder="New calendar name"
+            placeholder="New Meal Week name"
             autoFocus
           />
           <button
@@ -145,7 +145,7 @@ export function AddToCalendar({
           onClick={() => setCreating(true)}
           className={`text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 ${calendars.length > 0 ? "mt-3" : ""}`}
         >
-          + New calendar
+          + New Meal Week
         </button>
       )}
     </DropdownButton>

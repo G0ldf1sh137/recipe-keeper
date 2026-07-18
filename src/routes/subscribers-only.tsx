@@ -5,7 +5,7 @@ import { getSessionUser } from "#/auth/auth.functions";
 const featureLabels = {
   grocery: "Grocery lists",
   pantry: "Pantry",
-  calendars: "Calendars",
+  calendars: "Meal Weeks",
 } as const;
 
 const subscribersOnlySearchSchema = z.object({

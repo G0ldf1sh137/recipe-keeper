@@ -31,7 +31,7 @@ const featureGroups = [
   {
     title: "Cookbooks & meal planning",
     description:
-      "Organize recipes into cookbooks, drag to reorder them (with swipe-to-remove and an undo), schedule them across a weekly calendar with drag-and-drop (including moving a recipe from one day to another), and bulk-add a calendar's recipes to a grocery list in one click.",
+      "Organize recipes into cookbooks, drag to reorder them (with swipe-to-remove and an undo), schedule them across a Meal Week with drag-and-drop (including moving a recipe from one day to another), and bulk-add a Meal Week's recipes to a grocery list in one click.",
   },
   {
     title: "Grocery lists",
@@ -51,7 +51,7 @@ const featureGroups = [
   {
     title: "Sharing & visibility",
     description:
-      "Recipes, cookbooks, and calendars can be public or private, with shareable links; public profile pages show a user's public recipes and cookbooks. Set your own default visibility for new recipes and cookbooks, edit your display name, and upload a custom avatar (or keep your Google account picture) in Settings.",
+      "Recipes, cookbooks, and Meal Weeks can be public or private, with shareable links; public profile pages show a user's public recipes and cookbooks. Set your own default visibility for new recipes and cookbooks, edit your display name, and upload a custom avatar (or keep your Google account picture) in Settings.",
   },
   {
     title: "Community",
