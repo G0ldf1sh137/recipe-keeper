@@ -20,10 +20,13 @@ import { getMakeCount } from "#/makes/makes.functions";
 import { MadeItButton } from "#/makes/MadeItButton";
 import { getCollectionsForRecipe } from "#/collections/collections.functions";
 import { SaveToList } from "#/collections/SaveToList";
-import { getGroceryListsForRecipe } from "#/grocery/grocery.functions";
+import { getGroceryListsForRecipe, getGroceryItemPresence } from "#/grocery/grocery.functions";
 import { AddToGroceryList } from "#/grocery/AddToGroceryList";
+import { AddIngredientToGroceryList, presenceKey } from "#/grocery/AddIngredientToGroceryList";
 import { getCalendarsForRecipe } from "#/calendars/calendars.functions";
 import { AddToCalendar } from "#/calendars/AddToCalendar";
+import { AddIngredientToPantry } from "#/pantry/AddIngredientToPantry";
+import { getCombinedPantryNames } from "#/pantry/pantry.functions";
 import { getMyNote } from "#/notes/notes.functions";
 import { NoteEditor } from "#/notes/NoteEditor";
 import { ShareControl } from "#/sharing/ShareControl";
@@ -99,6 +102,8 @@ function RecipePage() {
   const reportRecipeFn = useServerFn(reportRecipe);
   const getRelatedRecipesFn = useServerFn(getRelatedRecipes);
   const getRatingSummariesFn = useServerFn(getRatingSummaries);
+  const getCombinedPantryNamesFn = useServerFn(getCombinedPantryNames);
+  const getGroceryItemPresenceFn = useServerFn(getGroceryItemPresence);
   const [deleting, setDeleting] = useState(false);
   const [forking, setForking] = useState(false);
   const { scale, setScale, customInput, handleCustomInputChange, activeFactor, isUnscaled } = useRecipeScale();
@@ -106,6 +111,8 @@ function RecipePage() {
 
   const [related, setRelated] = useState<Awaited<ReturnType<typeof getRelatedRecipes>> | null>(null);
   const [similarRatings, setSimilarRatings] = useState<Awaited<ReturnType<typeof getRatingSummaries>>>({});
+  const [pantryNames, setPantryNames] = useState<Set<string> | null>(null);
+  const [groceryPresence, setGroceryPresence] = useState<Set<string> | null>(null);
 
   const cancelledRef = useRef(false);
 
@@ -133,6 +140,24 @@ function RecipePage() {
       cancelledRef.current = true;
     };
   }, [recipe.id, recipe.tags, recipe.ingredients, getRelatedRecipesFn, getRatingSummariesFn]);
+
+  useEffect(() => {
+    if (!isSubscriber) return;
+    let cancelled = false;
+    setPantryNames(null);
+    setGroceryPresence(null);
+    void getCombinedPantryNamesFn().then((names) => {
+      if (cancelled) return;
+      setPantryNames(new Set(names.map((n) => n.trim().toLowerCase())));
+    });
+    void getGroceryItemPresenceFn().then((rows) => {
+      if (cancelled) return;
+      setGroceryPresence(new Set(rows.map((row) => presenceKey(row.listId, row.name, row.unit))));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [recipe.id, isSubscriber, getCombinedPantryNamesFn, getGroceryItemPresenceFn]);
 
   async function handleFork() {
     setForking(true);
@@ -377,14 +402,32 @@ function RecipePage() {
             onCustomInputChange={handleCustomInputChange}
           />
         </div>
-        <ul className="mt-2 list-inside list-disc text-ink/80">
-          {recipe.ingredients.map((ing, i) => (
-            <li key={i}>
-              {[isUnscaled ? ing.qty : scaleQuantity(ing.qty, activeFactor), ing.unit, ing.name]
-                .filter(Boolean)
-                .join(" ")}
-            </li>
-          ))}
+        <ul className="mt-2 flex flex-col gap-1 text-ink/80">
+          {recipe.ingredients.map((ing, i) => {
+            const displayQty = isUnscaled ? ing.qty : scaleQuantity(ing.qty, activeFactor);
+            return (
+              <li key={i} className="flex list-inside list-disc items-center justify-between gap-2">
+                <span className="list-item">{[displayQty, ing.unit, ing.name].filter(Boolean).join(" ")}</span>
+                {isSubscriber && (
+                  <span className="flex shrink-0 gap-1.5">
+                    <AddIngredientToPantry
+                      name={ing.name}
+                      initiallyInPantry={pantryNames?.has(ing.name.trim().toLowerCase()) ?? false}
+                      loading={pantryNames === null}
+                    />
+                    <AddIngredientToGroceryList
+                      qty={displayQty}
+                      unit={ing.unit}
+                      name={ing.name}
+                      groceryLists={groceryLists}
+                      presence={groceryPresence ?? new Set()}
+                      loading={groceryPresence === null}
+                    />
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
 

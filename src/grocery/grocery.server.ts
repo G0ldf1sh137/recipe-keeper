@@ -30,6 +30,17 @@ export async function findGroceryListById(id: string, ownerId: string, isAdmin =
   });
 }
 
+// Name+unit (both trimmed/lowercased, matching getGroceryListWithGroups' grouping
+// key) of every item across all of the owner's lists — lets the UI warn before
+// adding a duplicate rather than silently stacking entries.
+export async function findGroceryItemPresence(ownerId: string) {
+  return db
+    .select({ listId: groceryListItems.listId, name: groceryListItems.name, unit: groceryListItems.unit })
+    .from(groceryListItems)
+    .innerJoin(groceryLists, eq(groceryLists.id, groceryListItems.listId))
+    .where(eq(groceryLists.ownerId, ownerId));
+}
+
 export async function findGroceryListsWithMembership(ownerId: string, recipeId: string) {
   const rows = await db
     .select({

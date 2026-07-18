@@ -16,6 +16,10 @@ export const getPantryItems = createServerFn({ method: "GET" })
   .middleware([requireSubscriberMiddleware])
   .handler(async ({ context }) => listPantryItems(context.user.id));
 
+export const getCombinedPantryNames = createServerFn({ method: "GET" })
+  .middleware([requireSubscriberMiddleware])
+  .handler(async ({ context }) => listCombinedPantryNames(context.user.id));
+
 export const addPantryItem = createServerFn({ method: "POST" })
   .middleware([requireSubscriberMiddleware])
   .validator(pantryItemSchema)

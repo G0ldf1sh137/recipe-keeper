@@ -5,11 +5,15 @@ export function DropdownButton({
   icon,
   badge,
   children,
+  iconOnly = false,
+  disabled = false,
 }: {
   label: string;
   icon: React.ReactNode;
   badge?: string | number;
   children: React.ReactNode;
+  iconOnly?: boolean;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -39,10 +43,17 @@ export function DropdownButton({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-accent-50"
+        disabled={disabled}
+        aria-label={iconOnly ? label : undefined}
+        title={iconOnly ? label : undefined}
+        className={
+          iconOnly
+            ? "flex items-center rounded-lg border-2 border-accent-300 p-1.5 text-ink hover:bg-accent-50 disabled:opacity-50"
+            : "flex items-center gap-1.5 rounded-lg border-2 border-accent-300 px-3 py-1.5 text-sm font-medium text-ink hover:bg-accent-50 disabled:opacity-50"
+        }
       >
         {icon}
-        {label}
+        {!iconOnly && label}
         {!!badge && (
           <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-600 px-1 text-xs font-bold text-white">
             {badge}
@@ -50,7 +61,9 @@ export function DropdownButton({
         )}
       </button>
       {open && (
-        <div className="absolute z-10 mt-2 w-72 rounded-lg border-2 border-accent-200 bg-paper p-3 shadow-lg">
+        <div
+          className={`absolute z-10 mt-2 w-72 rounded-lg border-2 border-accent-200 bg-paper p-3 shadow-lg ${iconOnly ? "right-0" : ""}`}
+        >
           {children}
         </div>
       )}

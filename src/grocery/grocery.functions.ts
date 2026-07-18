@@ -15,6 +15,7 @@ import {
 import {
   findGroceryListsByOwner,
   findGroceryListsWithMembership,
+  findGroceryItemPresence,
   insertGroceryList,
   renameOwnedGroceryList,
   deleteOwnedGroceryList,
@@ -69,6 +70,10 @@ export const getGroceryListsForRecipe = createServerFn({ method: "GET" })
   .middleware([requireSubscriberMiddleware])
   .validator(groceryListsForRecipeSchema)
   .handler(async ({ data, context }) => findGroceryListsWithMembership(context.user.id, data.recipeId));
+
+export const getGroceryItemPresence = createServerFn({ method: "GET" })
+  .middleware([requireSubscriberMiddleware])
+  .handler(async ({ context }) => findGroceryItemPresence(context.user.id));
 
 export const toggleRecipeInGroceryList = createServerFn({ method: "POST" })
   .middleware([requireSubscriberMiddleware])
