@@ -4,6 +4,10 @@ import { users } from "#/db/schema";
 import type { Visibility, WeekStartDay } from "#/db/schema";
 import type { GoogleUserInfo } from "./google.server";
 
+export function isUserBanned(bannedUntil: Date | null): boolean {
+  return !!bannedUntil && bannedUntil.getTime() > Date.now();
+}
+
 function slugify(input: string) {
   return input
     .toLowerCase()
@@ -76,6 +80,12 @@ export async function setUserAdminStatus(userId: string, isAdmin: boolean) {
 
 export async function setUserModeratorStatus(userId: string, isModerator: boolean) {
   return db.update(users).set({ isModerator }).where(eq(users.id, userId)).returning();
+}
+
+// A bannedUntil far enough in the past clears the ban; far enough in the future is
+// effectively permanent — there's no separate boolean, the timestamp itself is the model.
+export async function setUserBannedUntil(userId: string, bannedUntil: Date | null) {
+  return db.update(users).set({ bannedUntil }).where(eq(users.id, userId)).returning();
 }
 
 export async function setUserIsSubscriberStatus(userId: string, isSubscriber: boolean) {

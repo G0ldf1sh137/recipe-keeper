@@ -366,6 +366,14 @@ function AuthHeader({
           </div>
         )}
       </header>
+      {user && user.bannedUntil && new Date(user.bannedUntil) > new Date() && (
+        <div className="flex flex-wrap items-center justify-center gap-2 border-b-2 border-rust bg-rust/10 px-4 py-2 text-sm text-ink">
+          <span>
+            Your account is temporarily suspended until {new Date(user.bannedUntil).toLocaleString()}. You
+            can still browse, but can't post new content until then.
+          </span>
+        </div>
+      )}
       {user && impersonationStatus.isImpersonating && (
         <div className="flex flex-wrap items-center justify-center gap-2 border-b-2 border-rust bg-rust/10 px-4 py-2 text-sm text-ink">
           <span>

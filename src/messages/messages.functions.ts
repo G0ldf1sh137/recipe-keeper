@@ -18,10 +18,15 @@ import {
   deleteMessageById,
 } from "./messages.server";
 import { findUserById, updateUserMessagingPreferences } from "#/auth/users.server";
-import { sessionMiddleware, requireAuthMiddleware, requireModeratorMiddleware } from "#/auth/auth-middleware";
+import {
+  sessionMiddleware,
+  requireAuthMiddleware,
+  requireModeratorMiddleware,
+  requireNotBannedMiddleware,
+} from "#/auth/auth-middleware";
 
 export const startConversation = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(startConversationSchema)
   .handler(async ({ data, context }) => {
     const conversation = await findOrCreateConversation(context.user.id, data.userId);
@@ -62,7 +67,7 @@ export const listConversations = createServerFn({ method: "GET" })
   .handler(async ({ context }) => findConversationsForUser(context.user.id));
 
 export const sendMessage = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(sendMessageSchema)
   .handler(async ({ data, context }) => {
     const conversation = await findConversationForParticipant(data.conversationId, context.user.id);

@@ -6,15 +6,17 @@ import {
   setUserIsSubscriberSchema,
   searchUsersSchema,
   deleteUserSchema,
+  banUserSchema,
 } from "./schemas";
 import {
   setUserAdminStatus,
   setUserModeratorStatus,
   setUserIsSubscriberStatus,
+  setUserBannedUntil,
   searchUsers as searchUsersDb,
   deleteUser as deleteUserDb,
 } from "./users.server";
-import { requireAdminMiddleware } from "./auth-middleware";
+import { requireAdminMiddleware, requireModeratorMiddleware } from "./auth-middleware";
 
 export const searchUsers = createServerFn({ method: "GET" })
   .middleware([requireAdminMiddleware])
@@ -50,6 +52,23 @@ export const setUserIsSubscriber = createServerFn({ method: "POST" })
   .validator(setUserIsSubscriberSchema)
   .handler(async ({ data }) => {
     const updated = (await setUserIsSubscriberStatus(data.userId, data.isSubscriber)).at(0);
+    if (!updated) throw notFound();
+    return updated;
+  });
+
+// Moderators and admins alike can timeout a user while working a report — a temporary
+// posting suspension, distinct from the admin-only isAdmin/isModerator/isSubscriber toggles
+// and account deletion above. Setting minutes far enough out (e.g. years) is how a
+// permanent ban is expressed — there's no separate boolean, just how far bannedUntil is set.
+export const banUser = createServerFn({ method: "POST" })
+  .middleware([requireModeratorMiddleware])
+  .validator(banUserSchema)
+  .handler(async ({ data, context }) => {
+    if (data.userId === context.user.id) {
+      throw new Error("You can't ban yourself.");
+    }
+    const bannedUntil = new Date(Date.now() + data.minutes * 60_000);
+    const updated = (await setUserBannedUntil(data.userId, bannedUntil)).at(0);
     if (!updated) throw notFound();
     return updated;
   });

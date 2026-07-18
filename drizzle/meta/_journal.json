@@ -267,6 +267,13 @@
       "when": 1784383592863,
       "tag": "0037_glossy_shadow_king",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1784385034852,
+      "tag": "0038_careful_charles_xavier",
+      "breakpoints": true
     }
   ]
 }

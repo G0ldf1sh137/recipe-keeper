@@ -1,6 +1,7 @@
 import { createMiddleware } from "@tanstack/react-start";
 import { readSessionToken } from "./cookies.server";
 import { validateSessionToken } from "./session.server";
+import { isUserBanned } from "./users.server";
 
 export const sessionMiddleware = createMiddleware({ type: "function" }).server(async ({ next }) => {
   const token = readSessionToken();
@@ -27,6 +28,20 @@ export const requireAdminMiddleware = createMiddleware({ type: "function" })
   .middleware([requireAuthMiddleware])
   .server(async ({ next, context }) => {
     if (!context.user.isAdmin) throw new Error("Forbidden");
+    return next({
+      context: { user: context.user, realUser: context.realUser, isImpersonating: context.isImpersonating },
+    });
+  });
+
+// Gates public content creation/editing (recipes, comments, messages, ratings, follows, forks,
+// cookbooks, "I made this" posts) for users currently serving a moderator/admin-issued timeout.
+// Browsing and account/settings actions are untouched — only this middleware's call sites are blocked.
+export const requireNotBannedMiddleware = createMiddleware({ type: "function" })
+  .middleware([requireAuthMiddleware])
+  .server(async ({ next, context }) => {
+    if (isUserBanned(context.user.bannedUntil)) {
+      throw new Error("Your account is temporarily suspended. You can still browse, but can't post new content.");
+    }
     return next({
       context: { user: context.user, realUser: context.realUser, isImpersonating: context.isImpersonating },
     });

@@ -24,6 +24,11 @@ export const setUserModeratorSchema = z.object({
   isModerator: z.boolean(),
 });
 
+export const banUserSchema = z.object({
+  userId: z.string().min(1),
+  minutes: z.number().int().positive(),
+});
+
 export const setUserIsSubscriberSchema = z.object({
   userId: z.string(),
   isSubscriber: z.boolean(),

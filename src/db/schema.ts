@@ -41,6 +41,7 @@ export const users = pgTable("users", {
   username: text("username").unique(),
   isAdmin: boolean("is_admin").notNull().default(false),
   isModerator: boolean("is_moderator").notNull().default(false),
+  bannedUntil: timestamp("banned_until", { mode: "date" }),
   isSubscriber: boolean("is_subscriber").notNull().default(false),
   notifyOnComment: boolean("notify_on_comment").notNull().default(true),
   notifyOnRating: boolean("notify_on_rating").notNull().default(true),

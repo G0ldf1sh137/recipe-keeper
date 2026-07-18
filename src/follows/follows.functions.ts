@@ -3,10 +3,10 @@ import { notFound } from "@tanstack/react-router";
 import { toggleFollowSchema, listByUsernameSchema } from "./schemas";
 import { toggleFollow as toggleFollowDb, findFollowers, findFollowing } from "./follows.server";
 import { findUserByUsername } from "#/auth/users.server";
-import { requireAuthMiddleware } from "#/auth/auth-middleware";
+import { requireNotBannedMiddleware } from "#/auth/auth-middleware";
 
 export const toggleFollow = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(toggleFollowSchema)
   .handler(async ({ data, context }) => {
     const result = await toggleFollowDb(context.user.id, data.userId);

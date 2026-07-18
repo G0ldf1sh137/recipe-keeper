@@ -4,7 +4,7 @@ import { rateRecipeSchema, getRatingSummarySchema, getRatingSummariesSchema } fr
 import { findRatingSummary, findRatingSummariesForRecipes, hasRated, upsertRating } from "./ratings.server";
 import { findRecipeById, filterVisibleRecipeIds } from "#/recipes/recipes.server";
 import { insertNotification } from "#/notifications/notifications.server";
-import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
+import { sessionMiddleware, requireNotBannedMiddleware } from "#/auth/auth-middleware";
 
 export const getRatingSummary = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
@@ -24,7 +24,7 @@ export const getRatingSummaries = createServerFn({ method: "GET" })
   });
 
 export const rateRecipe = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(rateRecipeSchema)
   .handler(async ({ data, context }) => {
     const recipe = await findRecipeById(data.recipeId, context.user.id, undefined, context.user.isAdmin);

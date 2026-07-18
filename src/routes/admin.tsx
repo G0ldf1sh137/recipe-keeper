@@ -2,12 +2,27 @@ import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
-import { deleteUser, searchUsers, setUserAdmin, setUserModerator, setUserIsSubscriber } from "#/auth/admin.functions";
+import {
+  banUser,
+  deleteUser,
+  searchUsers,
+  setUserAdmin,
+  setUserModerator,
+  setUserIsSubscriber,
+} from "#/auth/admin.functions";
+import type { ReportRow } from "#/reports/reports.server";
 import { startImpersonation } from "#/auth/impersonation.functions";
 import { listOpenReports, resolveReport } from "#/reports/reports.functions";
 import { deleteComment } from "#/comments/comments.functions";
 import { deleteMessage } from "#/messages/messages.functions";
 import { moderatorDeleteRecipe } from "#/recipes/recipes.functions";
+
+function reportedUser(report: ReportRow): { id: string; name: string } | null {
+  if (report.comment) return { id: report.comment.authorId, name: report.comment.authorName };
+  if (report.message) return { id: report.message.senderId, name: report.message.senderName };
+  if (report.recipe) return { id: report.recipe.ownerId, name: report.recipe.ownerName };
+  return null;
+}
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async () => {
@@ -33,10 +48,12 @@ function AdminPage() {
   const deleteCommentFn = useServerFn(deleteComment);
   const deleteMessageFn = useServerFn(deleteMessage);
   const moderatorDeleteRecipeFn = useServerFn(moderatorDeleteRecipe);
+  const banUserFn = useServerFn(banUser);
   const searchUsersFn = useServerFn(searchUsers);
   const startImpersonationFn = useServerFn(startImpersonation);
   const deleteUserFn = useServerFn(deleteUser);
 
+  const [timeoutMinutes, setTimeoutMinutes] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Awaited<ReturnType<typeof searchUsers>> | null>(null);
   const [searching, setSearching] = useState(false);
@@ -102,6 +119,18 @@ function AdminPage() {
     await router.invalidate();
   }
 
+  async function handleTimeout(reportId: string, userId: string, userName: string) {
+    const raw = timeoutMinutes[reportId];
+    const minutes = Number(raw);
+    if (!raw || !Number.isInteger(minutes) || minutes <= 0) {
+      window.alert("Enter a whole number of minutes greater than 0.");
+      return;
+    }
+    if (!window.confirm(`Suspend ${userName}'s ability to post for ${minutes} minute(s)?`)) return;
+    await banUserFn({ data: { userId, minutes } });
+    setTimeoutMinutes((prev) => ({ ...prev, [reportId]: "" }));
+  }
+
   async function handleImpersonate(userId: string) {
     await startImpersonationFn({ data: { userId } });
     // Full reload, not router.invalidate() — every component on the page may have
@@ -134,6 +163,13 @@ function AdminPage() {
               >
                 <p className="text-sm text-ink/60">
                   Reported by <span className="font-medium text-ink">{report.reporter.name}</span>
+                  {reportedUser(report) && (
+                    <>
+                      {" "}
+                      &middot; posted by{" "}
+                      <span className="font-medium text-ink">{reportedUser(report)!.name}</span>
+                    </>
+                  )}
                 </p>
                 {report.recipe && (
                   <p className="mt-1">
@@ -216,6 +252,30 @@ function AdminPage() {
                     </>
                   )}
                 </div>
+                {reportedUser(report) && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      value={timeoutMinutes[report.id] ?? ""}
+                      onChange={(e) =>
+                        setTimeoutMinutes((prev) => ({ ...prev, [report.id]: e.target.value }))
+                      }
+                      placeholder="Minutes"
+                      className="w-24 rounded-lg border border-accent-100 px-2 py-1 text-sm focus:border-accent-400 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleTimeout(report.id, reportedUser(report)!.id, reportedUser(report)!.name)
+                      }
+                      className="text-sm font-medium text-red-600 hover:text-red-700"
+                    >
+                      Timeout {reportedUser(report)!.name}
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

@@ -4,7 +4,7 @@ import { createCommentSchema, listCommentsSchema, deleteCommentSchema } from "./
 import { findCommentById, findCommentTreeForRecipe, insertComment, deleteCommentById } from "./comments.server";
 import { findRecipeById } from "#/recipes/recipes.server";
 import { insertNotification } from "#/notifications/notifications.server";
-import { sessionMiddleware, requireAuthMiddleware, requireModeratorMiddleware } from "#/auth/auth-middleware";
+import { sessionMiddleware, requireModeratorMiddleware, requireNotBannedMiddleware } from "#/auth/auth-middleware";
 
 export const listComments = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
@@ -16,7 +16,7 @@ export const listComments = createServerFn({ method: "GET" })
   });
 
 export const createComment = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(createCommentSchema)
   .handler(async ({ data, context }) => {
     const recipe = await findRecipeById(data.recipeId, context.user.id, undefined, context.user.isAdmin);

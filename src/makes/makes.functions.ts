@@ -3,7 +3,7 @@ import { notFound } from "@tanstack/react-router";
 import { markRecipeMadeSchema, getMakeCountSchema } from "./schemas";
 import { insertMake, countMakes } from "./makes.server";
 import { findRecipeById } from "#/recipes/recipes.server";
-import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
+import { sessionMiddleware, requireNotBannedMiddleware } from "#/auth/auth-middleware";
 
 export const getMakeCount = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
@@ -15,7 +15,7 @@ export const getMakeCount = createServerFn({ method: "GET" })
   });
 
 export const markRecipeMade = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(markRecipeMadeSchema)
   .handler(async ({ data, context }) => {
     const recipe = await findRecipeById(data.recipeId, context.user.id, undefined, context.user.isAdmin);

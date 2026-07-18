@@ -33,7 +33,7 @@ import {
   updateCollectionVisibility as updateOwnedCollectionVisibility,
 } from "./collections.server";
 import { findRecipeById } from "#/recipes/recipes.server";
-import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
+import { sessionMiddleware, requireAuthMiddleware, requireNotBannedMiddleware } from "#/auth/auth-middleware";
 
 export const listMyCollections = createServerFn({ method: "GET" })
   .middleware([requireAuthMiddleware])
@@ -104,7 +104,7 @@ export const revokeCollectionShare = createServerFn({ method: "POST" })
   });
 
 export const updateCollectionVisibility = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(updateCollectionVisibilitySchema)
   .handler(async ({ data, context }) => {
     const updated = await updateOwnedCollectionVisibility(
@@ -118,14 +118,14 @@ export const updateCollectionVisibility = createServerFn({ method: "POST" })
   });
 
 export const createCollection = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(createCollectionSchema)
   .handler(async ({ data, context }) =>
     insertCollection(data.name, context.user.id, context.user.defaultCollectionVisibility),
   );
 
 export const renameCollection = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(renameCollectionSchema)
   .handler(async ({ data, context }) => {
     const updated = await renameOwnedCollection(data.id, context.user.id, data.name, context.user.isAdmin);
@@ -148,7 +148,7 @@ export const getCollectionsForRecipe = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => findCollectionsWithMembership(context.user.id, data.recipeId));
 
 export const toggleRecipeInCollection = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(toggleRecipeInCollectionSchema)
   .handler(async ({ data, context }) => {
     const recipe = await findRecipeById(data.recipeId, context.user.id);

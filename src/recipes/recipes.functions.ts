@@ -30,7 +30,12 @@ import {
 } from "./recipes.server";
 import { insertNotification } from "#/notifications/notifications.server";
 import { findFollow } from "#/follows/follows.server";
-import { sessionMiddleware, requireAuthMiddleware, requireModeratorMiddleware } from "#/auth/auth-middleware";
+import {
+  sessionMiddleware,
+  requireAuthMiddleware,
+  requireModeratorMiddleware,
+  requireNotBannedMiddleware,
+} from "#/auth/auth-middleware";
 
 export const listRecipes = createServerFn({ method: "GET" })
   .middleware([sessionMiddleware])
@@ -100,7 +105,7 @@ export const revokeRecipeShare = createServerFn({ method: "POST" })
   });
 
 export const forkRecipe = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(forkRecipeSchema)
   .handler(async ({ data, context }) => {
     const result = await forkRecipeDb(data.recipeId, context.user.id, data.shareToken);
@@ -125,12 +130,12 @@ export const getTagCounts = createServerFn({ method: "GET" })
   .handler(async ({ context }) => findTagCounts(context.user?.id));
 
 export const createRecipe = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(createRecipeSchema)
   .handler(async ({ data, context }) => insertRecipe(data, context.user.id));
 
 export const updateRecipe = createServerFn({ method: "POST" })
-  .middleware([requireAuthMiddleware])
+  .middleware([requireNotBannedMiddleware])
   .validator(updateRecipeSchema)
   .handler(async ({ data, context }) => {
     const recipe = await updateOwnedRecipe(data, context.user.id, context.user.isAdmin);
