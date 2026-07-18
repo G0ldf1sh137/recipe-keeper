@@ -12,6 +12,8 @@ import {
 import { updateNotificationPreferences } from "#/notifications/notifications.functions";
 import { updateMessagingPreferences } from "#/messages/messages.functions";
 import { AvatarUpload } from "#/uploads/AvatarUpload";
+import { getColorThemePreference } from "#/theme/theme.functions";
+import { ColorThemeSwitcher } from "#/theme/ColorThemeSwitcher";
 import { visibilityValues, weekStartDayValues } from "#/db/schema";
 import type { Visibility, WeekStartDay } from "#/db/schema";
 
@@ -26,12 +28,12 @@ export const Route = createFileRoute("/settings")({
     if (!user) throw redirect({ to: "/login" });
     return { user };
   },
-  loader: async ({ context }) => ({ user: context.user }),
+  loader: async ({ context }) => ({ user: context.user, colorTheme: await getColorThemePreference() }),
   component: SettingsPage,
 });
 
 function SettingsPage() {
-  const { user } = Route.useLoaderData();
+  const { user, colorTheme } = Route.useLoaderData();
   const updateUsernameFn = useServerFn(updateUsername);
   const updateNameFn = useServerFn(updateName);
   const updateAvatarOverrideFn = useServerFn(updateAvatarOverride);
@@ -128,6 +130,12 @@ function SettingsPage() {
           onChange={handleAvatarChange}
         />
         <p className="text-sm text-ink/60">{user.email}</p>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-2">
+        <h2 className="font-serif text-xl font-semibold text-ink">Appearance</h2>
+        <p className="text-sm text-ink/50">Pick a color theme. Applies instantly on this device.</p>
+        <ColorThemeSwitcher initialColorTheme={colorTheme} />
       </div>
 
       <form onSubmit={handleSave} className="mt-6 flex flex-col gap-6">

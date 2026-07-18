@@ -72,8 +72,9 @@ const featureGroups = [
     description: "Download any recipe, or an entire cookbook, as a PDF.",
   },
   {
-    title: "Dark mode",
-    description: "Switch between light, dark, or auto themes to match your system.",
+    title: "Themes",
+    description:
+      "Switch between light, dark, or auto to match your system, and pick a color theme — Warm, Ocean, Forest, Berry, or Slate — in Settings.",
   },
 ];
 

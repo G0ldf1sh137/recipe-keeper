@@ -6,7 +6,7 @@ import { useServerFn } from '@tanstack/react-start'
 import { Bell, MessageCircle } from 'lucide-react'
 import { getSessionUser, logout } from '#/auth/auth.functions'
 import { getImpersonationStatus, endImpersonation } from '#/auth/impersonation.functions'
-import { getThemePreference } from '#/theme/theme.functions'
+import { getThemePreference, getColorThemePreference } from '#/theme/theme.functions'
 import { ThemeToggle } from '#/theme/ThemeToggle'
 import { getUnreadNotificationCount } from '#/notifications/notifications.functions'
 import { getUnreadMessageCount } from '#/messages/messages.functions'
@@ -48,25 +48,31 @@ export const Route = createRootRoute({
     ],
   }),
   loader: async () => {
-    const [user, theme, unreadCount, unreadMessageCount, impersonationStatus] = await Promise.all([
+    const [user, theme, colorTheme, unreadCount, unreadMessageCount, impersonationStatus] = await Promise.all([
       getSessionUser(),
       getThemePreference(),
+      getColorThemePreference(),
       getUnreadNotificationCount(),
       getUnreadMessageCount(),
       getImpersonationStatus(),
     ])
-    return { user, theme, unreadCount, unreadMessageCount, impersonationStatus }
+    return { user, theme, colorTheme, unreadCount, unreadMessageCount, impersonationStatus }
   },
   shellComponent: RootDocument,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { user, theme, unreadCount, unreadMessageCount, impersonationStatus } = Route.useLoaderData()
+  const { user, theme, colorTheme, unreadCount, unreadMessageCount, impersonationStatus } = Route.useLoaderData()
   const router = useRouter()
   const isCookMode = /^\/recipes\/[^/]+\/cook$/.test(router.state.location.pathname)
 
   return (
-    <html lang="en" className={theme === 'dark' ? 'dark' : undefined} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={theme === 'dark' ? 'dark' : undefined}
+      data-theme={colorTheme === 'warm' ? undefined : colorTheme}
+      suppressHydrationWarning
+    >
       <head>
         <HeadContent />
         {theme === 'system' && (
@@ -361,7 +367,7 @@ function AuthHeader({
         )}
       </header>
       {user && impersonationStatus.isImpersonating && (
-        <div className="flex flex-wrap items-center justify-center gap-2 border-b-2 border-yellow-300 bg-yellow-50 px-4 py-2 text-sm text-yellow-900">
+        <div className="flex flex-wrap items-center justify-center gap-2 border-b-2 border-rust bg-rust/10 px-4 py-2 text-sm text-ink">
           <span>
             Viewing as <strong>{user.name}</strong>
             {impersonationStatus.realUserName && ` (impersonated by ${impersonationStatus.realUserName})`}

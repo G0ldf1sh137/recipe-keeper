@@ -12,3 +12,15 @@ export const getThemePreference = createServerFn({ method: "GET" }).handler(asyn
   const value = match ? decodeURIComponent(match[1]) : undefined;
   return (themeValues as readonly string[]).includes(value ?? "") ? (value as ThemePreference) : "system";
 });
+
+export const colorThemeValues = ["warm", "ocean", "forest", "berry", "slate"] as const;
+export type ColorTheme = (typeof colorThemeValues)[number];
+
+export const COLOR_THEME_COOKIE = "colorTheme";
+
+export const getColorThemePreference = createServerFn({ method: "GET" }).handler(async () => {
+  const header = getRequestHeader("cookie");
+  const match = header?.match(/(?:^|;\s*)colorTheme=([^;]*)/);
+  const value = match ? decodeURIComponent(match[1]) : undefined;
+  return (colorThemeValues as readonly string[]).includes(value ?? "") ? (value as ColorTheme) : "warm";
+});
