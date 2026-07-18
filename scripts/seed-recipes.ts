@@ -1,8 +1,14 @@
 // Disposable local dev seeding script — not part of the app. Run with:
 //   npx tsx scripts/seed-recipes.ts
-// Populates 50 varied recipes owned by the persistent test-admin/test-sub/test-free
-// fixtures (never real users), each tagged "seed-data" for easy identification/cleanup:
+// Populates 1000 varied recipes (50 dish names x 20 modifiers) owned by the
+// persistent test-admin/test-sub/test-free fixtures (never real users), each
+// tagged "seed-data" for easy identification/cleanup:
 //   DELETE FROM recipes WHERE tags @> '{"seed-data"}';
+// Photo/step-photo URLs are drawn from a small pool of images already sitting
+// in the app's S3 bucket (reused verbatim across many rows, exactly how
+// forking already shares one S3 object across multiple recipes — see
+// findAllReferencedImageUrls in recipes.server.ts) rather than uploading or
+// referencing 1000+ new external images.
 import { insertRecipe } from "#/recipes/recipes.server";
 import { findUserByUsername } from "#/auth/users.server";
 import type { createRecipeSchema } from "#/recipes/schemas";
@@ -98,6 +104,33 @@ const TAG_POOL = [
 
 const IMAGE_KEYWORDS = ["food", "cooking", "kitchen", "dinner", "meal", "plate", "recipe", "restaurant"];
 
+// Combined with DISH_NAMES (50 x 20 = 1000) to get enough unique-ish titles
+// without repeating the exact same dish name a thousand times.
+const MODIFIERS = [
+  "Classic", "Spicy", "Quick", "Grandma's", "Weeknight", "Restaurant-Style", "Healthy", "Loaded",
+  "Smoky", "Zesty", "Homestyle", "Rustic", "Simple", "Ultimate", "Creamy", "Crispy",
+  "Slow-Cooked", "One-Pot", "5-Ingredient", "Copycat",
+];
+
+// Real objects already sitting in the app's S3 bucket (uploaded during earlier
+// manual testing) — reused across every seeded recipe's photos/step photos
+// instead of creating new S3 objects for 1000+ rows.
+const S3_PHOTO_POOL = [
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/1755e46202c8b43307ba1fed3e76b59c.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/ef8f5731011bab08db1130b7b63a8244.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/3361e8251abd2716037d247b581fd93f.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/edc5738797c181cb602373b71f851fa9.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/70c8247e11fc10b9b3b13c9457b3024e.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/5da835c09145abcbd35e0068b3f91bde.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/f583ca7251b2e2aefd997a120a5789b2.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/1f4bc76c3d20519450b1e416b2ccdfb9.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/9768d7ddd5d6dcf9a77461742eab2cbd.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/b22a0a8ccd5f6193d6b610961df145fb.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/8506941727f612da49558deb46c424bc.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/de276f66cf9219fabcd499845689f0de.jpg",
+  "https://recipe-keeper-103930329104-us-east-2-an.s3.us-east-2.amazonaws.com/b0cb69af96e0486627398cba9d78ab17.jpg",
+];
+
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -111,10 +144,8 @@ function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-let imageCounter = 0;
 function randomImageUrl(): string {
-  imageCounter++;
-  return `https://picsum.photos/seed/lemmecook-seed-${imageCounter}/900/675`;
+  return pick(S3_PHOTO_POOL);
 }
 
 function buildRecipe(dishName: string, index: number): z.infer<typeof createRecipeSchema> {
@@ -161,6 +192,12 @@ function buildRecipe(dishName: string, index: number): z.infer<typeof createReci
   };
 }
 
+// 50 dish names x 20 modifiers = 1000 unique titles, shuffled so runs aren't
+// alphabetically/dish-grouped in the DB.
+const TITLES = MODIFIERS.flatMap((modifier) => DISH_NAMES.map((dish) => `${modifier} ${dish}`)).sort(
+  () => Math.random() - 0.5,
+);
+
 async function main() {
   const owners = await Promise.all(
     ["test-admin", "test-sub", "test-free"].map((username) => findUserByUsername(username)),
@@ -173,12 +210,14 @@ async function main() {
   }
   const ownerIds = owners.map((u) => u!.id);
 
-  console.log(`Seeding ${DISH_NAMES.length} recipes across ${ownerIds.length} owners...`);
-  for (let i = 0; i < DISH_NAMES.length; i++) {
-    const recipe = buildRecipe(DISH_NAMES[i], i);
+  console.log(`Seeding ${TITLES.length} recipes across ${ownerIds.length} owners...`);
+  for (let i = 0; i < TITLES.length; i++) {
+    const recipe = buildRecipe(TITLES[i], i);
     const ownerId = ownerIds[i % ownerIds.length];
     await insertRecipe(recipe, ownerId);
-    console.log(`  [${i + 1}/${DISH_NAMES.length}] ${recipe.title} (owner ${i % ownerIds.length})`);
+    if ((i + 1) % 50 === 0 || i === TITLES.length - 1) {
+      console.log(`  [${i + 1}/${TITLES.length}] ${recipe.title} (owner ${i % ownerIds.length})`);
+    }
   }
   console.log("Done.");
 }
