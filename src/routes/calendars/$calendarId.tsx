@@ -244,6 +244,8 @@ function CalendarPage() {
     await router.invalidate();
   }
 
+  const hasNoEntries = dayOfWeekValues.every((day) => entriesByDay[day].length === 0);
+
   return (
     <div className="mx-auto max-w-4xl p-4 sm:p-8">
       <Link
@@ -341,39 +343,54 @@ function CalendarPage() {
         </span>
       )}
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-        onDragCancel={handleDragCancel}
-      >
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-7">
-          {dayOfWeekValues.map((day) => (
-            <CalendarDayColumn
-              key={day}
-              day={day}
-              dayLabel={dayLabels[day]}
-              entries={entriesByDay[day]}
-              totals={sumDayMacros(entriesByDay[day])}
-              canManage={calendar.canManage}
-              onRemove={handleRemove}
-            />
-          ))}
-        </div>
-      </DndContext>
+      {hasNoEntries ? (
+        <p className="mt-6 text-ink/60">
+          This calendar doesn't have any recipes yet.{" "}
+          <Link
+            to="/recipes"
+            className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          >
+            Browse recipes
+          </Link>{" "}
+          to add some.
+        </p>
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+        >
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-7">
+            {dayOfWeekValues.map((day) => (
+              <CalendarDayColumn
+                key={day}
+                day={day}
+                dayLabel={dayLabels[day]}
+                entries={entriesByDay[day]}
+                totals={sumDayMacros(entriesByDay[day])}
+                canManage={calendar.canManage}
+                onRemove={handleRemove}
+              />
+            ))}
+          </div>
+        </DndContext>
+      )}
 
       {toast && (
         <Toast message={`Removed "${toast.title}" from this calendar.`} actionLabel="Undo" onAction={handleUndoRemove} />
       )}
 
-      <AddCalendarToGroceryList
-        calendarId={calendar.id}
-        shareToken={shareToken}
-        groceryLists={groceryLists}
-        canSave={isSubscriber}
-        isLoggedIn={!!user}
-      />
+      {!hasNoEntries && (
+        <AddCalendarToGroceryList
+          calendarId={calendar.id}
+          shareToken={shareToken}
+          groceryLists={groceryLists}
+          canSave={isSubscriber}
+          isLoggedIn={!!user}
+        />
+      )}
     </div>
   );
 }
