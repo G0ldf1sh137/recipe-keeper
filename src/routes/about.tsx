@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 // Keep this list in sync with design-plan.md — add an entry here for
 // any new *user-facing* feature milestone.
@@ -84,6 +84,13 @@ function AboutPage() {
         LemmeCook is a place to write up, organize, and share your recipes — with a few tools to make
         cooking and meal planning easier along the way.
       </p>
+
+      <Link
+        to="/recipes"
+        className="mt-4 inline-block font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+      >
+        Go to recipes →
+      </Link>
 
       <div className="mt-8 flex flex-col gap-6">
         {featureGroups.map((group) => (
