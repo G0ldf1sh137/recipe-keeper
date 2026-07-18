@@ -89,15 +89,16 @@ function RecipesListPage() {
   const [qInput, setQInput] = useState(search.q ?? "");
   useEffect(() => setQInput(search.q ?? ""), [search.q]);
 
-  function handleFilterSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    navigate({
-      search: (prev) => ({
-        ...prev,
-        q: qInput.trim() || undefined,
-      }),
-    });
-  }
+  // Live search: debounce so we don't refetch on every keystroke, mirroring
+  // the same setTimeout/clearTimeout pattern used for admin's user search.
+  useEffect(() => {
+    const trimmed = qInput.trim();
+    if (trimmed === (search.q ?? "")) return;
+    const timeout = window.setTimeout(() => {
+      navigate({ search: (prev) => ({ ...prev, q: trimmed || undefined }) });
+    }, 300);
+    return () => window.clearTimeout(timeout);
+  }, [qInput, search.q, navigate]);
 
   function handleVisibilityChange(value: string) {
     navigate({
@@ -151,7 +152,7 @@ function RecipesListPage() {
         Browse tags
       </Link>
 
-      <form onSubmit={handleFilterSubmit} className="mt-6 flex flex-wrap items-end gap-3">
+      <div className="mt-6 flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
           <span className="text-sm font-medium text-ink/70">Search</span>
           <input
@@ -191,13 +192,6 @@ function RecipesListPage() {
           </select>
         </label>
 
-        <button
-          type="submit"
-          className="rounded-lg border-2 border-accent-300 px-4 py-2 font-medium text-ink transition-colors hover:bg-accent-50"
-        >
-          Apply
-        </button>
-
         {hasFilters && (
           <Link
             to="/recipes"
@@ -207,7 +201,7 @@ function RecipesListPage() {
             Clear filters
           </Link>
         )}
-      </form>
+      </div>
 
       {recipes.length === 0 ? (
         <p className="mt-6 text-ink/60">
