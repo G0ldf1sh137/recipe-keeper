@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, ne } from "drizzle-orm";
+import { and, eq, ilike, isNotNull, ne, or } from "drizzle-orm";
 import { db } from "#/db/index";
 import { users } from "#/db/schema";
 import type { GoogleUserInfo } from "./google.server";
@@ -27,6 +27,10 @@ export async function findUserByUsername(username: string) {
   return db.query.users.findFirst({ where: eq(users.username, username.toLowerCase()) });
 }
 
+export async function findUserById(id: string) {
+  return db.query.users.findFirst({ where: eq(users.id, id) });
+}
+
 export async function updateUserUsername(userId: string, username: string) {
   const taken = await db.query.users.findFirst({
     where: and(eq(users.username, username), ne(users.id, userId)),
@@ -37,8 +41,13 @@ export async function updateUserUsername(userId: string, username: string) {
   return { user: updated } as const;
 }
 
-export async function listAllUsers() {
-  return db.query.users.findMany({ orderBy: (u, { asc }) => [asc(u.name)] });
+export async function searchUsers(query: string, limit = 20) {
+  const term = `%${query}%`;
+  return db.query.users.findMany({
+    where: or(ilike(users.name, term), ilike(users.email, term), ilike(users.username, term)),
+    orderBy: (u, { asc }) => [asc(u.name)],
+    limit,
+  });
 }
 
 export async function listAllUsernames(): Promise<string[]> {
@@ -56,6 +65,10 @@ export async function setUserAdminStatus(userId: string, isAdmin: boolean) {
 
 export async function setUserCanTranscribeStatus(userId: string, canTranscribe: boolean) {
   return db.update(users).set({ canTranscribe }).where(eq(users.id, userId)).returning();
+}
+
+export async function deleteUser(userId: string) {
+  return db.delete(users).where(eq(users.id, userId)).returning();
 }
 
 export async function upsertGoogleUser(profile: GoogleUserInfo) {

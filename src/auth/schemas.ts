@@ -21,5 +21,13 @@ export const setUserCanTranscribeSchema = z.object({
 });
 
 export const startImpersonationSchema = z.object({
-  username: z.string().min(1),
+  userId: z.string().min(1),
+});
+
+export const searchUsersSchema = z.object({
+  q: z.string().trim().min(1),
+});
+
+export const deleteUserSchema = z.object({
+  userId: z.string().min(1),
 });

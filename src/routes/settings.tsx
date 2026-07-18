@@ -3,7 +3,6 @@ import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-rout
 import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
 import { updateUsername } from "#/auth/username.functions";
-import { startImpersonation, getImpersonationStatus } from "#/auth/impersonation.functions";
 import { updateNotificationPreferences } from "#/notifications/notifications.functions";
 import {
   getMyHouseholdInfo,
@@ -25,24 +24,22 @@ export const Route = createFileRoute("/settings")({
     return { user };
   },
   loader: async ({ context }) => {
-    const [household, invites, knownUsernames, impersonationStatus] = await Promise.all([
+    const [household, invites, knownUsernames] = await Promise.all([
       getMyHouseholdInfo(),
       getMyInvites(),
       getKnownUsernames(),
-      getImpersonationStatus(),
     ]);
     const pendingInviteUsernames =
       household && household.ownerId === context.user.id
         ? await getPendingInviteUsernames({ data: { householdId: household.id } })
         : [];
-    return { user: context.user, household, invites, knownUsernames, impersonationStatus, pendingInviteUsernames };
+    return { user: context.user, household, invites, knownUsernames, pendingInviteUsernames };
   },
   component: SettingsPage,
 });
 
 function SettingsPage() {
-  const { user, household, invites, knownUsernames, impersonationStatus, pendingInviteUsernames } =
-    Route.useLoaderData();
+  const { user, household, invites, knownUsernames, pendingInviteUsernames } = Route.useLoaderData();
   const router = useRouter();
   const updateUsernameFn = useServerFn(updateUsername);
   const updateNotificationPreferencesFn = useServerFn(updateNotificationPreferences);
@@ -52,11 +49,6 @@ function SettingsPage() {
   const removeMemberFn = useServerFn(removeMember);
   const leaveHouseholdFn = useServerFn(leaveHousehold);
   const transferOwnershipFn = useServerFn(transferOwnership);
-  const startImpersonationFn = useServerFn(startImpersonation);
-
-  const [impersonateUsername, setImpersonateUsername] = useState("");
-  const [impersonateError, setImpersonateError] = useState<string | null>(null);
-  const [impersonateSubmitting, setImpersonateSubmitting] = useState(false);
 
   const [householdName, setHouseholdName] = useState("");
   const [householdError, setHouseholdError] = useState<string | null>(null);
@@ -84,8 +76,6 @@ function SettingsPage() {
       !household?.members.some((member) => member.username === name) &&
       !pendingInviteUsernames.includes(name),
   );
-  // Excludes yourself, since impersonating your own account isn't a meaningful action.
-  const impersonateUsernames = knownUsernames.filter((name) => name !== user.username);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -171,25 +161,6 @@ function SettingsPage() {
     }
     await transferOwnershipFn({ data: { householdId: household.id, newOwnerId: memberUserId } });
     await router.invalidate();
-  }
-
-  async function handleImpersonate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!impersonateUsername.trim()) return;
-    setImpersonateSubmitting(true);
-    setImpersonateError(null);
-    try {
-      await startImpersonationFn({ data: { username: impersonateUsername.trim() } });
-      // Full reload, not router.invalidate() — every other component on the page (and app)
-      // may have local state seeded from the pre-impersonation user (e.g. this file's own
-      // `username`/`notifyOnX` state), which only a fresh mount will pick up correctly.
-      window.location.reload();
-      return;
-    } catch (err) {
-      setImpersonateError(err instanceof Error ? err.message : "Failed to impersonate user.");
-    } finally {
-      setImpersonateSubmitting(false);
-    }
   }
 
   async function handleLeaveOrDelete() {
@@ -424,38 +395,6 @@ function SettingsPage() {
           <option key={name} value={name} />
         ))}
       </datalist>
-      <datalist id="impersonate-usernames">
-        {impersonateUsernames.map((name) => (
-          <option key={name} value={name} />
-        ))}
-      </datalist>
-
-      {user.isAdmin && !impersonationStatus.isImpersonating && (
-        <div className="mt-8 flex flex-col gap-2">
-          <h2 className="font-serif text-xl font-semibold text-ink">Impersonate a user</h2>
-          <p className="text-sm text-ink/50">
-            View the app exactly as another user would. Use "End impersonation" in the header to return to your
-            own account.
-          </p>
-          <form onSubmit={(e) => void handleImpersonate(e)} className="flex gap-2">
-            <input
-              className="min-w-[10rem] flex-1 rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
-              list="impersonate-usernames"
-              value={impersonateUsername}
-              onChange={(e) => setImpersonateUsername(e.target.value)}
-              placeholder="Username to impersonate"
-            />
-            <button
-              type="submit"
-              disabled={impersonateSubmitting || !impersonateUsername.trim()}
-              className="rounded-lg bg-accent-600 px-4 py-2 font-medium text-white transition-colors hover:bg-accent-700 disabled:opacity-50"
-            >
-              {impersonateSubmitting ? "Starting..." : "Impersonate"}
-            </button>
-          </form>
-          {impersonateError && <p className="text-red-600">{impersonateError}</p>}
-        </div>
-      )}
     </div>
   );
 }
