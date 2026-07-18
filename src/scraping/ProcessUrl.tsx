@@ -66,6 +66,13 @@ export function ProcessUrl({
         {canUse && scanning && <span className="text-xs text-ink/50">Reading the page — this can take a minute.</span>}
       </div>
 
+      {canUse && (
+        <p className="mt-2 text-xs text-ink/50">
+          Works on sites that publish structured recipe data. Some sites (e.g. allrecipes.com) aren't supported and
+          won't produce a result.
+        </p>
+      )}
+
       {result?.status === "not_found" && (
         <div className="mt-3 flex items-start justify-between gap-3 rounded-lg bg-accent-50 px-4 py-3 text-sm text-ink/80">
           <p>No recipe found: {result.reason}</p>
