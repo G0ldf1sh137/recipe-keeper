@@ -1,10 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
+import { notFound } from "@tanstack/react-router";
 import { z } from "zod";
 import { sessionMiddleware, requireAuthMiddleware } from "#/auth/auth-middleware";
 import {
   countUnreadNotifications,
   findNotificationsForUser,
   markAllNotificationsRead,
+  deleteNotification as deleteNotificationInDb,
+  deleteAllNotifications,
   updateNotificationPreferences as updateNotificationPreferencesInDb,
 } from "./notifications.server";
 
@@ -25,6 +28,21 @@ export const markNotificationsRead = createServerFn({ method: "POST" })
   .middleware([requireAuthMiddleware])
   .handler(async ({ context }) => {
     await markAllNotificationsRead(context.user.id);
+  });
+
+export const deleteNotification = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .validator(z.object({ id: z.string().min(1) }))
+  .handler(async ({ data, context }) => {
+    const deleted = await deleteNotificationInDb(context.user.id, data.id);
+    if (!deleted) throw notFound();
+    return deleted;
+  });
+
+export const clearAllNotifications = createServerFn({ method: "POST" })
+  .middleware([requireAuthMiddleware])
+  .handler(async ({ context }) => {
+    await deleteAllNotifications(context.user.id);
   });
 
 export const updateNotificationPreferences = createServerFn({ method: "POST" })

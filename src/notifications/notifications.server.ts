@@ -84,3 +84,15 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
     .set({ readAt: new Date() })
     .where(and(eq(notifications.recipientId, userId), isNull(notifications.readAt)));
 }
+
+export async function deleteNotification(userId: string, notificationId: string) {
+  const rows = await db
+    .delete(notifications)
+    .where(and(eq(notifications.id, notificationId), eq(notifications.recipientId, userId)))
+    .returning();
+  return rows.at(0);
+}
+
+export async function deleteAllNotifications(userId: string): Promise<void> {
+  await db.delete(notifications).where(eq(notifications.recipientId, userId));
+}

@@ -1,7 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
-import { listNotifications, markNotificationsRead } from "#/notifications/notifications.functions";
+import {
+  listNotifications,
+  markNotificationsRead,
+  deleteNotification,
+  clearAllNotifications,
+} from "#/notifications/notifications.functions";
 import type { NotificationRow } from "#/notifications/notifications.server";
 
 export const Route = createFileRoute("/notifications/")({
@@ -31,8 +37,16 @@ function notificationText(notification: NotificationRow) {
 }
 
 function NotificationsPage() {
-  const notifications = Route.useLoaderData();
+  const loaderNotifications = Route.useLoaderData();
   const router = useRouter();
+  const deleteFn = useServerFn(deleteNotification);
+  const clearAllFn = useServerFn(clearAllNotifications);
+
+  const [notifications, setNotifications] = useState(loaderNotifications);
+
+  useEffect(() => {
+    setNotifications(loaderNotifications);
+  }, [loaderNotifications]);
 
   useEffect(() => {
     // Clears the header's unread badge immediately, since this page's own loader
@@ -40,9 +54,31 @@ function NotificationsPage() {
     void router.invalidate();
   }, [router]);
 
+  async function handleDelete(id: string) {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    await deleteFn({ data: { id } });
+  }
+
+  async function handleClearAll() {
+    if (!window.confirm("Clear all notifications? This can't be undone.")) return;
+    setNotifications([]);
+    await clearAllFn();
+  }
+
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
-      <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Notifications</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Notifications</h1>
+        {notifications.length > 0 && (
+          <button
+            type="button"
+            onClick={handleClearAll}
+            className="text-sm font-medium text-red-600 hover:text-red-700"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
 
       {notifications.length === 0 ? (
         <p className="mt-6 text-ink/60">No notifications yet.</p>
@@ -51,7 +87,7 @@ function NotificationsPage() {
           {notifications.map((notification) => (
             <li
               key={notification.id}
-              className={`rounded-xl border-2 bg-surface px-4 py-3 shadow-sm ${
+              className={`flex items-center justify-between gap-3 rounded-xl border-2 bg-surface px-4 py-3 shadow-sm ${
                 notification.readAt ? "border-accent-100" : "border-accent-400"
               }`}
             >
@@ -64,10 +100,21 @@ function NotificationsPage() {
                   {notificationText(notification)}
                 </Link>
               ) : (
-                <Link to="/settings" className="text-ink hover:text-accent-700 dark:hover:text-accent-400">
+                <Link
+                  to={notification.type === "householdInvite" ? "/pantry" : "/settings"}
+                  className="text-ink hover:text-accent-700 dark:hover:text-accent-400"
+                >
                   {notificationText(notification)}
                 </Link>
               )}
+              <button
+                type="button"
+                onClick={() => handleDelete(notification.id)}
+                aria-label="Delete notification"
+                className="text-sm text-ink/50 hover:text-red-600"
+              >
+                ✕
+              </button>
             </li>
           ))}
         </ul>
