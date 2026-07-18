@@ -169,6 +169,20 @@
       "when": 1784322044165,
       "tag": "0023_aromatic_wild_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784329199979,
+      "tag": "0024_fat_agent_zero",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1784332027975,
+      "tag": "0025_special_bushwacker",
+      "breakpoints": true
     }
   ]
 }

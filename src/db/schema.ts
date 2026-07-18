@@ -1,4 +1,4 @@
-import { pgTable, text, integer, boolean, timestamp, jsonb, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, boolean, timestamp, jsonb, primaryKey, uniqueIndex } from "drizzle-orm/pg-core";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 const id = () =>
@@ -221,7 +221,7 @@ export const groceryListItems = pgTable("grocery_list_items", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const notificationTypeValues = ["comment", "fork", "rating"] as const;
+export const notificationTypeValues = ["comment", "fork", "rating", "householdInvite"] as const;
 export type NotificationType = (typeof notificationTypeValues)[number];
 
 export const notifications = pgTable("notifications", {
@@ -232,9 +232,9 @@ export const notifications = pgTable("notifications", {
   actorId: text("actor_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  recipeId: text("recipe_id")
-    .notNull()
-    .references(() => recipes.id, { onDelete: "cascade" }),
+  // Nullable — recipe-based notifications (comment/fork/rating) always set
+  // this, but household invites aren't about a recipe at all.
+  recipeId: text("recipe_id").references(() => recipes.id, { onDelete: "cascade" }),
   type: text("type", { enum: notificationTypeValues }).notNull(),
   readAt: timestamp("read_at", { mode: "date" }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -267,6 +267,48 @@ export const pantryItems = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [primaryKey({ columns: [table.ownerId, table.name] })],
+);
+
+export const households = pgTable("households", {
+  id: id(),
+  name: text("name").notNull(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+export const householdMembers = pgTable(
+  "household_members",
+  {
+    householdId: text("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: "cascade" }),
+    joinedAt: timestamp("joined_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.householdId, table.userId] })],
+);
+
+export const householdInvites = pgTable(
+  "household_invites",
+  {
+    id: id(),
+    householdId: text("household_id")
+      .notNull()
+      .references(() => households.id, { onDelete: "cascade" }),
+    invitedUserId: text("invited_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    invitedByUserId: text("invited_by_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("household_invites_household_invited_idx").on(table.householdId, table.invitedUserId)],
 );
 
 export const ingredientNames = pgTable("ingredients", {

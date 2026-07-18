@@ -1,4 +1,4 @@
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, isNotNull, ne } from "drizzle-orm";
 import { db } from "#/db/index";
 import { users } from "#/db/schema";
 import type { GoogleUserInfo } from "./google.server";
@@ -39,6 +39,15 @@ export async function updateUserUsername(userId: string, username: string) {
 
 export async function listAllUsers() {
   return db.query.users.findMany({ orderBy: (u, { asc }) => [asc(u.name)] });
+}
+
+export async function listAllUsernames(): Promise<string[]> {
+  const rows = await db.query.users.findMany({
+    where: isNotNull(users.username),
+    columns: { username: true },
+    orderBy: (u, { asc }) => [asc(u.username)],
+  });
+  return rows.map((row) => row.username).filter((username) => username != null);
 }
 
 export async function setUserAdminStatus(userId: string, isAdmin: boolean) {

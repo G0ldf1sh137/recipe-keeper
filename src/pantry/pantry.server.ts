@@ -1,7 +1,8 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "#/db/index";
 import { pantryItems, recipes } from "#/db/schema";
 import type { Ingredient } from "#/db/schema";
+import { getMyHousehold } from "#/households/households.server";
 
 export async function listPantryItems(ownerId: string): Promise<string[]> {
   const rows = await db.query.pantryItems.findMany({
@@ -9,6 +10,45 @@ export async function listPantryItems(ownerId: string): Promise<string[]> {
     orderBy: (p, { asc }) => [asc(p.name)],
   });
   return rows.map((row) => row.name);
+}
+
+async function pantryItemsForMembers(memberIds: string[]) {
+  return db.query.pantryItems.findMany({
+    where: inArray(pantryItems.ownerId, memberIds),
+    orderBy: (p, { asc }) => [asc(p.name)],
+  });
+}
+
+// Unions every household member's pantry (deduped by name) so "what can we
+// make" reflects the whole household's stock; falls back to a solo pantry
+// for users not in a household. Adding/removing items still only ever
+// touches the caller's own rows (see addPantryItem/removePantryItem below).
+export async function listCombinedPantryNames(userId: string): Promise<string[]> {
+  const household = await getMyHousehold(userId);
+  if (!household) return listPantryItems(userId);
+
+  const rows = await pantryItemsForMembers(household.members.map((m) => m.id));
+  return [...new Set(rows.map((row) => row.name))];
+}
+
+export type PantryGroup = { ownerId: string; ownerName: string; items: string[] };
+
+// Per-member breakdown of the household pantry, so the UI can show whose
+// items are whose (grouped/color-coded) rather than one anonymous merged
+// list. Returns null for users not in a household — the page falls back to
+// its plain solo chip list in that case.
+export async function listPantryGroups(userId: string): Promise<PantryGroup[] | null> {
+  const household = await getMyHousehold(userId);
+  if (!household) return null;
+
+  const rows = await pantryItemsForMembers(household.members.map((m) => m.id));
+  const byOwner = new Map<string, string[]>();
+  for (const row of rows) {
+    const list = byOwner.get(row.ownerId) ?? [];
+    list.push(row.name);
+    byOwner.set(row.ownerId, list);
+  }
+  return household.members.map((m) => ({ ownerId: m.id, ownerName: m.name, items: byOwner.get(m.id) ?? [] }));
 }
 
 export async function addPantryItem(ownerId: string, name: string): Promise<void> {
@@ -20,6 +60,33 @@ export async function addPantryItem(ownerId: string, name: string): Promise<void
 export async function removePantryItem(ownerId: string, name: string): Promise<void> {
   const normalized = name.trim().toLowerCase();
   await db.delete(pantryItems).where(and(eq(pantryItems.ownerId, ownerId), eq(pantryItems.name, normalized)));
+}
+
+// Lets the household owner remove any member's item, not just their own —
+// still requires the target to actually be a fellow household member.
+export async function removePantryItemAsOwner(requesterId: string, targetOwnerId: string, name: string) {
+  const household = await getMyHousehold(requesterId);
+  if (!household || household.ownerId !== requesterId) {
+    throw new Error("Only the household owner can remove another member's items.");
+  }
+  if (!household.members.some((m) => m.id === targetOwnerId)) {
+    throw new Error("That user isn't in your household.");
+  }
+  await removePantryItem(targetOwnerId, name);
+}
+
+// Wipes every item from every member's pantry at once.
+export async function clearHouseholdPantry(requesterId: string) {
+  const household = await getMyHousehold(requesterId);
+  if (!household || household.ownerId !== requesterId) {
+    throw new Error("Only the household owner can clear the pantry.");
+  }
+  await db.delete(pantryItems).where(
+    inArray(
+      pantryItems.ownerId,
+      household.members.map((m) => m.id),
+    ),
+  );
 }
 
 export type PantryMatch = {

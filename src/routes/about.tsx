@@ -41,7 +41,7 @@ const featureGroups = [
   {
     title: "Pantry mode",
     description:
-      "List the ingredients you have on hand and see which recipes you can make right now, plus close matches showing exactly what you're missing.",
+      "List the ingredients you have on hand and see which recipes you can make right now, plus close matches showing exactly what you're missing. Pool your pantry with a household — invite people you live with so everyone's items count toward what you can make together.",
   },
   {
     title: "Search & discovery",

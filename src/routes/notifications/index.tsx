@@ -20,11 +20,13 @@ export const Route = createFileRoute("/notifications/")({
 function notificationText(notification: NotificationRow) {
   switch (notification.type) {
     case "comment":
-      return `${notification.actor.name} commented on your recipe "${notification.recipe.title}"`;
+      return `${notification.actor.name} commented on your recipe "${notification.recipe?.title}"`;
     case "fork":
-      return `${notification.actor.name} forked your recipe "${notification.recipe.title}"`;
+      return `${notification.actor.name} forked your recipe "${notification.recipe?.title}"`;
     case "rating":
-      return `${notification.actor.name} rated your recipe "${notification.recipe.title}"`;
+      return `${notification.actor.name} rated your recipe "${notification.recipe?.title}"`;
+    case "householdInvite":
+      return `${notification.actor.name} invited you to join their household`;
   }
 }
 
@@ -53,13 +55,19 @@ function NotificationsPage() {
                 notification.readAt ? "border-accent-100" : "border-accent-400"
               }`}
             >
-              <Link
-                to="/recipes/$recipeId"
-                params={{ recipeId: notification.recipe.id }}
-                className="text-ink hover:text-accent-700 dark:hover:text-accent-400"
-              >
-                {notificationText(notification)}
-              </Link>
+              {notification.recipe ? (
+                <Link
+                  to="/recipes/$recipeId"
+                  params={{ recipeId: notification.recipe.id }}
+                  className="text-ink hover:text-accent-700 dark:hover:text-accent-400"
+                >
+                  {notificationText(notification)}
+                </Link>
+              ) : (
+                <Link to="/settings" className="text-ink hover:text-accent-700 dark:hover:text-accent-400">
+                  {notificationText(notification)}
+                </Link>
+              )}
             </li>
           ))}
         </ul>

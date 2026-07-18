@@ -9,27 +9,35 @@ export type NotificationRow = {
   readAt: Date | null;
   createdAt: Date;
   actor: { id: string; name: string; avatarUrl: string | null };
-  recipe: { id: string; title: string };
+  recipe: { id: string; title: string } | null;
 };
 
-const notificationPreferenceColumns = {
+type PreferenceColumn = "notifyOnComment" | "notifyOnRating" | "notifyOnFork";
+
+// Only recipe-based notification types have an opt-out preference; types
+// absent here (e.g. householdInvite) always notify — they're actionable
+// system notifications, not a "someone interacted with your content" ping.
+const notificationPreferenceColumns: Partial<Record<NotificationType, PreferenceColumn>> = {
   comment: "notifyOnComment",
   rating: "notifyOnRating",
   fork: "notifyOnFork",
-} as const satisfies Record<NotificationType, keyof typeof users.$inferSelect>;
+};
 
 export async function insertNotification(input: {
   recipientId: string;
   actorId: string;
-  recipeId: string;
+  recipeId: string | null;
   type: NotificationType;
 }) {
   if (input.recipientId === input.actorId) return;
-  const recipient = await db.query.users.findFirst({
-    where: eq(users.id, input.recipientId),
-    columns: { notifyOnComment: true, notifyOnRating: true, notifyOnFork: true },
-  });
-  if (!recipient?.[notificationPreferenceColumns[input.type]]) return;
+  const preferenceColumn = notificationPreferenceColumns[input.type];
+  if (preferenceColumn) {
+    const recipient = await db.query.users.findFirst({
+      where: eq(users.id, input.recipientId),
+      columns: { notifyOnComment: true, notifyOnRating: true, notifyOnFork: true },
+    });
+    if (!recipient?.[preferenceColumn]) return;
+  }
   await db.insert(notifications).values(input);
 }
 
@@ -41,7 +49,7 @@ export async function updateNotificationPreferences(
 }
 
 export async function findNotificationsForUser(userId: string): Promise<NotificationRow[]> {
-  return db
+  const rows = await db
     .select({
       id: notifications.id,
       type: notifications.type,
@@ -52,10 +60,14 @@ export async function findNotificationsForUser(userId: string): Promise<Notifica
     })
     .from(notifications)
     .innerJoin(users, eq(notifications.actorId, users.id))
-    .innerJoin(recipes, eq(notifications.recipeId, recipes.id))
+    .leftJoin(recipes, eq(notifications.recipeId, recipes.id))
     .where(eq(notifications.recipientId, userId))
     .orderBy(desc(notifications.createdAt))
     .limit(100);
+
+  // A left join with no match fills every selected recipe column with null
+  // rather than nulling out the whole nested object — collapse that here.
+  return rows.map((row) => ({ ...row, recipe: row.recipe?.id ? row.recipe : null }));
 }
 
 export async function countUnreadNotifications(userId: string): Promise<number> {
