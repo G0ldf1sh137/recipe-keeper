@@ -37,6 +37,7 @@ import { scaleQuantity } from "#/recipes/quantity";
 import { useRecipeScale } from "#/recipes/useRecipeScale";
 import { ScaleToggle } from "#/recipes/ScaleToggle";
 import { ImageModal } from "#/ui/ImageModal";
+import { buildRecipeJsonLd, stringifyJsonLd } from "#/recipes/recipeJsonLd";
 
 const recipeSearchSchema = z.object({ st: z.string().optional() });
 
@@ -197,6 +198,12 @@ function RecipePage() {
 
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
+      {recipe.visibility === "public" && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: stringifyJsonLd(buildRecipeJsonLd(recipe)) }}
+        />
+      )}
       <div className="flex items-center justify-between">
         <Link
           to="/"
