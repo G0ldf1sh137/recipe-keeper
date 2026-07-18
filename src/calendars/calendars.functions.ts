@@ -9,7 +9,7 @@ import {
   calendarShareSchema,
   addEntryToCalendarSchema,
   removeEntryFromCalendarSchema,
-  moveEntryInCalendarSchema,
+  moveCalendarEntrySchema,
   updateCalendarVisibilitySchema,
 } from "./schemas";
 import {
@@ -25,7 +25,7 @@ import {
   revokeShareForCalendar,
   addEntryToCalendar,
   removeEntryFromCalendar,
-  moveEntryInCalendar,
+  moveCalendarEntry as moveCalendarEntryInDb,
   updateCalendarVisibility as updateOwnedCalendarVisibility,
 } from "./calendars.server";
 import { findRecipeById } from "#/recipes/recipes.server";
@@ -49,7 +49,7 @@ export const getCalendar = createServerFn({ method: "GET" })
     const entries = await findEntriesForCalendar(data.id);
     const entriesByDay = Object.fromEntries(
       dayOfWeekValues.map((day) => [day, entries.filter((entry) => entry.dayOfWeek === day)]),
-    );
+    ) as Record<(typeof dayOfWeekValues)[number], typeof entries>;
     return {
       calendar: { ...calendar, isOwner, canManage, shareUrl: shareToken ? `/shared/${shareToken}` : null },
       entriesByDay,
@@ -149,12 +149,13 @@ export const removeRecipeFromCalendarDay = createServerFn({ method: "POST" })
 
 export const moveCalendarEntry = createServerFn({ method: "POST" })
   .middleware([requireSubscriberMiddleware])
-  .validator(moveEntryInCalendarSchema)
+  .validator(moveCalendarEntrySchema)
   .handler(async ({ data, context }) => {
-    const result = await moveEntryInCalendar(
+    const result = await moveCalendarEntryInDb(
       data.calendarId,
       data.entryId,
-      data.direction,
+      data.dayOfWeek,
+      data.orderedEntryIds,
       context.user.id,
       context.user.isAdmin,
     );

@@ -134,34 +134,30 @@ export async function addEntryToCalendar(
   return entry;
 }
 
-export async function moveEntryInCalendar(
+export async function moveCalendarEntry(
   calendarId: string,
   entryId: string,
-  direction: "up" | "down",
+  dayOfWeek: DayOfWeek,
+  orderedEntryIds: string[],
   ownerId: string,
   isAdmin = false,
 ) {
   const calendar = await findCalendarById(calendarId, ownerId, isAdmin);
   if (!calendar) return undefined;
 
-  const entry = await db.query.calendarEntries.findFirst({
-    where: and(eq(calendarEntries.id, entryId), eq(calendarEntries.calendarId, calendarId)),
-  });
-  if (!entry) return undefined;
-
-  const dayEntries = await db.query.calendarEntries.findMany({
-    where: and(eq(calendarEntries.calendarId, calendarId), eq(calendarEntries.dayOfWeek, entry.dayOfWeek)),
-    orderBy: (e, { asc }) => [asc(e.position)],
-  });
-
-  const index = dayEntries.findIndex((e) => e.id === entryId);
-  const neighborIndex = direction === "up" ? index - 1 : index + 1;
-  if (neighborIndex < 0 || neighborIndex >= dayEntries.length) return { ok: true };
-
-  const neighbor = dayEntries[neighborIndex];
   await db.transaction(async (tx) => {
-    await tx.update(calendarEntries).set({ position: neighbor.position }).where(eq(calendarEntries.id, entry.id));
-    await tx.update(calendarEntries).set({ position: entry.position }).where(eq(calendarEntries.id, neighbor.id));
+    await tx
+      .update(calendarEntries)
+      .set({ dayOfWeek })
+      .where(and(eq(calendarEntries.id, entryId), eq(calendarEntries.calendarId, calendarId)));
+    await Promise.all(
+      orderedEntryIds.map((id, position) =>
+        tx
+          .update(calendarEntries)
+          .set({ position })
+          .where(and(eq(calendarEntries.id, id), eq(calendarEntries.calendarId, calendarId))),
+      ),
+    );
   });
   return { ok: true };
 }

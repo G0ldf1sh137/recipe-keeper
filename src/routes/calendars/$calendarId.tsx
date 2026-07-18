@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { DndContext, closestCorners, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import type { DragCancelEvent, DragEndEvent, DragOverEvent } from "@dnd-kit/core";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import {
   getCalendar,
   renameCalendar,
@@ -12,7 +15,9 @@ import {
   revokeCalendarShare,
   updateCalendarVisibility,
 } from "#/calendars/calendars.functions";
+import { CalendarDayColumn } from "#/calendars/CalendarDayColumn";
 import { ShareControl } from "#/sharing/ShareControl";
+import { Toast } from "#/ui/Toast";
 import { getSessionUser } from "#/auth/auth.functions";
 import { listMyGroceryLists } from "#/grocery/grocery.functions";
 import { AddCalendarToGroceryList } from "#/grocery/AddCalendarToGroceryList";
@@ -60,8 +65,21 @@ export const Route = createFileRoute("/calendars/$calendarId")({
   ),
 });
 
+type CalendarEntry = ReturnType<typeof Route.useLoaderData>["entriesByDay"][DayOfWeek][number];
+
+function findContainer(
+  entriesByDay: Record<DayOfWeek, CalendarEntry[]>,
+  id: string,
+): DayOfWeek | undefined {
+  if ((dayOfWeekValues as readonly string[]).includes(id)) return id as DayOfWeek;
+  for (const day of dayOfWeekValues) {
+    if (entriesByDay[day].some((entry) => entry.entryId === id)) return day;
+  }
+  return undefined;
+}
+
 function CalendarPage() {
-  const { calendar, entriesByDay, user, groceryLists, isSubscriber } = Route.useLoaderData();
+  const { calendar, entriesByDay: loaderEntriesByDay, user, groceryLists, isSubscriber } = Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const router = useRouter();
   const navigate = useNavigate();
@@ -75,6 +93,20 @@ function CalendarPage() {
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(calendar.name);
+  const [entriesByDay, setEntriesByDay] = useState(loaderEntriesByDay);
+  const [toast, setToast] = useState<{ entryId: string; title: string } | null>(null);
+  const pendingRemovalsRef = useRef(
+    new Map<string, { entry: CalendarEntry; day: DayOfWeek; index: number; timeoutId: number }>(),
+  );
+
+  useEffect(() => {
+    setEntriesByDay(loaderEntriesByDay);
+  }, [loaderEntriesByDay]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   async function handleRename(e: React.FormEvent) {
     e.preventDefault();
@@ -90,14 +122,93 @@ function CalendarPage() {
     await navigate({ to: "/calendars" });
   }
 
-  async function handleRemove(entryId: string) {
-    await removeFn({ data: { calendarId: calendar.id, entryId } });
-    await router.invalidate();
+  function handleRemove(entryId: string) {
+    const day = findContainer(entriesByDay, entryId);
+    if (!day) return;
+    const index = entriesByDay[day].findIndex((e) => e.entryId === entryId);
+    if (index === -1) return;
+    const entry = entriesByDay[day][index];
+    setEntriesByDay((prev) => ({ ...prev, [day]: prev[day].filter((e) => e.entryId !== entryId) }));
+
+    const timeoutId = window.setTimeout(() => {
+      pendingRemovalsRef.current.delete(entryId);
+      void removeFn({ data: { calendarId: calendar.id, entryId } });
+      setToast((current) => (current?.entryId === entryId ? null : current));
+    }, 5000);
+    pendingRemovalsRef.current.set(entryId, { entry, day, index, timeoutId });
+    setToast({ entryId, title: entry.title });
   }
 
-  async function handleMove(entryId: string, direction: "up" | "down") {
-    await moveFn({ data: { calendarId: calendar.id, entryId, direction } });
-    await router.invalidate();
+  function handleUndoRemove() {
+    if (!toast) return;
+    const pending = pendingRemovalsRef.current.get(toast.entryId);
+    if (!pending) return;
+    window.clearTimeout(pending.timeoutId);
+    pendingRemovalsRef.current.delete(toast.entryId);
+    setEntriesByDay((prev) => {
+      const next = [...prev[pending.day]];
+      next.splice(Math.min(pending.index, next.length), 0, pending.entry);
+      return { ...prev, [pending.day]: next };
+    });
+    setToast(null);
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event;
+    if (!over) return;
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const activeContainer = findContainer(entriesByDay, activeId);
+    const overContainer = findContainer(entriesByDay, overId);
+    if (!activeContainer || !overContainer || activeContainer === overContainer) return;
+
+    setEntriesByDay((prev) => {
+      const activeItems = prev[activeContainer];
+      const overItems = prev[overContainer];
+      const activeIndex = activeItems.findIndex((e) => e.entryId === activeId);
+      if (activeIndex === -1) return prev;
+      const overIndex = overItems.findIndex((e) => e.entryId === overId);
+      const insertIndex = overIndex >= 0 ? overIndex : overItems.length;
+      const movedEntry = { ...activeItems[activeIndex], dayOfWeek: overContainer };
+      return {
+        ...prev,
+        [activeContainer]: activeItems.filter((e) => e.entryId !== activeId),
+        [overContainer]: [...overItems.slice(0, insertIndex), movedEntry, ...overItems.slice(insertIndex)],
+      };
+    });
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over) {
+      void router.invalidate();
+      return;
+    }
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const container = findContainer(entriesByDay, activeId);
+    if (!container) return;
+
+    setEntriesByDay((prev) => {
+      const items = prev[container];
+      const oldIndex = items.findIndex((e) => e.entryId === activeId);
+      const newIndex = overId === container ? items.length - 1 : items.findIndex((e) => e.entryId === overId);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      const next = arrayMove(items, oldIndex, newIndex);
+      void moveFn({
+        data: {
+          calendarId: calendar.id,
+          entryId: activeId,
+          dayOfWeek: container,
+          orderedEntryIds: next.map((e) => e.entryId),
+        },
+      }).catch(() => router.invalidate());
+      return { ...prev, [container]: next };
+    });
+  }
+
+  function handleDragCancel(_event: DragCancelEvent) {
+    void router.invalidate();
   }
 
   async function handleVisibilityChange(visibility: Visibility) {
@@ -212,60 +323,30 @@ function CalendarPage() {
         </span>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-7">
-        {dayOfWeekValues.map((day) => (
-          <div key={day} className="rounded-xl border-2 border-accent-200 bg-surface p-3">
-            <h2 className="font-serif text-sm font-semibold text-ink">{dayLabels[day]}</h2>
-            {entriesByDay[day].length === 0 ? (
-              <p className="mt-2 text-xs text-ink/40">No recipes</p>
-            ) : (
-              <ul className="mt-2 flex flex-col gap-2">
-                {entriesByDay[day].map((entry, index) => (
-                  <li key={entry.entryId} className="flex items-start justify-between gap-1">
-                    <Link
-                      to="/recipes/$recipeId"
-                      params={{ recipeId: entry.recipeId }}
-                      className="text-sm font-medium text-ink hover:text-accent-600"
-                    >
-                      {entry.title}
-                    </Link>
-                    {calendar.canManage && (
-                      <div className="flex shrink-0 items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleMove(entry.entryId, "up")}
-                          disabled={index === 0}
-                          aria-label="Move up"
-                          className="text-base font-medium text-accent-600 hover:text-accent-700 disabled:opacity-30"
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleMove(entry.entryId, "down")}
-                          disabled={index === entriesByDay[day].length - 1}
-                          aria-label="Move down"
-                          className="text-base font-medium text-accent-600 hover:text-accent-700 disabled:opacity-30"
-                        >
-                          ↓
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleRemove(entry.entryId)}
-                          aria-label="Remove"
-                          className="text-base font-medium text-red-600 hover:text-red-700"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-7">
+          {dayOfWeekValues.map((day) => (
+            <CalendarDayColumn
+              key={day}
+              day={day}
+              dayLabel={dayLabels[day]}
+              entries={entriesByDay[day]}
+              canManage={calendar.canManage}
+              onRemove={handleRemove}
+            />
+          ))}
+        </div>
+      </DndContext>
+
+      {toast && (
+        <Toast message={`Removed "${toast.title}" from this calendar.`} actionLabel="Undo" onAction={handleUndoRemove} />
+      )}
 
       <AddCalendarToGroceryList
         calendarId={calendar.id}
