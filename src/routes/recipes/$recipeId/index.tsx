@@ -12,7 +12,6 @@ import {
 } from "#/recipes/recipes.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
 import { RecipeCardSkeleton } from "#/recipes/RecipeCardSkeleton";
-import { listComments } from "#/comments/comments.functions";
 import { getSessionUser } from "#/auth/auth.functions";
 import { CommentThread } from "#/comments/CommentThread";
 import { getRatingSummary, getRatingSummaries } from "#/ratings/ratings.functions";
@@ -46,9 +45,8 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
   validateSearch: recipeSearchSchema,
   loaderDeps: ({ search }) => ({ shareToken: search.st }),
   loader: async ({ params, deps }) => {
-    const [recipe, comments, user, rating] = await Promise.all([
+    const [recipe, user, rating] = await Promise.all([
       getRecipe({ data: { id: params.recipeId, shareToken: deps.shareToken } }),
-      listComments({ data: { recipeId: params.recipeId, shareToken: deps.shareToken } }),
       getSessionUser(),
       getRatingSummary({ data: { recipeId: params.recipeId, shareToken: deps.shareToken } }),
     ]);
@@ -60,7 +58,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
           getMyNote({ data: { recipeId: params.recipeId } }),
         ])
       : [[], [], [], null];
-    return { recipe, comments, user, rating, collections, groceryLists, calendars, note };
+    return { recipe, user, rating, collections, groceryLists, calendars, note };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -80,7 +78,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, comments, user, rating, collections, groceryLists, calendars, note } = Route.useLoaderData();
+  const { recipe, user, rating, collections, groceryLists, calendars, note } = Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
@@ -446,7 +444,7 @@ function RecipePage() {
 
       <CommentThread
         recipeId={recipe.id}
-        comments={comments}
+        shareToken={shareToken}
         canComment={!!user}
         currentUserId={user?.id}
         isAdmin={!!user?.isAdmin}

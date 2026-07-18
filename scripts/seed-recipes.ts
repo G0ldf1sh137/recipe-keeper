@@ -3,7 +3,6 @@
 // Populates 50 varied recipes owned by the persistent test-admin/test-sub/test-free
 // fixtures (never real users), each tagged "seed-data" for easy identification/cleanup:
 //   DELETE FROM recipes WHERE tags @> '{"seed-data"}';
-import { db } from "#/db/index";
 import { insertRecipe } from "#/recipes/recipes.server";
 import { findUserByUsername } from "#/auth/users.server";
 import type { createRecipeSchema } from "#/recipes/schemas";

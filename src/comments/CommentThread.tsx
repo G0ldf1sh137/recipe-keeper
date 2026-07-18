@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Link, useRouter } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { createComment, deleteComment } from "./comments.functions";
+import { createComment, deleteComment, listComments } from "./comments.functions";
 import { reportComment } from "#/reports/reports.functions";
 import { ReportButton } from "#/reports/ReportButton";
 import type { CommentNode } from "./comments.server";
@@ -167,27 +167,46 @@ function CommentItem({
 
 export function CommentThread({
   recipeId,
-  comments,
+  shareToken,
   canComment,
   currentUserId,
   isAdmin,
 }: {
   recipeId: string;
-  comments: CommentNode[];
+  shareToken?: string;
   canComment: boolean;
   currentUserId?: string;
   isAdmin?: boolean;
 }) {
-  const router = useRouter();
   const createCommentFn = useServerFn(createComment);
   const reportCommentFn = useServerFn(reportComment);
   const deleteCommentFn = useServerFn(deleteComment);
+  const listCommentsFn = useServerFn(listComments);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [comments, setComments] = useState<CommentNode[] | null>(null);
+
+  const cancelledRef = useRef(false);
+
+  async function refetchComments() {
+    const result = await listCommentsFn({ data: { recipeId, shareToken } });
+    if (!cancelledRef.current) setComments(result);
+  }
+
+  useEffect(() => {
+    cancelledRef.current = false;
+    setComments(null);
+    void listCommentsFn({ data: { recipeId, shareToken } }).then((result) => {
+      if (!cancelledRef.current) setComments(result);
+    });
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [recipeId, shareToken, listCommentsFn]);
 
   async function postComment(body: string, parentId?: string) {
     await createCommentFn({ data: { recipeId, parentId, body } });
     setReplyingTo(null);
-    await router.invalidate();
+    await refetchComments();
   }
 
   async function reportCommentHandler(commentId: string, reason: string) {
@@ -196,7 +215,7 @@ export function CommentThread({
 
   async function deleteCommentHandler(commentId: string) {
     await deleteCommentFn({ data: { commentId } });
-    await router.invalidate();
+    await refetchComments();
   }
 
   return (
@@ -219,7 +238,9 @@ export function CommentThread({
         </p>
       )}
 
-      {comments.length === 0 ? (
+      {comments === null ? (
+        <p className="mt-4 text-ink/60">Loading comments...</p>
+      ) : comments.length === 0 ? (
         <p className="mt-4 text-ink/60">No comments yet.</p>
       ) : (
         <ul className="mt-6 flex flex-col gap-4">
