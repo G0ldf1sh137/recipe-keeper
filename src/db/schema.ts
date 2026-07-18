@@ -34,6 +34,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   avatarUrl: text("avatar_url"),
+  avatarOverrideUrl: text("avatar_override_url"),
   username: text("username").unique(),
   isAdmin: boolean("is_admin").notNull().default(false),
   isSubscriber: boolean("is_subscriber").notNull().default(false),

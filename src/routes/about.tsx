@@ -51,7 +51,7 @@ const featureGroups = [
   {
     title: "Sharing & visibility",
     description:
-      "Recipes, cookbooks, and calendars can be public or private, with shareable links; public profile pages show a user's public recipes and cookbooks. Set your own default visibility for new recipes and cookbooks in Settings.",
+      "Recipes, cookbooks, and calendars can be public or private, with shareable links; public profile pages show a user's public recipes and cookbooks. Set your own default visibility for new recipes and cookbooks, edit your display name, and upload a custom avatar (or keep your Google account picture) in Settings.",
   },
   {
     title: "Community",

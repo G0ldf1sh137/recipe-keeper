@@ -198,8 +198,13 @@ function AdminPage() {
                   className="flex flex-wrap items-center justify-between gap-4 rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm"
                 >
                   <div className="flex items-center gap-3">
-                    {user.avatarUrl && (
-                      <img src={user.avatarUrl} alt="" className="h-9 w-9 rounded-full ring-2 ring-accent-100" />
+                    {(user.avatarOverrideUrl ?? user.avatarUrl) && (
+                      <img
+                        src={user.avatarOverrideUrl ?? user.avatarUrl ?? undefined}
+                        alt=""
+                        loading="lazy"
+                        className="h-9 w-9 rounded-full ring-2 ring-accent-100"
+                      />
                     )}
                     <div>
                       <p className="font-medium text-ink">{user.name}</p>

@@ -67,7 +67,11 @@ const recipeWithOwnerColumns = {
   visibility: recipes.visibility,
   createdAt: recipes.createdAt,
   updatedAt: recipes.updatedAt,
-  owner: { name: users.name, avatarUrl: users.avatarUrl, username: users.username },
+  owner: {
+    name: users.name,
+    avatarUrl: sql<string | null>`coalesce(${users.avatarOverrideUrl}, ${users.avatarUrl})`,
+    username: users.username,
+  },
 };
 
 /**

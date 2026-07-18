@@ -36,7 +36,7 @@ function ProfilePage() {
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <div className="flex items-center gap-4">
         {user.avatarUrl && (
-          <img src={user.avatarUrl} alt={user.name} className="h-16 w-16 rounded-full" />
+          <img src={user.avatarUrl} alt={user.name} loading="lazy" className="h-16 w-16 rounded-full" />
         )}
         <div>
           <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">{user.name}</h1>

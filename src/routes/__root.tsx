@@ -262,8 +262,13 @@ function AuthHeader({
             Admin
           </Link>
         )}
-        {currentUser.avatarUrl && (
-          <img src={currentUser.avatarUrl} alt="" className="h-7 w-7 rounded-full ring-2 ring-accent-100" />
+        {(currentUser.avatarOverrideUrl ?? currentUser.avatarUrl) && (
+          <img
+            src={currentUser.avatarOverrideUrl ?? currentUser.avatarUrl ?? undefined}
+            alt=""
+            loading="lazy"
+            className="h-7 w-7 rounded-full ring-2 ring-accent-100"
+          />
         )}
         {currentUser.username ? (
           <Link

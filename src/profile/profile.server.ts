@@ -12,7 +12,12 @@ export async function getPublicProfile(username: string) {
   ]);
 
   return {
-    user: { id: user.id, name: user.name, avatarUrl: user.avatarUrl, username: user.username },
+    user: {
+      id: user.id,
+      name: user.name,
+      avatarUrl: user.avatarOverrideUrl ?? user.avatarUrl,
+      username: user.username,
+    },
     recipes,
     collections,
   };

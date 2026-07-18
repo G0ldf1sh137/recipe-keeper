@@ -286,17 +286,22 @@ function RecipePage() {
         isSubscriber={isSubscriber}
       />
 
-      {recipe.owner.username ? (
-        <Link
-          to="/u/$username"
-          params={{ username: recipe.owner.username }}
-          className="mt-1 inline-block text-sm text-ink/60 hover:text-accent-600 dark:hover:text-accent-400"
-        >
-          by {recipe.owner.name}
-        </Link>
-      ) : (
-        <p className="mt-1 text-sm text-ink/60">by {recipe.owner.name}</p>
-      )}
+      <div className="mt-1 flex items-center gap-1.5">
+        {recipe.owner.avatarUrl && (
+          <img src={recipe.owner.avatarUrl} alt="" loading="lazy" className="h-5 w-5 rounded-full" />
+        )}
+        {recipe.owner.username ? (
+          <Link
+            to="/u/$username"
+            params={{ username: recipe.owner.username }}
+            className="inline-block text-sm text-ink/60 hover:text-accent-600 dark:hover:text-accent-400"
+          >
+            by {recipe.owner.name}
+          </Link>
+        ) : (
+          <p className="text-sm text-ink/60">by {recipe.owner.name}</p>
+        )}
+      </div>
       {recipe.forkedFrom && (
         <p className="mt-1 text-sm text-ink/60">
           Forked from{" "}
@@ -370,7 +375,12 @@ function RecipePage() {
                 onClick={() => setZoomedImage({ src: url, alt })}
                 className={recipe.photoUrls.length === 1 ? "col-span-2" : ""}
               >
-                <img src={url} alt={alt} className="w-full cursor-zoom-in rounded-xl object-cover shadow-sm" />
+                <img
+                  src={url}
+                  alt={alt}
+                  loading="lazy"
+                  className="w-full cursor-zoom-in rounded-xl object-cover shadow-sm"
+                />
               </button>
             );
           })}
@@ -446,6 +456,7 @@ function RecipePage() {
                         <img
                           src={url}
                           alt={alt}
+                          loading="lazy"
                           className="max-h-48 cursor-zoom-in rounded-lg object-cover shadow-sm"
                         />
                       </button>

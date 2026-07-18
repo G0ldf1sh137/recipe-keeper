@@ -22,7 +22,13 @@ export async function findCommentTreeForRecipe(recipeId: string): Promise<Commen
       parentId: comments.parentId,
       body: comments.body,
       createdAt: comments.createdAt,
-      author: { id: users.id, name: users.name, avatarUrl: users.avatarUrl, username: users.username },
+      author: {
+        id: users.id,
+        name: users.name,
+        avatarUrl: users.avatarUrl,
+        avatarOverrideUrl: users.avatarOverrideUrl,
+        username: users.username,
+      },
     })
     .from(comments)
     .innerJoin(users, eq(comments.authorId, users.id))
@@ -30,7 +36,10 @@ export async function findCommentTreeForRecipe(recipeId: string): Promise<Commen
     .orderBy(comments.createdAt);
 
   const byId = new Map<string, CommentNode>();
-  for (const row of rows) byId.set(row.id, { ...row, replies: [] });
+  for (const row of rows) {
+    const { avatarOverrideUrl, ...author } = row.author;
+    byId.set(row.id, { ...row, author: { ...author, avatarUrl: avatarOverrideUrl ?? author.avatarUrl }, replies: [] });
+  }
 
   const roots: CommentNode[] = [];
   for (const row of rows) {

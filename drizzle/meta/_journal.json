@@ -225,6 +225,13 @@
       "when": 1784356483780,
       "tag": "0031_sharp_stepford_cuckoos",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1784362499252,
+      "tag": "0032_warm_deathstrike",
+      "breakpoints": true
     }
   ]
 }

@@ -96,7 +96,7 @@ function CommentItem({
     <li className="border-l-2 border-accent-100 pl-4">
       <div className="flex items-center gap-2">
         {comment.author.avatarUrl && (
-          <img src={comment.author.avatarUrl} alt="" className="h-6 w-6 rounded-full" />
+          <img src={comment.author.avatarUrl} alt="" loading="lazy" className="h-6 w-6 rounded-full" />
         )}
         {comment.author.username ? (
           <Link

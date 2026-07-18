@@ -85,6 +85,14 @@ export async function updateUserVisibilityDefaults(
   return db.update(users).set(prefs).where(eq(users.id, userId)).returning();
 }
 
+export async function updateUserName(userId: string, name: string) {
+  return db.update(users).set({ name }).where(eq(users.id, userId)).returning();
+}
+
+export async function updateUserAvatarOverride(userId: string, avatarOverrideUrl: string | null) {
+  return db.update(users).set({ avatarOverrideUrl }).where(eq(users.id, userId)).returning();
+}
+
 export async function deleteUser(userId: string) {
   return db.delete(users).where(eq(users.id, userId)).returning();
 }

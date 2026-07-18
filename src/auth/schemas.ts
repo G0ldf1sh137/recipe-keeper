@@ -39,3 +39,11 @@ export const updateVisibilityDefaultsSchema = z.object({
   defaultRecipeVisibility: visibilitySchema,
   defaultCollectionVisibility: visibilitySchema,
 });
+
+export const updateNameSchema = z.object({
+  name: z.string().trim().min(1, "Name can't be empty.").max(100),
+});
+
+export const updateAvatarOverrideSchema = z.object({
+  avatarOverrideUrl: z.string().url().nullable(),
+});
