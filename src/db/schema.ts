@@ -185,6 +185,17 @@ export const ratings = pgTable(
   (table) => [primaryKey({ columns: [table.recipeId, table.userId] })],
 );
 
+export const recipeMakes = pgTable("recipe_makes", {
+  id: id(),
+  recipeId: text("recipe_id")
+    .notNull()
+    .references(() => recipes.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 export const recipeNotes = pgTable(
   "recipe_notes",
   {

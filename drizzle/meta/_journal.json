@@ -197,6 +197,13 @@
       "when": 1784341234567,
       "tag": "0027_rename_can_transcribe_to_is_subscriber",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1784343416700,
+      "tag": "0028_fancy_hemingway",
+      "breakpoints": true
     }
   ]
 }

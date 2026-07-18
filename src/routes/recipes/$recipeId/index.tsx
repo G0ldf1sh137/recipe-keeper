@@ -16,6 +16,8 @@ import { getSessionUser } from "#/auth/auth.functions";
 import { CommentThread } from "#/comments/CommentThread";
 import { getRatingSummary, getRatingSummaries } from "#/ratings/ratings.functions";
 import { RecipeRating } from "#/ratings/RecipeRating";
+import { getMakeCount } from "#/makes/makes.functions";
+import { MadeItButton } from "#/makes/MadeItButton";
 import { getCollectionsForRecipe } from "#/collections/collections.functions";
 import { SaveToList } from "#/collections/SaveToList";
 import { getGroceryListsForRecipe } from "#/grocery/grocery.functions";
@@ -45,10 +47,11 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
   validateSearch: recipeSearchSchema,
   loaderDeps: ({ search }) => ({ shareToken: search.st }),
   loader: async ({ params, deps }) => {
-    const [recipe, user, rating] = await Promise.all([
+    const [recipe, user, rating, makeCount] = await Promise.all([
       getRecipe({ data: { id: params.recipeId, shareToken: deps.shareToken } }),
       getSessionUser(),
       getRatingSummary({ data: { recipeId: params.recipeId, shareToken: deps.shareToken } }),
+      getMakeCount({ data: { recipeId: params.recipeId, shareToken: deps.shareToken } }),
     ]);
     const isSubscriber = !!user && (user.isAdmin || user.isSubscriber);
     const [collections, note] = user
@@ -63,7 +66,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
           getCalendarsForRecipe({ data: { recipeId: params.recipeId } }),
         ])
       : [[], []];
-    return { recipe, user, rating, collections, groceryLists, calendars, note, isSubscriber };
+    return { recipe, user, rating, makeCount, collections, groceryLists, calendars, note, isSubscriber };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -83,7 +86,8 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, user, rating, collections, groceryLists, calendars, note, isSubscriber } = Route.useLoaderData();
+  const { recipe, user, rating, makeCount, collections, groceryLists, calendars, note, isSubscriber } =
+    Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const navigate = useNavigate();
   const router = useRouter();
@@ -179,7 +183,7 @@ function RecipePage() {
             search={{ st: shareToken }}
             className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
           >
-            Cook mode
+            LemmeCook mode
           </Link>
           <a
             href={`/recipes/${recipe.id}/pdf${shareToken ? `?st=${shareToken}` : ""}`}
@@ -245,6 +249,14 @@ function RecipePage() {
         count={rating.count}
         myRating={rating.myRating}
         canRate={!!user}
+      />
+
+      <MadeItButton
+        recipeId={recipe.id}
+        count={makeCount}
+        ingredientNames={[...new Set(recipe.ingredients.map((ing) => ing.name))]}
+        canMake={!!user}
+        isSubscriber={isSubscriber}
       />
 
       {recipe.owner.username ? (
