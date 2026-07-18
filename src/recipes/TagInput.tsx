@@ -39,31 +39,33 @@ export function TagInput({
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-accent-100 px-2 py-1.5 focus-within:border-accent-400">
-        {value.map((tag) => (
-          <span
-            key={tag}
-            className="flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-xs text-ink/70"
-          >
-            {tag}
-            <button
-              type="button"
-              onClick={() => removeTag(tag)}
-              aria-label={`Remove ${tag}`}
-              className="text-ink/40 hover:text-ink"
+      <input
+        className="rounded-lg border border-accent-100 px-3 py-2 text-sm focus:border-accent-400 focus:outline-none"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+      />
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {value.map((tag) => (
+            <span
+              key={tag}
+              className="flex items-center gap-1 rounded-full bg-accent-50 px-2 py-0.5 text-xs text-ink/70"
             >
-              ✕
-            </button>
-          </span>
-        ))}
-        <input
-          className="min-w-[8rem] flex-1 border-none px-1 py-0.5 text-sm focus:outline-none"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-        />
-      </div>
+              {tag}
+              <button
+                type="button"
+                onClick={() => removeTag(tag)}
+                aria-label={`Remove ${tag}`}
+                className="text-ink/40 hover:text-ink"
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
       {suggestions.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {suggestions.map((name) => (
