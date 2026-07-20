@@ -325,40 +325,42 @@ function AuthHeader({
 
   return (
     <>
-      <header className="relative flex items-center justify-between border-b-2 border-accent-200 bg-paper px-4 py-4 sm:px-8">
-        <Link to="/" className="font-serif text-xl font-semibold tracking-tight text-ink">
-          LemmeCook
-        </Link>
-        <div className="flex items-center gap-4">
-          <Link
-            to="/about"
-            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-          >
-            About
+      <header className="relative border-b-2 border-accent-200 bg-paper px-4 py-4 sm:px-8">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <Link to="/" className="font-serif text-xl font-semibold tracking-tight text-ink">
+            LemmeCook
           </Link>
-          <ThemeToggle initialTheme={theme} />
-          {user ? (
-            <>
-              <NotificationBell unreadCount={unreadCount} />
-              <MessagesBell unreadCount={unreadMessageCount} />
-              <div className="hidden items-center gap-3 sm:flex">{renderNavLinks(user)}</div>
-              <button
-                type="button"
-                onClick={() => setMenuOpen((open) => !open)}
-                aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-                className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 sm:hidden"
-              >
-                {menuOpen ? '✕' : '☰'}
-              </button>
-            </>
-          ) : (
-            <a
-              href="/auth/google"
+          <div className="flex items-center gap-4">
+            <Link
+              to="/about"
               className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
             >
-              Sign in with Google
-            </a>
-          )}
+              About
+            </Link>
+            <ThemeToggle initialTheme={theme} />
+            {user ? (
+              <>
+                <NotificationBell unreadCount={unreadCount} />
+                <MessagesBell unreadCount={unreadMessageCount} />
+                <div className="hidden items-center gap-3 sm:flex">{renderNavLinks(user)}</div>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((open) => !open)}
+                  aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                  className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400 sm:hidden"
+                >
+                  {menuOpen ? '✕' : '☰'}
+                </button>
+              </>
+            ) : (
+              <a
+                href="/auth/google"
+                className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+              >
+                Sign in with Google
+              </a>
+            )}
+          </div>
         </div>
         {user && menuOpen && (
           <div className="absolute inset-x-0 top-full flex flex-col gap-3 border-b-2 border-accent-200 bg-paper px-4 py-4 sm:hidden">
