@@ -204,25 +204,25 @@ function RecipePage() {
           dangerouslySetInnerHTML={{ __html: stringifyJsonLd(buildRecipeJsonLd(recipe)) }}
         />
       )}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Link
           to="/"
-          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+          className="whitespace-nowrap text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
         >
           ← Back home
         </Link>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Link
             to="/recipes/$recipeId/cook"
             params={{ recipeId: recipe.id }}
             search={{ st: shareToken }}
-            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+            className="whitespace-nowrap text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
           >
             LemmeCook mode
           </Link>
           <a
             href={`/recipes/${recipe.id}/pdf${shareToken ? `?st=${shareToken}` : ""}`}
-            className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+            className="whitespace-nowrap text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
           >
             Print to PDF
           </a>
@@ -231,7 +231,7 @@ function RecipePage() {
               type="button"
               onClick={handleFork}
               disabled={forking}
-              className="text-sm font-medium text-accent-600 hover:text-accent-700 disabled:opacity-50 dark:hover:text-accent-400"
+              className="whitespace-nowrap text-sm font-medium text-accent-600 hover:text-accent-700 disabled:opacity-50 dark:hover:text-accent-400"
             >
               {forking ? "Forking..." : "Fork"}
             </button>
@@ -242,7 +242,7 @@ function RecipePage() {
               <Link
                 to="/recipes/$recipeId/edit"
                 params={{ recipeId: recipe.id }}
-                className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+                className="whitespace-nowrap text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
               >
                 Edit
               </Link>
@@ -250,7 +250,7 @@ function RecipePage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                className="whitespace-nowrap text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>
