@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { listRecipes, getRandomRecipeId } from "#/recipes/recipes.functions";
 import { getRatingSummaries } from "#/ratings/ratings.functions";
-import { RecipeCard } from "#/recipes/RecipeCard";
 import { RecipeCardSkeleton } from "#/recipes/RecipeCardSkeleton";
+import { groupRecipeForks, RecipeForkGroup } from "#/recipes/RecipeForkGroup";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
@@ -116,6 +116,7 @@ function RecipesListPage() {
   }
 
   const hasFilters = Boolean(search.visibility || search.q);
+  const groups = useMemo(() => groupRecipeForks(recipes), [recipes]);
 
   async function handleRandom() {
     const id = await getRandomRecipeIdFn({ data: search });
@@ -210,9 +211,9 @@ function RecipesListPage() {
       ) : (
         <>
           <ul className="mt-6 flex flex-col gap-3">
-            {recipes.map((recipe) => (
-              <li key={recipe.id}>
-                <RecipeCard recipe={recipe} rating={ratingsById.get(recipe.id)} />
+            {groups.map((group) => (
+              <li key={group.primary.id}>
+                <RecipeForkGroup group={group} rating={ratingsById.get(group.primary.id)} ratingsById={ratingsById} />
               </li>
             ))}
             {loadingMore && (
