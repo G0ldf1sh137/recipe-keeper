@@ -112,7 +112,7 @@ function AboutPage() {
         ))}
       </div>
 
-      <p className="mt-8 text-ink/70">
+      <p className="mt-8 flex flex-wrap gap-x-4 text-ink/70">
         <a
           href="https://github.com/G0ldf1sh137/recipe-keeper"
           target="_blank"
@@ -120,6 +120,14 @@ function AboutPage() {
           className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
         >
           View source on GitHub
+        </a>
+        <a
+          href="https://github.com/G0ldf1sh137/recipe-keeper/wiki"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
+          Read the wiki
         </a>
       </p>
     </div>
