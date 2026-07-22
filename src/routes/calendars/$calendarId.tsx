@@ -310,7 +310,7 @@ function CalendarPage() {
 
       {!calendar.isOwner && calendar.canManage && (
         <p className="mt-3 rounded-lg bg-accent-50 px-3 py-2 text-sm font-medium text-accent-700">
-          Viewing as admin — you aren't the owner of this Meal Week.
+          Viewing as admin: you aren't the owner of this Meal Week.
         </p>
       )}
 

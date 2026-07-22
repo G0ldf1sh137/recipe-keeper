@@ -276,7 +276,7 @@ function RecipePage() {
       )}
       {!recipe.isOwner && recipe.canEdit && (
         <p className="mt-3 rounded-lg bg-accent-50 px-3 py-2 text-sm font-medium text-accent-700">
-          Viewing as admin — you aren't the owner of this recipe.
+          Viewing as admin: you aren't the owner of this recipe.
         </p>
       )}
       <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">{recipe.title}</h1>

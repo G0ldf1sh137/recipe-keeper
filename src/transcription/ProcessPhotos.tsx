@@ -57,7 +57,7 @@ export function ProcessPhotos({
           </span>
         )}
         {canUse && scanning && (
-          <span className="text-xs text-ink/50">Reading the photos with Claude — this can take a minute.</span>
+          <span className="text-xs text-ink/50">Reading the photos with Claude. This can take a minute.</span>
         )}
       </div>
 
@@ -150,7 +150,7 @@ export function ProcessPhotos({
           )}
 
           <p className="mt-4 text-xs text-ink/50">
-            Applying fills in the fields below — nothing is saved until you press Save changes.
+            Applying fills in the fields below. Nothing is saved until you press Save changes.
           </p>
           <div className="mt-2 flex gap-3">
             <button

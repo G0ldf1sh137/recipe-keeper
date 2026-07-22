@@ -317,8 +317,8 @@ function PantryPage() {
                         member.name
                       )}
                       {member.username && ` (@${member.username})`}
-                      {member.id === loaderData.userId && " — you"}
-                      {member.id === household.ownerId && " — owner"}
+                      {member.id === loaderData.userId && " (you)"}
+                      {member.id === household.ownerId && " (owner)"}
                     </span>
                     {household.ownerId === loaderData.userId &&
                       member.id !== household.ownerId && (
@@ -373,7 +373,7 @@ function PantryPage() {
           ) : (
             <>
               <p className="text-sm text-ink/50">
-                Pool your pantry with people you live with — everyone's items count toward "what can we
+                Pool your pantry with people you live with: everyone's items count toward "what can we
                 make."
               </p>
               <form onSubmit={(e) => void handleCreateHousehold(e)} className="mt-2 flex gap-2">
@@ -402,7 +402,7 @@ function PantryPage() {
                       className="flex items-center justify-between rounded-lg border border-accent-100 px-3 py-2"
                     >
                       <span className="text-ink/70">
-                        {invite.householdName} — invited by {invite.inviterName}
+                        {invite.householdName} (invited by {invite.inviterName})
                       </span>
                       <div className="flex gap-3">
                         <button
@@ -430,8 +430,8 @@ function PantryPage() {
       </div>
       {household && (
         <p className="mt-1 text-sm text-ink/50">
-          Showing combined pantry with {household.name} — {household.members.length}{" "}
-          member{household.members.length === 1 ? "" : "s"}.
+          Showing combined pantry with {household.name} ({household.members.length}{" "}
+          member{household.members.length === 1 ? "" : "s"}).
         </p>
       )}
 

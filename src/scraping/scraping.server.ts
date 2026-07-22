@@ -186,7 +186,7 @@ export async function scrapeRecipeFromUrl(
   } catch {
     return {
       status: "error",
-      message: "Could not fetch this page — it may be unreachable or blocking automated requests.",
+      message: "Could not fetch this page. It may be unreachable or blocking automated requests.",
     };
   }
 

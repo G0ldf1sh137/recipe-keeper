@@ -88,7 +88,7 @@ function NewRecipePage() {
         <p className="mt-2 text-ink/60">How would you like to start?</p>
         {!isSubscriber && (
           <p className="mt-2 text-sm text-ink/50">
-            AI import tools are disabled for your account — you can still start from scratch.
+            AI import tools are disabled for your account. You can still start from scratch.
           </p>
         )}
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">

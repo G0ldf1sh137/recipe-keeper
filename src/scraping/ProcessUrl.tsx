@@ -63,7 +63,7 @@ export function ProcessUrl({
         {canUse && !scanning && !result && (
           <span className="text-xs text-ink/50">Pulls a recipe from the linked page's structured data.</span>
         )}
-        {canUse && scanning && <span className="text-xs text-ink/50">Reading the page — this can take a minute.</span>}
+        {canUse && scanning && <span className="text-xs text-ink/50">Reading the page. This can take a minute.</span>}
       </div>
 
       {canUse && (
@@ -170,7 +170,7 @@ export function ProcessUrl({
           )}
 
           <p className="mt-4 text-xs text-ink/50">
-            Applying fills in the fields below — nothing is saved until you press Save changes.
+            Applying fills in the fields below. Nothing is saved until you press Save changes.
           </p>
           <div className="mt-2 flex gap-3">
             <button

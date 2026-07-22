@@ -174,7 +174,7 @@ function PollPage() {
               <div className="mt-1 flex items-center justify-between px-2 pb-1">
                 <span className="text-sm text-ink/50">
                   {option.voteCount} vote{option.voteCount === 1 ? "" : "s"}
-                  {option.voters.length > 0 && ` — ${option.voters.map((v) => v.name).join(", ")}`}
+                  {option.voters.length > 0 && ` · ${option.voters.map((v) => v.name).join(", ")}`}
                 </span>
                 <div className="flex items-center gap-2">
                   {isWinner && <span className="text-sm font-medium text-accent-600">Winner</span>}

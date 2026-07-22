@@ -52,7 +52,7 @@ function SubscribersOnlyPage() {
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Subscribers only</h1>
-      <p className="mt-4 text-ink/70">Access to {label} requires a subscription — just $5/month.</p>
+      <p className="mt-4 text-ink/70">Access to {label} requires a subscription, just $5/month.</p>
       {error && <p className="mt-3 text-red-600 dark:text-red-400">{error}</p>}
       <div className="mt-6 flex items-center gap-4">
         <button

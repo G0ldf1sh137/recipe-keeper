@@ -146,7 +146,7 @@ function useVoiceControl(onCommand: (command: VoiceCommand) => void) {
         return;
       }
       if (event.error === "no-speech") return; // benign — restart happens via onend as normal
-      setError("Voice recognition error — try again.");
+      setError("Voice recognition error. Try again.");
     };
     recognition.onend = () => {
       if (shouldRestartRef.current) {

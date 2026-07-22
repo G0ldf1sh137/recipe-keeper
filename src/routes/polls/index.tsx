@@ -95,7 +95,7 @@ function PollsPage() {
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Dinner Polls</h1>
       <p className="mt-2 text-ink/70">
-        Propose a recipe poll for a specific night — your household votes, one vote each.
+        Propose a recipe poll for a specific night. Your household votes, one vote each.
       </p>
 
       {!household ? (

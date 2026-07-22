@@ -46,7 +46,7 @@ export function ProcessText({
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={6}
-          placeholder="Paste a recipe from anywhere — a website, an email, a note..."
+          placeholder="Paste a recipe from anywhere: a website, an email, a note..."
           disabled={!canUse}
         />
       </label>
@@ -67,7 +67,7 @@ export function ProcessText({
           <span className="text-xs text-ink/50">Uses Claude to transcribe a recipe from the pasted text.</span>
         )}
         {canUse && scanning && (
-          <span className="text-xs text-ink/50">Reading the text with Claude — this can take a minute.</span>
+          <span className="text-xs text-ink/50">Reading the text with Claude. This can take a minute.</span>
         )}
       </div>
 
@@ -160,7 +160,7 @@ export function ProcessText({
           )}
 
           <p className="mt-4 text-xs text-ink/50">
-            Applying fills in the fields below — nothing is saved until you press Save changes.
+            Applying fills in the fields below. Nothing is saved until you press Save changes.
           </p>
           <div className="mt-2 flex gap-3">
             <button

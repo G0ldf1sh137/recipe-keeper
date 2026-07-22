@@ -11,7 +11,7 @@ const featureGroups = [
   {
     title: "AI-powered import",
     description:
-      "Import a recipe by uploading a photo of a handwritten card, a PDF, pasting text from anywhere, or a source URL — Claude reads it and fills in the form for you.",
+      "Import a recipe by uploading a photo of a handwritten card, a PDF, pasting text from anywhere, or a source URL. Claude reads it and fills in the form for you.",
   },
   {
     title: "Recipe forking",
@@ -26,7 +26,7 @@ const featureGroups = [
   {
     title: "Scaling",
     description:
-      "Instantly scale a recipe's ingredient quantities up or down — 0.5x, 2x, or a custom multiplier — without editing the recipe itself.",
+      "Instantly scale a recipe's ingredient quantities up or down (0.5x, 2x, or a custom multiplier) without editing the recipe itself.",
   },
   {
     title: "Cookbooks & meal planning",
@@ -36,7 +36,7 @@ const featureGroups = [
   {
     title: "Dinner Polls",
     description:
-      "Propose a poll of recipes for a night, and let everyone in your household vote — one vote each, changeable until the poll's creator closes it. A clear winner can be auto-scheduled straight onto your Meal Week.",
+      "Propose a poll of recipes for a night, and let everyone in your household vote. One vote each, changeable until the poll's creator closes it, and a clear winner can be auto-scheduled straight onto your Meal Week.",
   },
   {
     title: "Grocery lists",
@@ -46,12 +46,12 @@ const featureGroups = [
   {
     title: "Pantry mode",
     description:
-      "List the ingredients you have on hand and see which recipes you can make right now, plus close matches showing exactly what you're missing. Pool your pantry with a household — invite people you live with so everyone's items count toward what you can make together.",
+      "List the ingredients you have on hand and see which recipes you can make right now, plus close matches showing exactly what you're missing. Pool your pantry with a household: invite people you live with so everyone's items count toward what you can make together.",
   },
   {
     title: "Subscription",
     description:
-      "Grocery lists, pantry mode, Meal Weeks, Dinner Polls, and AI import are subscriber features — subscribe for $5/month right from Settings, and manage or cancel anytime from the same page.",
+      "Grocery lists, pantry mode, Meal Weeks, Dinner Polls, and AI import are subscriber features. Subscribe for $5/month right from Settings, and manage or cancel anytime from the same page.",
   },
   {
     title: "Search & discovery",
@@ -66,7 +66,7 @@ const featureGroups = [
   {
     title: "Community",
     description:
-      "Rate and comment on recipes, fork someone else's recipe to make your own version, follow other users from their profile or any of their recipes, and get notified when someone comments on, rates, forks, or follows you — with per-event controls in Settings if you'd rather not hear about all four.",
+      "Rate and comment on recipes, fork someone else's recipe to make your own version, follow other users from their profile or any of their recipes, and get notified when someone comments on, rates, forks, or follows you, with per-event controls in Settings if you'd rather not hear about all four.",
   },
   {
     title: "Direct messages",
@@ -75,7 +75,7 @@ const featureGroups = [
   },
   {
     title: "Personal notes",
-    description: "Keep a private note on any recipe — only you can see it, not even the recipe's owner.",
+    description: "Keep a private note on any recipe: only you can see it, not even the recipe's owner.",
   },
   {
     title: "Export",
@@ -84,7 +84,7 @@ const featureGroups = [
   {
     title: "Themes",
     description:
-      "Switch between light, dark, or auto to match your system, and pick a color theme — Warm, Ocean, Forest, Berry, or Slate — in Settings.",
+      "Switch between light, dark, or auto to match your system, and pick a color theme (Warm, Ocean, Forest, Berry, or Slate) in Settings.",
   },
 ];
 
@@ -97,7 +97,7 @@ function AboutPage() {
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">About LemmeCook</h1>
       <p className="mt-3 text-ink/70">
-        LemmeCook is a place to write up, organize, and share your recipes — with a few tools to make
+        LemmeCook is a place to write up, organize, and share your recipes, with a few tools to make
         cooking and meal planning easier along the way.
       </p>
 
