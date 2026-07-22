@@ -276,6 +276,13 @@ function AuthHeader({
           Meal Weeks
         </Link>
         <Link
+          to="/polls"
+          onClick={() => setMenuOpen(false)}
+          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
+          Dinner Polls
+        </Link>
+        <Link
           to="/settings"
           onClick={() => setMenuOpen(false)}
           className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"

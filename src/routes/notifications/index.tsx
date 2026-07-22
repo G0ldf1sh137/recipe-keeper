@@ -35,6 +35,10 @@ function notificationText(notification: NotificationRow) {
       return `${notification.actor.name} invited you to join their household`;
     case "follow":
       return `${notification.actor.name} started following you`;
+    case "pollCreated":
+      return `${notification.actor.name} started a Dinner Poll: "${notification.poll?.title}"`;
+    case "pollClosed":
+      return `The Dinner Poll "${notification.poll?.title}" has a winner`;
   }
 }
 
@@ -105,6 +109,14 @@ function NotificationsPage() {
                 <Link
                   to="/u/$username"
                   params={{ username: notification.actor.username }}
+                  className="text-ink hover:text-accent-700 dark:hover:text-accent-400"
+                >
+                  {notificationText(notification)}
+                </Link>
+              ) : notification.poll ? (
+                <Link
+                  to="/polls/$pollId"
+                  params={{ pollId: notification.poll.id }}
                   className="text-ink hover:text-accent-700 dark:hover:text-accent-400"
                 >
                   {notificationText(notification)}

@@ -309,7 +309,15 @@ export const groceryListItems = pgTable("grocery_list_items", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
-export const notificationTypeValues = ["comment", "fork", "rating", "householdInvite", "follow"] as const;
+export const notificationTypeValues = [
+  "comment",
+  "fork",
+  "rating",
+  "householdInvite",
+  "follow",
+  "pollCreated",
+  "pollClosed",
+] as const;
 export type NotificationType = (typeof notificationTypeValues)[number];
 
 export const notifications = pgTable("notifications", {
@@ -323,6 +331,9 @@ export const notifications = pgTable("notifications", {
   // Nullable — recipe-based notifications (comment/fork/rating) always set
   // this, but household invites aren't about a recipe at all.
   recipeId: text("recipe_id").references(() => recipes.id, { onDelete: "cascade" }),
+  // Nullable — only pollCreated/pollClosed set this; forward ref to `polls`,
+  // declared further down in this file, same AnyPgColumn pattern used elsewhere.
+  pollId: text("poll_id").references((): AnyPgColumn => polls.id, { onDelete: "cascade" }),
   type: text("type", { enum: notificationTypeValues }).notNull(),
   readAt: timestamp("read_at", { mode: "date" }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -398,6 +409,64 @@ export const householdInvites = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("household_invites_household_invited_idx").on(table.householdId, table.invitedUserId)],
+);
+
+export const pollStatusValues = ["open", "closed"] as const;
+export type PollStatus = (typeof pollStatusValues)[number];
+
+export const polls = pgTable("polls", {
+  id: id(),
+  householdId: text("household_id")
+    .notNull()
+    .references(() => households.id, { onDelete: "cascade" }),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  targetDate: timestamp("target_date", { mode: "date" }).notNull(),
+  // Nullable — creator can skip linking a Meal Week; closing then never auto-schedules anything.
+  targetCalendarId: text("target_calendar_id").references(() => calendars.id, { onDelete: "set null" }),
+  status: text("status", { enum: pollStatusValues }).notNull().default("open"),
+  // References poll_options, declared below — forward ref via AnyPgColumn, same pattern as
+  // recipes.parentRecipeId/comments.parentId's self-references elsewhere in this file.
+  winningOptionId: text("winning_option_id").references((): AnyPgColumn => pollOptions.id, { onDelete: "set null" }),
+  closedAt: timestamp("closed_at", { mode: "date" }),
+  ...timestamps,
+});
+
+export const pollOptions = pgTable(
+  "poll_options",
+  {
+    id: id(),
+    pollId: text("poll_id")
+      .notNull()
+      .references(() => polls.id, { onDelete: "cascade" }),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    addedBy: text("added_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("poll_options_poll_recipe_idx").on(table.pollId, table.recipeId)],
+);
+
+export const pollVotes = pgTable(
+  "poll_votes",
+  {
+    pollId: text("poll_id")
+      .notNull()
+      .references(() => polls.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    optionId: text("option_id")
+      .notNull()
+      .references(() => pollOptions.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.pollId, table.userId] })],
 );
 
 export const ingredientNames = pgTable("ingredients", {
