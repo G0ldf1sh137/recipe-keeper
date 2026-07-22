@@ -113,7 +113,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   )
 }
 
-function CookbooksNavLink({ onNavigate }: { onNavigate: () => void }) {
+function CookbooksNavLink({
+  username,
+  onNavigate,
+}: {
+  username: string | null | undefined
+  onNavigate: () => void
+}) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -153,6 +159,23 @@ function CookbooksNavLink({ onNavigate }: { onNavigate: () => void }) {
       </button>
       {open && (
         <div className="absolute z-10 mt-2 w-44 rounded-lg border-2 border-accent-200 bg-paper p-2 shadow-lg">
+          {username && (
+            <Link
+              to="/u/$username"
+              params={{ username }}
+              onClick={handleSelect}
+              className="block rounded-md px-2 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50"
+            >
+              My Recipes
+            </Link>
+          )}
+          <Link
+            to="/"
+            onClick={handleSelect}
+            className="block rounded-md px-2 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50"
+          >
+            Public Recipes
+          </Link>
           <Link
             to="/collections"
             onClick={handleSelect}
@@ -165,7 +188,7 @@ function CookbooksNavLink({ onNavigate }: { onNavigate: () => void }) {
             onClick={handleSelect}
             className="block rounded-md px-2 py-1.5 text-sm font-medium text-accent-600 hover:bg-accent-50"
           >
-            Browse Cookbooks
+            Public Cookbooks
           </Link>
           <Link
             to="/collections/saved"
@@ -253,7 +276,7 @@ function AuthHeader({
   function renderNavLinks(currentUser: NonNullable<typeof user>) {
     return (
       <>
-        <CookbooksNavLink onNavigate={() => setMenuOpen(false)} />
+        <CookbooksNavLink username={currentUser.username} onNavigate={() => setMenuOpen(false)} />
         <Link
           to="/pantry"
           onClick={() => setMenuOpen(false)}
