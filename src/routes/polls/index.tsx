@@ -4,13 +4,23 @@ import { useServerFn } from "@tanstack/react-start";
 import { getSessionUser } from "#/auth/auth.functions";
 import { getMyHouseholdInfo } from "#/households/households.functions";
 import { listMyCalendars } from "#/calendars/calendars.functions";
-import { listMyHouseholdPolls, createPoll } from "#/polls/polls.functions";
+import { listMyHouseholdPolls, createPoll, deletePoll } from "#/polls/polls.functions";
 
 // targetDate is a calendar date with no meaningful time-of-day component, so
 // it's always read with UTC getters — local-timezone getters would shift the
 // displayed day backward/forward depending on the viewer's timezone.
 function formatTargetDate(date: Date) {
   return `${dayLabels[date.getUTCDay()]}, ${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
+}
+
+// UTC-anchored "today", matching the same convention as formatTargetDate —
+// used as the date input's min so the picker can't be scrolled into the past.
+function todayUTCDateString() {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(now.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 const dayLabels: Record<number, string> = {
@@ -32,30 +42,34 @@ export const Route = createFileRoute("/polls/")({
     }
   },
   loader: async () => {
-    const [polls, household, calendars] = await Promise.all([
+    const [polls, household, calendars, user] = await Promise.all([
       listMyHouseholdPolls(),
       getMyHouseholdInfo(),
       listMyCalendars(),
+      getSessionUser(),
     ]);
-    return { polls, household, calendars };
+    return { polls, household, calendars, userId: user!.id };
   },
   component: PollsPage,
 });
 
 function PollsPage() {
-  const { polls, household, calendars } = Route.useLoaderData();
+  const { polls, household, calendars, userId } = Route.useLoaderData();
   const router = useRouter();
   const createFn = useServerFn(createPoll);
+  const deleteFn = useServerFn(deletePoll);
 
   const [title, setTitle] = useState("");
   const [targetDate, setTargetDate] = useState("");
   const [targetCalendarId, setTargetCalendarId] = useState("");
   const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !targetDate) return;
     setCreating(true);
+    setCreateError(null);
     try {
       await createFn({
         data: { title: title.trim(), targetDate: new Date(targetDate), targetCalendarId: targetCalendarId || undefined },
@@ -64,9 +78,17 @@ function PollsPage() {
       setTargetDate("");
       setTargetCalendarId("");
       await router.invalidate();
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Couldn't create that poll.");
     } finally {
       setCreating(false);
     }
+  }
+
+  async function handleDelete(pollId: string, pollTitle: string) {
+    if (!window.confirm(`Delete "${pollTitle}"? This can't be undone.`)) return;
+    await deleteFn({ data: { id: pollId } });
+    await router.invalidate();
   }
 
   return (
@@ -97,6 +119,7 @@ function PollsPage() {
                 <span className="text-sm font-medium text-ink/70">Date</span>
                 <input
                   type="date"
+                  min={todayUTCDateString()}
                   className="rounded-lg border border-accent-100 px-3 py-2 focus:border-accent-400 focus:outline-none"
                   value={targetDate}
                   onChange={(e) => setTargetDate(e.target.value)}
@@ -118,6 +141,7 @@ function PollsPage() {
                 </select>
               </label>
             </div>
+            {createError && <p className="text-sm text-red-600">{createError}</p>}
             <button
               type="submit"
               disabled={creating || !title.trim() || !targetDate}
@@ -133,13 +157,13 @@ function PollsPage() {
             <ul className="mt-6 flex flex-col gap-3">
               {polls.map((poll) => {
                 const date = new Date(poll.targetDate);
+                const canDelete = poll.status === "closed" && poll.createdBy === userId;
                 return (
-                  <li key={poll.id}>
-                    <Link
-                      to="/polls/$pollId"
-                      params={{ pollId: poll.id }}
-                      className="block rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-                    >
+                  <li
+                    key={poll.id}
+                    className="rounded-xl border-2 border-accent-200 bg-surface shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <Link to="/polls/$pollId" params={{ pollId: poll.id }} className="block px-4 py-3">
                       <div className="flex items-center justify-between">
                         <span className="font-serif text-lg font-medium text-ink">{poll.title}</span>
                         <span className="text-xs font-medium uppercase tracking-wide text-ink/40">
@@ -154,6 +178,17 @@ function PollsPage() {
                         <p className="mt-1 text-sm font-medium text-accent-600">Winner: {poll.winningRecipeTitle}</p>
                       )}
                     </Link>
+                    {canDelete && (
+                      <div className="border-t border-accent-100 px-4 py-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(poll.id, poll.title)}
+                          className="text-sm font-medium text-red-600 hover:text-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </li>
                 );
               })}

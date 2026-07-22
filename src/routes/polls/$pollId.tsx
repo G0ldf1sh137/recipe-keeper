@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Check } from "lucide-react";
-import { getPoll, addPollOption, voteOnPoll, closePoll } from "#/polls/polls.functions";
+import { getPoll, addPollOption, voteOnPoll, closePoll, deletePoll } from "#/polls/polls.functions";
 import { searchRecipesByPantryMatch } from "#/pantry/pantry.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
 
@@ -42,9 +42,11 @@ export const Route = createFileRoute("/polls/$pollId")({
 function PollPage() {
   const { poll, isCreator, yourVoteOptionId } = Route.useLoaderData();
   const router = useRouter();
+  const navigate = useNavigate();
   const addOptionFn = useServerFn(addPollOption);
   const voteFn = useServerFn(voteOnPoll);
   const closeFn = useServerFn(closePoll);
+  const deleteFn = useServerFn(deletePoll);
   const searchFn = useServerFn(searchRecipesByPantryMatch);
 
   const [query, setQuery] = useState("");
@@ -52,6 +54,7 @@ function PollPage() {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const searchIdRef = useRef(0);
 
   const isOpen = poll.status === "open";
@@ -110,6 +113,17 @@ function PollPage() {
     }
   }
 
+  async function handleDelete() {
+    if (!window.confirm(`Delete "${poll.title}"? This can't be undone.`)) return;
+    setDeleting(true);
+    try {
+      await deleteFn({ data: { id: poll.id } });
+      await navigate({ to: "/polls" });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-2xl p-4 sm:p-8">
       <Link to="/polls" className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400">
@@ -132,6 +146,17 @@ function PollPage() {
           className="mt-4 rounded-lg border-2 border-red-300 px-4 py-2 font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
         >
           {closing ? "Closing..." : "Close poll"}
+        </button>
+      )}
+
+      {isCreator && !isOpen && (
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className="mt-4 rounded-lg border-2 border-red-300 px-4 py-2 font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+        >
+          {deleting ? "Deleting..." : "Delete poll"}
         </button>
       )}
 

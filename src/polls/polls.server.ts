@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import { db } from "#/db/index";
 import { polls, pollOptions, pollVotes, recipes, users } from "#/db/schema";
 import { addEntryToCalendar } from "#/calendars/calendars.server";
@@ -305,7 +305,23 @@ export async function closePoll(pollId: string, requesterId: string) {
 }
 
 export async function deletePoll(pollId: string, requesterId: string, isAdmin = false) {
-  const scoped = isAdmin ? eq(polls.id, pollId) : and(eq(polls.id, pollId), eq(polls.createdBy, requesterId));
-  const rows = await db.delete(polls).where(scoped).returning();
+  const poll = await db.query.polls.findFirst({ where: eq(polls.id, pollId) });
+  if (!poll) return undefined;
+  if (!isAdmin && poll.createdBy !== requesterId) return undefined;
+  if (!isAdmin && poll.status !== "closed") throw new Error("Only closed polls can be deleted.");
+
+  const rows = await db.delete(polls).where(eq(polls.id, pollId)).returning();
   return rows.at(0);
+}
+
+// Best-effort household cleanup: polls are a transient "what should we eat
+// tonight" object, not a durable record worth keeping once the date has long
+// passed — anything decided gets a real Meal Week entry via closePoll, which
+// isn't touched by this (calendar_entries has no FK back to polls).
+const POLL_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+
+export async function deleteExpiredPolls(): Promise<number> {
+  const cutoff = new Date(Date.now() - POLL_RETENTION_MS);
+  const rows = await db.delete(polls).where(lt(polls.targetDate, cutoff)).returning({ id: polls.id });
+  return rows.length;
 }

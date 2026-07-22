@@ -48,6 +48,7 @@ import { Route as RecipesRecipeIdCookRouteImport } from './routes/recipes/$recip
 import { Route as CollectionsCollectionIdPdfRouteImport } from './routes/collections/$collectionId/pdf'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth/google/callback'
 import { Route as ApiWebhooksStripeRouteImport } from './routes/api/webhooks/stripe'
+import { Route as ApiCronDeleteExpiredPollsRouteImport } from './routes/api/cron/delete-expired-polls'
 
 const SubscribersOnlyRoute = SubscribersOnlyRouteImport.update({
   id: '/subscribers-only',
@@ -246,6 +247,12 @@ const ApiWebhooksStripeRoute = ApiWebhooksStripeRouteImport.update({
   path: '/api/webhooks/stripe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronDeleteExpiredPollsRoute =
+  ApiCronDeleteExpiredPollsRouteImport.update({
+    id: '/api/cron/delete-expired-polls',
+    path: '/api/cron/delete-expired-polls',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -275,6 +282,7 @@ export interface FileRoutesByFullPath {
   '/notifications/': typeof NotificationsIndexRoute
   '/polls/': typeof PollsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
+  '/api/cron/delete-expired-polls': typeof ApiCronDeleteExpiredPollsRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/collections/$collectionId/pdf': typeof CollectionsCollectionIdPdfRoute
@@ -316,6 +324,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsIndexRoute
   '/polls': typeof PollsIndexRoute
   '/recipes': typeof RecipesIndexRoute
+  '/api/cron/delete-expired-polls': typeof ApiCronDeleteExpiredPollsRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/collections/$collectionId/pdf': typeof CollectionsCollectionIdPdfRoute
@@ -358,6 +367,7 @@ export interface FileRoutesById {
   '/notifications/': typeof NotificationsIndexRoute
   '/polls/': typeof PollsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
+  '/api/cron/delete-expired-polls': typeof ApiCronDeleteExpiredPollsRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
   '/collections/$collectionId/pdf': typeof CollectionsCollectionIdPdfRoute
@@ -401,6 +411,7 @@ export interface FileRouteTypes {
     | '/notifications/'
     | '/polls/'
     | '/recipes/'
+    | '/api/cron/delete-expired-polls'
     | '/api/webhooks/stripe'
     | '/auth/google/callback'
     | '/collections/$collectionId/pdf'
@@ -442,6 +453,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/polls'
     | '/recipes'
+    | '/api/cron/delete-expired-polls'
     | '/api/webhooks/stripe'
     | '/auth/google/callback'
     | '/collections/$collectionId/pdf'
@@ -483,6 +495,7 @@ export interface FileRouteTypes {
     | '/notifications/'
     | '/polls/'
     | '/recipes/'
+    | '/api/cron/delete-expired-polls'
     | '/api/webhooks/stripe'
     | '/auth/google/callback'
     | '/collections/$collectionId/pdf'
@@ -525,6 +538,7 @@ export interface RootRouteChildren {
   NotificationsIndexRoute: typeof NotificationsIndexRoute
   PollsIndexRoute: typeof PollsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
+  ApiCronDeleteExpiredPollsRoute: typeof ApiCronDeleteExpiredPollsRoute
   ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
   CollectionsCollectionIdPdfRoute: typeof CollectionsCollectionIdPdfRoute
@@ -814,6 +828,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWebhooksStripeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/delete-expired-polls': {
+      id: '/api/cron/delete-expired-polls'
+      path: '/api/cron/delete-expired-polls'
+      fullPath: '/api/cron/delete-expired-polls'
+      preLoaderRoute: typeof ApiCronDeleteExpiredPollsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -845,6 +866,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsIndexRoute: NotificationsIndexRoute,
   PollsIndexRoute: PollsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
+  ApiCronDeleteExpiredPollsRoute: ApiCronDeleteExpiredPollsRoute,
   ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
   CollectionsCollectionIdPdfRoute: CollectionsCollectionIdPdfRoute,
