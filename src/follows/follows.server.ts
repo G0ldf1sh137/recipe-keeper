@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
 import { follows, users } from "#/db/schema";
 import { findUserById } from "#/auth/users.server";
@@ -32,6 +32,17 @@ export async function toggleFollow(followerId: string, followingId: string) {
     type: "follow",
   });
   return { isFollowing: true };
+}
+
+// Called from blockUser to retroactively sever any existing follow between
+// the two users, in either direction, the moment a block is created.
+export async function deleteFollowsBetween(userAId: string, userBId: string): Promise<void> {
+  await db.delete(follows).where(
+    or(
+      and(eq(follows.followerId, userAId), eq(follows.followingId, userBId)),
+      and(eq(follows.followerId, userBId), eq(follows.followingId, userAId)),
+    ),
+  );
 }
 
 export async function countFollowers(userId: string): Promise<number> {

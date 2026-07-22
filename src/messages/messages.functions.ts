@@ -18,6 +18,7 @@ import {
   deleteMessageById,
 } from "./messages.server";
 import { findUserById, updateUserMessagingPreferences } from "#/auth/users.server";
+import { hasWallBetween } from "#/blocks/blocks.server";
 import {
   sessionMiddleware,
   requireAuthMiddleware,
@@ -29,6 +30,9 @@ export const startConversation = createServerFn({ method: "POST" })
   .middleware([requireNotBannedMiddleware])
   .validator(startConversationSchema)
   .handler(async ({ data, context }) => {
+    if (await hasWallBetween(context.user.id, data.userId)) {
+      throw new Error("You can't message this user.");
+    }
     const conversation = await findOrCreateConversation(context.user.id, data.userId);
     if (!conversation) throw notFound();
     return conversation;
@@ -72,6 +76,11 @@ export const sendMessage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const conversation = await findConversationForParticipant(data.conversationId, context.user.id);
     if (!conversation) throw notFound();
+    const otherUserId =
+      conversation.user1Id === context.user.id ? conversation.user2Id : conversation.user1Id;
+    if (await hasWallBetween(context.user.id, otherUserId)) {
+      throw new Error("You can't message this user.");
+    }
     return sendMessageDb(data.conversationId, context.user.id, data.body);
   });
 

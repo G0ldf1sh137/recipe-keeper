@@ -1,6 +1,8 @@
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "#/db/index";
 import { notifications, recipes, polls, users } from "#/db/schema";
+import { hasWallBetween } from "#/blocks/blocks.server";
+import { isMuted } from "#/mutes/mutes.server";
 import type { NotificationType } from "#/db/schema";
 
 export type NotificationRow = {
@@ -33,6 +35,8 @@ export async function insertNotification(input: {
   type: NotificationType;
 }) {
   if (input.recipientId === input.actorId) return;
+  if (await isMuted(input.recipientId, input.actorId)) return;
+  if (await hasWallBetween(input.recipientId, input.actorId)) return;
   const preferenceColumn = notificationPreferenceColumns[input.type];
   if (preferenceColumn) {
     const recipient = await db.query.users.findFirst({

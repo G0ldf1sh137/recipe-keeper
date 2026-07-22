@@ -1,6 +1,18 @@
 import { and, asc as ascOrder, desc as descOrder, eq, getTableColumns, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
-import { recipes, shares, users, ingredientNames, unitNames, tagNames, ratings, comments, hiddenRecipes } from "#/db/schema";
+import {
+  recipes,
+  shares,
+  users,
+  ingredientNames,
+  unitNames,
+  tagNames,
+  ratings,
+  comments,
+  hiddenRecipes,
+  blocks,
+  mutes,
+} from "#/db/schema";
 import { deleteImageUrls } from "#/uploads/uploads.server";
 import type { createRecipeSchema, deleteRecipeSchema, updateRecipeSchema } from "./schemas";
 import type { z } from "zod";
@@ -30,6 +42,29 @@ function notHiddenByViewer(viewerId: string | undefined) {
   return sql`not exists (
     select 1 from ${hiddenRecipes}
     where ${hiddenRecipes.recipeId} = ${recipes.id} and ${hiddenRecipes.userId} = ${viewerId}
+  )`;
+}
+
+// A mutual wall: a recipe is invisible to a viewer if either party has
+// blocked the other. Applied both to algorithmic surfaces (browse, tags,
+// similar, random) and to direct-link access (findRecipeById), unlike
+// notHiddenByViewer/notMutedOwner which only apply to the former.
+function noWallWithOwner(viewerId: string | undefined) {
+  if (!viewerId) return sql`true`;
+  return sql`not exists (
+    select 1 from ${blocks}
+    where (${blocks.blockerId} = ${viewerId} and ${blocks.blockedId} = ${recipes.ownerId})
+       or (${blocks.blockerId} = ${recipes.ownerId} and ${blocks.blockedId} = ${viewerId})
+  )`;
+}
+
+// One-directional and soft, like notHiddenByViewer: only filters algorithmic
+// surfaces, never blocks a direct link to the recipe.
+function notMutedOwner(viewerId: string | undefined) {
+  if (!viewerId) return sql`true`;
+  return sql`not exists (
+    select 1 from ${mutes}
+    where ${mutes.muterId} = ${viewerId} and ${mutes.mutedId} = ${recipes.ownerId}
   )`;
 }
 
@@ -103,7 +138,11 @@ export async function findRecipeById(
     .select(recipeWithOwnerColumns)
     .from(recipes)
     .innerJoin(users, eq(recipes.ownerId, users.id))
-    .where(isAdmin ? eq(recipes.id, id) : and(eq(recipes.id, id), visibleToViewer(viewerId)));
+    .where(
+      isAdmin
+        ? eq(recipes.id, id)
+        : and(eq(recipes.id, id), visibleToViewer(viewerId), noWallWithOwner(viewerId)),
+    );
   const recipe = rows.at(0);
   if (recipe) return recipe;
   if (!shareToken) return undefined;
@@ -127,7 +166,12 @@ export async function findRecipeById(
  * @returns 
  */
 function buildRecipeFilterConditions(filters: RecipeFilters, viewerId: string | undefined) {
-  const conditions = [visibleToViewer(viewerId), notHiddenByViewer(viewerId)];
+  const conditions = [
+    visibleToViewer(viewerId),
+    notHiddenByViewer(viewerId),
+    noWallWithOwner(viewerId),
+    notMutedOwner(viewerId),
+  ];
   if (filters.ownerId) conditions.push(eq(recipes.ownerId, filters.ownerId));
   if (filters.visibility) conditions.push(eq(recipes.visibility, filters.visibility));
   if (filters.q) {
@@ -229,7 +273,14 @@ export async function findForksOfRecipe(recipeId: string, viewerId: string | und
     .select(recipeWithOwnerColumns)
     .from(recipes)
     .innerJoin(users, eq(recipes.ownerId, users.id))
-    .where(and(eq(recipes.parentRecipeId, recipeId), visibleToViewer(viewerId)))
+    .where(
+      and(
+        eq(recipes.parentRecipeId, recipeId),
+        visibleToViewer(viewerId),
+        noWallWithOwner(viewerId),
+        notMutedOwner(viewerId),
+      ),
+    )
     .orderBy(recipes.createdAt);
 }
 
@@ -289,10 +340,12 @@ export async function findTagCounts(viewerId: string | undefined): Promise<{ tag
     ? sql`(${recipes.visibility} = 'public' or ${recipes.ownerId} = ${viewerId})`
     : sql`${recipes.visibility} = 'public'`;
   const notHidden = notHiddenByViewer(viewerId);
+  const noWall = noWallWithOwner(viewerId);
+  const notMuted = notMutedOwner(viewerId);
   const rows = await db.execute<{ tag: string; count: number }>(sql`
     select tag, count(*)::int as count
     from ${recipes}, unnest(${recipes.tags}) as tag
-    where ${visibility} and ${notHidden}
+    where ${visibility} and ${notHidden} and ${noWall} and ${notMuted}
     group by tag
     order by count desc, tag asc
   `);
@@ -348,7 +401,8 @@ export async function findSimilarRecipes(
         ${tagOverlap} as tag_overlap,
         ${ingredientOverlap} as ingredient_overlap
       from ${recipes}
-      where ${recipes.id} != ${excludeRecipeId} and ${visibility} and ${notHiddenByViewer(viewerId)}
+      where ${recipes.id} != ${excludeRecipeId} and ${visibility}
+        and ${notHiddenByViewer(viewerId)} and ${noWallWithOwner(viewerId)} and ${notMutedOwner(viewerId)}
     ) as scored
     where tag_overlap + ingredient_overlap > 0
     order by tag_overlap + ingredient_overlap desc, "createdAt" desc

@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
-import { conversations, messages, users } from "#/db/schema";
+import { conversations, messages, users, blocks } from "#/db/schema";
 import { findUserById } from "#/auth/users.server";
 import { findFollow } from "#/follows/follows.server";
 
@@ -52,10 +52,31 @@ const messageParticipantColumns = {
   avatarUrl: sql<string | null>`coalesce(${users.avatarOverrideUrl}, ${users.avatarUrl})`,
 };
 
+// Uses the plain query builder rather than db.query.conversations.findMany
+// (the relational query builder) because RQB mis-qualifies raw-sql column
+// references to other tables (e.g. blocks.blockerId) as belonging to
+// "conversations" instead of "blocks" — the same bug class that broke
+// findRecipes' default sort branch earlier; see notHiddenByViewer's comment
+// in recipes.server.ts.
 export async function findConversationsForUser(userId: string) {
-  const rows = await db.query.conversations.findMany({
-    where: or(eq(conversations.user1Id, userId), eq(conversations.user2Id, userId)),
-  });
+  const rows = await db
+    .select({
+      id: conversations.id,
+      user1Id: conversations.user1Id,
+      user2Id: conversations.user2Id,
+      createdAt: conversations.createdAt,
+    })
+    .from(conversations)
+    .where(
+      and(
+        or(eq(conversations.user1Id, userId), eq(conversations.user2Id, userId)),
+        sql`not exists (
+          select 1 from ${blocks}
+          where (${blocks.blockerId} = ${userId} and (${blocks.blockedId} = ${conversations.user1Id} or ${blocks.blockedId} = ${conversations.user2Id}))
+             or (${blocks.blockedId} = ${userId} and (${blocks.blockerId} = ${conversations.user1Id} or ${blocks.blockerId} = ${conversations.user2Id}))
+        )`,
+      ),
+    );
   if (rows.length === 0) return [];
 
   const conversationIds = rows.map((row) => row.id);

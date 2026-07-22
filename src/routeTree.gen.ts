@@ -10,12 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SubscribersOnlyRouteImport } from './routes/subscribers-only'
-import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PantryRouteImport } from './routes/pantry'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SettingsIndexRouteImport } from './routes/settings/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
 import { Route as PollsIndexRouteImport } from './routes/polls/index'
 import { Route as NotificationsIndexRouteImport } from './routes/notifications/index'
@@ -24,6 +24,9 @@ import { Route as GroceryIndexRouteImport } from './routes/grocery/index'
 import { Route as CollectionsIndexRouteImport } from './routes/collections/index'
 import { Route as CalendarsIndexRouteImport } from './routes/calendars/index'
 import { Route as SharedTokenRouteImport } from './routes/shared/$token'
+import { Route as SettingsMutedUsersRouteImport } from './routes/settings/muted-users'
+import { Route as SettingsHiddenRecipesRouteImport } from './routes/settings/hidden-recipes'
+import { Route as SettingsBlockedUsersRouteImport } from './routes/settings/blocked-users'
 import { Route as RecipesTagsRouteImport } from './routes/recipes/tags'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
 import { Route as PollsPollIdRouteImport } from './routes/polls/$pollId'
@@ -55,11 +58,6 @@ const SubscribersOnlyRoute = SubscribersOnlyRouteImport.update({
   path: '/subscribers-only',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PantryRoute = PantryRouteImport.update({
   id: '/pantry',
   path: '/pantry',
@@ -83,6 +81,11 @@ const AboutRoute = AboutRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsIndexRoute = SettingsIndexRouteImport.update({
+  id: '/settings/',
+  path: '/settings/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesIndexRoute = RecipesIndexRouteImport.update({
@@ -123,6 +126,21 @@ const CalendarsIndexRoute = CalendarsIndexRouteImport.update({
 const SharedTokenRoute = SharedTokenRouteImport.update({
   id: '/shared/$token',
   path: '/shared/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsMutedUsersRoute = SettingsMutedUsersRouteImport.update({
+  id: '/settings/muted-users',
+  path: '/settings/muted-users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsHiddenRecipesRoute = SettingsHiddenRecipesRouteImport.update({
+  id: '/settings/hidden-recipes',
+  path: '/settings/hidden-recipes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsBlockedUsersRoute = SettingsBlockedUsersRouteImport.update({
+  id: '/settings/blocked-users',
+  path: '/settings/blocked-users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesTagsRoute = RecipesTagsRouteImport.update({
@@ -260,7 +278,6 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/pantry': typeof PantryRoute
-  '/settings': typeof SettingsRoute
   '/subscribers-only': typeof SubscribersOnlyRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
@@ -274,6 +291,9 @@ export interface FileRoutesByFullPath {
   '/polls/$pollId': typeof PollsPollIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
+  '/settings/blocked-users': typeof SettingsBlockedUsersRoute
+  '/settings/hidden-recipes': typeof SettingsHiddenRecipesRoute
+  '/settings/muted-users': typeof SettingsMutedUsersRoute
   '/shared/$token': typeof SharedTokenRoute
   '/calendars/': typeof CalendarsIndexRoute
   '/collections/': typeof CollectionsIndexRoute
@@ -282,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/notifications/': typeof NotificationsIndexRoute
   '/polls/': typeof PollsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/api/cron/delete-expired-polls': typeof ApiCronDeleteExpiredPollsRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -302,7 +323,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/pantry': typeof PantryRoute
-  '/settings': typeof SettingsRoute
   '/subscribers-only': typeof SubscribersOnlyRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
@@ -316,6 +336,9 @@ export interface FileRoutesByTo {
   '/polls/$pollId': typeof PollsPollIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
+  '/settings/blocked-users': typeof SettingsBlockedUsersRoute
+  '/settings/hidden-recipes': typeof SettingsHiddenRecipesRoute
+  '/settings/muted-users': typeof SettingsMutedUsersRoute
   '/shared/$token': typeof SharedTokenRoute
   '/calendars': typeof CalendarsIndexRoute
   '/collections': typeof CollectionsIndexRoute
@@ -324,6 +347,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsIndexRoute
   '/polls': typeof PollsIndexRoute
   '/recipes': typeof RecipesIndexRoute
+  '/settings': typeof SettingsIndexRoute
   '/api/cron/delete-expired-polls': typeof ApiCronDeleteExpiredPollsRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -345,7 +369,6 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/pantry': typeof PantryRoute
-  '/settings': typeof SettingsRoute
   '/subscribers-only': typeof SubscribersOnlyRoute
   '/api/rotate-image': typeof ApiRotateImageRoute
   '/api/upload': typeof ApiUploadRoute
@@ -359,6 +382,9 @@ export interface FileRoutesById {
   '/polls/$pollId': typeof PollsPollIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
+  '/settings/blocked-users': typeof SettingsBlockedUsersRoute
+  '/settings/hidden-recipes': typeof SettingsHiddenRecipesRoute
+  '/settings/muted-users': typeof SettingsMutedUsersRoute
   '/shared/$token': typeof SharedTokenRoute
   '/calendars/': typeof CalendarsIndexRoute
   '/collections/': typeof CollectionsIndexRoute
@@ -367,6 +393,7 @@ export interface FileRoutesById {
   '/notifications/': typeof NotificationsIndexRoute
   '/polls/': typeof PollsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
+  '/settings/': typeof SettingsIndexRoute
   '/api/cron/delete-expired-polls': typeof ApiCronDeleteExpiredPollsRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -389,7 +416,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/pantry'
-    | '/settings'
     | '/subscribers-only'
     | '/api/rotate-image'
     | '/api/upload'
@@ -403,6 +429,9 @@ export interface FileRouteTypes {
     | '/polls/$pollId'
     | '/recipes/new'
     | '/recipes/tags'
+    | '/settings/blocked-users'
+    | '/settings/hidden-recipes'
+    | '/settings/muted-users'
     | '/shared/$token'
     | '/calendars/'
     | '/collections/'
@@ -411,6 +440,7 @@ export interface FileRouteTypes {
     | '/notifications/'
     | '/polls/'
     | '/recipes/'
+    | '/settings/'
     | '/api/cron/delete-expired-polls'
     | '/api/webhooks/stripe'
     | '/auth/google/callback'
@@ -431,7 +461,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/pantry'
-    | '/settings'
     | '/subscribers-only'
     | '/api/rotate-image'
     | '/api/upload'
@@ -445,6 +474,9 @@ export interface FileRouteTypes {
     | '/polls/$pollId'
     | '/recipes/new'
     | '/recipes/tags'
+    | '/settings/blocked-users'
+    | '/settings/hidden-recipes'
+    | '/settings/muted-users'
     | '/shared/$token'
     | '/calendars'
     | '/collections'
@@ -453,6 +485,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/polls'
     | '/recipes'
+    | '/settings'
     | '/api/cron/delete-expired-polls'
     | '/api/webhooks/stripe'
     | '/auth/google/callback'
@@ -473,7 +506,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/pantry'
-    | '/settings'
     | '/subscribers-only'
     | '/api/rotate-image'
     | '/api/upload'
@@ -487,6 +519,9 @@ export interface FileRouteTypes {
     | '/polls/$pollId'
     | '/recipes/new'
     | '/recipes/tags'
+    | '/settings/blocked-users'
+    | '/settings/hidden-recipes'
+    | '/settings/muted-users'
     | '/shared/$token'
     | '/calendars/'
     | '/collections/'
@@ -495,6 +530,7 @@ export interface FileRouteTypes {
     | '/notifications/'
     | '/polls/'
     | '/recipes/'
+    | '/settings/'
     | '/api/cron/delete-expired-polls'
     | '/api/webhooks/stripe'
     | '/auth/google/callback'
@@ -516,7 +552,6 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   LoginRoute: typeof LoginRoute
   PantryRoute: typeof PantryRoute
-  SettingsRoute: typeof SettingsRoute
   SubscribersOnlyRoute: typeof SubscribersOnlyRoute
   ApiRotateImageRoute: typeof ApiRotateImageRoute
   ApiUploadRoute: typeof ApiUploadRoute
@@ -530,6 +565,9 @@ export interface RootRouteChildren {
   PollsPollIdRoute: typeof PollsPollIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
   RecipesTagsRoute: typeof RecipesTagsRoute
+  SettingsBlockedUsersRoute: typeof SettingsBlockedUsersRoute
+  SettingsHiddenRecipesRoute: typeof SettingsHiddenRecipesRoute
+  SettingsMutedUsersRoute: typeof SettingsMutedUsersRoute
   SharedTokenRoute: typeof SharedTokenRoute
   CalendarsIndexRoute: typeof CalendarsIndexRoute
   CollectionsIndexRoute: typeof CollectionsIndexRoute
@@ -538,6 +576,7 @@ export interface RootRouteChildren {
   NotificationsIndexRoute: typeof NotificationsIndexRoute
   PollsIndexRoute: typeof PollsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
+  SettingsIndexRoute: typeof SettingsIndexRoute
   ApiCronDeleteExpiredPollsRoute: typeof ApiCronDeleteExpiredPollsRoute
   ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
@@ -560,13 +599,6 @@ declare module '@tanstack/react-router' {
       path: '/subscribers-only'
       fullPath: '/subscribers-only'
       preLoaderRoute: typeof SubscribersOnlyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pantry': {
@@ -602,6 +634,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/': {
+      id: '/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof SettingsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/': {
@@ -658,6 +697,27 @@ declare module '@tanstack/react-router' {
       path: '/shared/$token'
       fullPath: '/shared/$token'
       preLoaderRoute: typeof SharedTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/muted-users': {
+      id: '/settings/muted-users'
+      path: '/settings/muted-users'
+      fullPath: '/settings/muted-users'
+      preLoaderRoute: typeof SettingsMutedUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/hidden-recipes': {
+      id: '/settings/hidden-recipes'
+      path: '/settings/hidden-recipes'
+      fullPath: '/settings/hidden-recipes'
+      preLoaderRoute: typeof SettingsHiddenRecipesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/blocked-users': {
+      id: '/settings/blocked-users'
+      path: '/settings/blocked-users'
+      fullPath: '/settings/blocked-users'
+      preLoaderRoute: typeof SettingsBlockedUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/tags': {
@@ -844,7 +904,6 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   LoginRoute: LoginRoute,
   PantryRoute: PantryRoute,
-  SettingsRoute: SettingsRoute,
   SubscribersOnlyRoute: SubscribersOnlyRoute,
   ApiRotateImageRoute: ApiRotateImageRoute,
   ApiUploadRoute: ApiUploadRoute,
@@ -858,6 +917,9 @@ const rootRouteChildren: RootRouteChildren = {
   PollsPollIdRoute: PollsPollIdRoute,
   RecipesNewRoute: RecipesNewRoute,
   RecipesTagsRoute: RecipesTagsRoute,
+  SettingsBlockedUsersRoute: SettingsBlockedUsersRoute,
+  SettingsHiddenRecipesRoute: SettingsHiddenRecipesRoute,
+  SettingsMutedUsersRoute: SettingsMutedUsersRoute,
   SharedTokenRoute: SharedTokenRoute,
   CalendarsIndexRoute: CalendarsIndexRoute,
   CollectionsIndexRoute: CollectionsIndexRoute,
@@ -866,6 +928,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsIndexRoute: NotificationsIndexRoute,
   PollsIndexRoute: PollsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
+  SettingsIndexRoute: SettingsIndexRoute,
   ApiCronDeleteExpiredPollsRoute: ApiCronDeleteExpiredPollsRoute,
   ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,

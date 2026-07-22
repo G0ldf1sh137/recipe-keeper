@@ -12,7 +12,7 @@ export const listComments = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const recipe = await findRecipeById(data.recipeId, context.user?.id, data.shareToken, context.user?.isAdmin);
     if (!recipe) throw notFound();
-    return findCommentTreeForRecipe(data.recipeId);
+    return findCommentTreeForRecipe(data.recipeId, context.user?.id);
   });
 
 export const createComment = createServerFn({ method: "POST" })

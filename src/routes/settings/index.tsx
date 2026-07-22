@@ -15,6 +15,9 @@ import { AvatarUpload } from "#/uploads/AvatarUpload";
 import { getColorThemePreference } from "#/theme/theme.functions";
 import { ColorThemeSwitcher } from "#/theme/ColorThemeSwitcher";
 import { startBillingPortal, startCheckout } from "#/billing/billing.functions";
+import { getBlockedUsersCount } from "#/blocks/blocks.functions";
+import { getMutedUsersCount } from "#/mutes/mutes.functions";
+import { getHiddenRecipesCount } from "#/hidden-recipes/hidden-recipes.functions";
 import { visibilityValues, weekStartDayValues } from "#/db/schema";
 import type { Visibility, WeekStartDay } from "#/db/schema";
 
@@ -23,18 +26,24 @@ const weekStartDayLabels: Record<WeekStartDay, string> = {
   mon: "Monday",
 };
 
-export const Route = createFileRoute("/settings")({
+export const Route = createFileRoute("/settings/")({
   beforeLoad: async () => {
     const user = await getSessionUser();
     if (!user) throw redirect({ to: "/login" });
     return { user };
   },
-  loader: async ({ context }) => ({ user: context.user, colorTheme: await getColorThemePreference() }),
+  loader: async ({ context }) => ({
+    user: context.user,
+    colorTheme: await getColorThemePreference(),
+    blockedCount: await getBlockedUsersCount(),
+    mutedCount: await getMutedUsersCount(),
+    hiddenRecipesCount: await getHiddenRecipesCount(),
+  }),
   component: SettingsPage,
 });
 
 function SettingsPage() {
-  const { user, colorTheme } = Route.useLoaderData();
+  const { user, colorTheme, blockedCount, mutedCount, hiddenRecipesCount } = Route.useLoaderData();
   const updateUsernameFn = useServerFn(updateUsername);
   const updateNameFn = useServerFn(updateName);
   const updateAvatarOverrideFn = useServerFn(updateAvatarOverride);
@@ -379,6 +388,31 @@ function SettingsPage() {
           {submitting ? "Saving..." : "Save"}
         </button>
       </form>
+
+      <div className="mt-6 flex flex-col gap-2">
+        <h2 className="font-serif text-xl font-semibold text-ink">Privacy</h2>
+        <Link
+          to="/settings/blocked-users"
+          className="flex items-center justify-between rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm hover:bg-accent-50"
+        >
+          <span className="font-medium text-ink">Blocked users</span>
+          <span className="text-sm text-ink/50">{blockedCount} →</span>
+        </Link>
+        <Link
+          to="/settings/muted-users"
+          className="flex items-center justify-between rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm hover:bg-accent-50"
+        >
+          <span className="font-medium text-ink">Muted users</span>
+          <span className="text-sm text-ink/50">{mutedCount} →</span>
+        </Link>
+        <Link
+          to="/settings/hidden-recipes"
+          className="flex items-center justify-between rounded-xl border-2 border-accent-200 bg-surface px-4 py-3 shadow-sm hover:bg-accent-50"
+        >
+          <span className="font-medium text-ink">Hidden recipes</span>
+          <span className="text-sm text-ink/50">{hiddenRecipesCount} →</span>
+        </Link>
+      </div>
     </div>
   );
 }

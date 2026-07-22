@@ -66,7 +66,7 @@ const featureGroups = [
   {
     title: "Community",
     description:
-      "Rate and comment on recipes, fork someone else's recipe to make your own version, follow other users from their profile or any of their recipes, and get notified when someone comments on, rates, forks, or follows you, with per-event controls in Settings if you'd rather not hear about all four.",
+      "Rate and comment on recipes, fork someone else's recipe to make your own version, follow other users from their profile or any of their recipes, and get notified when someone comments on, rates, forks, or follows you, with per-event controls in Settings if you'd rather not hear about all four. If someone's not for you, block them for a full two-way wall (no more seeing or contacting each other) or quietly mute them to stop seeing their recipes and activity without them ever knowing — both from their profile page, with a Settings page to review and undo any block, mute, or hidden recipe.",
   },
   {
     title: "Direct messages",

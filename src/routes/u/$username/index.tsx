@@ -4,6 +4,7 @@ import { getProfile } from "#/profile/profile.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
 import { FollowButton } from "#/follows/FollowButton";
 import { MessageButton } from "#/messages/MessageButton";
+import { BlockMuteMenu } from "#/blocks/BlockMuteMenu";
 
 export const Route = createFileRoute("/u/$username/")({
   loader: async ({ params }) => getProfile({ data: { username: params.username } }),
@@ -25,8 +26,18 @@ export const Route = createFileRoute("/u/$username/")({
 });
 
 function ProfilePage() {
-  const { user, recipes, collections, followerCount, followingCount, canFollow, isFollowing, canMessage } =
-    Route.useLoaderData();
+  const {
+    user,
+    recipes,
+    collections,
+    followerCount,
+    followingCount,
+    canFollow,
+    isFollowing,
+    canMessage,
+    canBlock,
+    isMuted,
+  } = Route.useLoaderData();
   const [query, setQuery] = useState("");
 
   const q = query.trim().toLowerCase();
@@ -47,6 +58,7 @@ function ProfilePage() {
         </div>
         {canFollow && <FollowButton targetUserId={user.id} initiallyFollowing={isFollowing} />}
         {canMessage && <MessageButton targetUserId={user.id} />}
+        {canBlock && <BlockMuteMenu targetUserId={user.id} initiallyMuted={isMuted} />}
       </div>
 
       <p className="mt-2 text-sm text-ink/60">

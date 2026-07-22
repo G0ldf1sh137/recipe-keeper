@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "#/db/index";
-import { comments, users } from "#/db/schema";
+import { comments, users, blocks, mutes } from "#/db/schema";
 import type { z } from "zod";
 import type { createCommentSchema } from "./schemas";
 
@@ -14,7 +14,30 @@ export type CommentNode = {
   replies: CommentNode[];
 };
 
-export async function findCommentTreeForRecipe(recipeId: string): Promise<CommentNode[]> {
+// Mutual: a blocked author's comments are hidden from the viewer, and vice
+// versa, on any recipe regardless of who owns it.
+function noWallWithAuthor(viewerId: string | undefined) {
+  if (!viewerId) return sql`true`;
+  return sql`not exists (
+    select 1 from ${blocks}
+    where (${blocks.blockerId} = ${viewerId} and ${blocks.blockedId} = ${comments.authorId})
+       or (${blocks.blockerId} = ${comments.authorId} and ${blocks.blockedId} = ${viewerId})
+  )`;
+}
+
+// One-directional: only hides the muted author's comments from the muter.
+function notMutedAuthor(viewerId: string | undefined) {
+  if (!viewerId) return sql`true`;
+  return sql`not exists (
+    select 1 from ${mutes}
+    where ${mutes.muterId} = ${viewerId} and ${mutes.mutedId} = ${comments.authorId}
+  )`;
+}
+
+export async function findCommentTreeForRecipe(
+  recipeId: string,
+  viewerId: string | undefined,
+): Promise<CommentNode[]> {
   const rows = await db
     .select({
       id: comments.id,
@@ -32,7 +55,7 @@ export async function findCommentTreeForRecipe(recipeId: string): Promise<Commen
     })
     .from(comments)
     .innerJoin(users, eq(comments.authorId, users.id))
-    .where(eq(comments.recipeId, recipeId))
+    .where(and(eq(comments.recipeId, recipeId), noWallWithAuthor(viewerId), notMutedAuthor(viewerId)))
     .orderBy(comments.createdAt);
 
   const byId = new Map<string, CommentNode>();

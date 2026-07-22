@@ -1,7 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { notFound } from "@tanstack/react-router";
 import { hideRecipeSchema } from "./schemas";
-import { hideRecipe as hideRecipeDb, unhideRecipe as unhideRecipeDb } from "./hidden-recipes.server";
+import {
+  hideRecipe as hideRecipeDb,
+  unhideRecipe as unhideRecipeDb,
+  listHiddenRecipes,
+  countHiddenRecipes,
+} from "./hidden-recipes.server";
 import { findRecipeById } from "#/recipes/recipes.server";
 import { requireAuthMiddleware } from "#/auth/auth-middleware";
 
@@ -24,3 +29,11 @@ export const unhideRecipe = createServerFn({ method: "POST" })
     await unhideRecipeDb(context.user.id, data.recipeId);
     return { ok: true };
   });
+
+export const getHiddenRecipes = createServerFn({ method: "GET" })
+  .middleware([requireAuthMiddleware])
+  .handler(async ({ context }) => listHiddenRecipes(context.user.id));
+
+export const getHiddenRecipesCount = createServerFn({ method: "GET" })
+  .middleware([requireAuthMiddleware])
+  .handler(async ({ context }) => countHiddenRecipes(context.user.id));

@@ -152,6 +152,37 @@ export const follows = pgTable(
   (table) => [primaryKey({ columns: [table.followerId, table.followingId] })],
 );
 
+// A mutual wall between two users — only the blocker can remove their own
+// row, but enforcement checks both directions (see hasWallBetween).
+export const blocks = pgTable(
+  "blocks",
+  {
+    blockerId: text("blocker_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    blockedId: text("blocked_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.blockerId, table.blockedId] })],
+);
+
+// A silent, one-directional filter — only affects the muter's own view.
+export const mutes = pgTable(
+  "mutes",
+  {
+    muterId: text("muter_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    mutedId: text("muted_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.muterId, table.mutedId] })],
+);
+
 export const conversations = pgTable(
   "conversations",
   {
