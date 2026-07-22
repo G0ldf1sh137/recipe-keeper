@@ -56,17 +56,19 @@ export function RecipeForkGroup<T extends ForkableRecipe>({
   group,
   rating,
   ratingsById,
+  onHide,
 }: {
   group: RecipeGroup<T>;
   rating?: { average: number; count: number };
   ratingsById: Map<string, { average: number; count: number }>;
+  onHide?: (recipeId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const { primary, forks } = group;
 
   return (
     <div>
-      <RecipeCard recipe={primary} rating={rating} />
+      <RecipeCard recipe={primary} rating={rating} onHide={onHide ? () => onHide(primary.id) : undefined} />
       {forks.length > 0 && (
         <div className="mt-1 pl-2">
           <button
@@ -80,7 +82,11 @@ export function RecipeForkGroup<T extends ForkableRecipe>({
             <ul className="mt-2 flex flex-col gap-2 border-l-2 border-accent-100 pl-4">
               {forks.map((fork) => (
                 <li key={fork.id}>
-                  <RecipeCard recipe={fork} rating={ratingsById.get(fork.id)} />
+                  <RecipeCard
+                    recipe={fork}
+                    rating={ratingsById.get(fork.id)}
+                    onHide={onHide ? () => onHide(fork.id) : undefined}
+                  />
                 </li>
               ))}
             </ul>

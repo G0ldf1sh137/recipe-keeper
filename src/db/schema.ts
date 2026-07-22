@@ -287,6 +287,20 @@ export const recipeNotes = pgTable(
   (table) => [primaryKey({ columns: [table.recipeId, table.userId] })],
 );
 
+export const hiddenRecipes = pgTable(
+  "hidden_recipes",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    recipeId: text("recipe_id")
+      .notNull()
+      .references(() => recipes.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.recipeId] })],
+);
+
 export const groceryLists = pgTable("grocery_lists", {
   id: id(),
   ownerId: text("owner_id")

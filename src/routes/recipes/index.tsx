@@ -6,6 +6,9 @@ import { listRecipes, getRandomRecipeId } from "#/recipes/recipes.functions";
 import { getRatingSummaries } from "#/ratings/ratings.functions";
 import { RecipeCardSkeleton } from "#/recipes/RecipeCardSkeleton";
 import { groupRecipeForks, RecipeForkGroup } from "#/recipes/RecipeForkGroup";
+import { getSessionUser } from "#/auth/auth.functions";
+import { hideRecipe, unhideRecipe } from "#/hidden-recipes/hidden-recipes.functions";
+import { Toast } from "#/ui/Toast";
 import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 
@@ -19,9 +22,9 @@ export const Route = createFileRoute("/recipes/")({
   validateSearch: recipesSearchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    const { recipes, hasMore } = await listRecipes({ data: deps });
+    const [{ recipes, hasMore }, user] = await Promise.all([listRecipes({ data: deps }), getSessionUser()]);
     const ratings = await getRatingSummaries({ data: { recipeIds: recipes.map((r) => r.id) } });
-    return { recipes, hasMore, ratings };
+    return { recipes, hasMore, ratings, isLoggedIn: !!user };
   },
   component: RecipesListPage,
 });
@@ -33,11 +36,16 @@ function RecipesListPage() {
   const listRecipesFn = useServerFn(listRecipes);
   const getRatingSummariesFn = useServerFn(getRatingSummaries);
   const getRandomRecipeIdFn = useServerFn(getRandomRecipeId);
+  const hideRecipeFn = useServerFn(hideRecipe);
+  const unhideRecipeFn = useServerFn(unhideRecipe);
 
   const [recipes, setRecipes] = useState(loaderData.recipes);
   const [hasMore, setHasMore] = useState(loaderData.hasMore);
   const [ratingsById, setRatingsById] = useState(() => new Map(Object.entries(loaderData.ratings)));
   const [loadingMore, setLoadingMore] = useState(false);
+  const [hideToast, setHideToast] = useState<{ recipeId: string; title: string } | null>(null);
+  const removedRecipeRef = useRef<{ recipe: (typeof loaderData.recipes)[number]; index: number } | null>(null);
+  const toastTimeoutRef = useRef<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   // Synchronous guards for the scroll-triggered fetch below — state alone isn't
   // enough here, since IntersectionObserver can fire again before a re-render
@@ -121,6 +129,35 @@ function RecipesListPage() {
   async function handleRandom() {
     const id = await getRandomRecipeIdFn({ data: search });
     if (id) void navigate({ to: "/recipes/$recipeId", params: { recipeId: id } });
+  }
+
+  function handleHide(recipeId: string) {
+    const index = recipes.findIndex((r) => r.id === recipeId);
+    if (index === -1) return;
+    const recipe = recipes[index];
+    removedRecipeRef.current = { recipe, index };
+    setRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+    setHideToast({ recipeId, title: recipe.title });
+    void hideRecipeFn({ data: { recipeId } });
+
+    if (toastTimeoutRef.current) window.clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setHideToast((current) => (current?.recipeId === recipeId ? null : current));
+    }, 5000);
+  }
+
+  function handleUndoHide() {
+    const removed = removedRecipeRef.current;
+    if (!removed) return;
+    if (toastTimeoutRef.current) window.clearTimeout(toastTimeoutRef.current);
+    setRecipes((prev) => {
+      const next = [...prev];
+      next.splice(Math.min(removed.index, next.length), 0, removed.recipe);
+      return next;
+    });
+    setHideToast(null);
+    removedRecipeRef.current = null;
+    void unhideRecipeFn({ data: { recipeId: removed.recipe.id } });
   }
 
   return (
@@ -213,7 +250,12 @@ function RecipesListPage() {
           <ul className="mt-6 flex flex-col gap-3">
             {groups.map((group) => (
               <li key={group.primary.id}>
-                <RecipeForkGroup group={group} rating={ratingsById.get(group.primary.id)} ratingsById={ratingsById} />
+                <RecipeForkGroup
+                  group={group}
+                  rating={ratingsById.get(group.primary.id)}
+                  ratingsById={ratingsById}
+                  onHide={loaderData.isLoggedIn ? handleHide : undefined}
+                />
               </li>
             ))}
             {loadingMore && (
@@ -229,6 +271,9 @@ function RecipesListPage() {
           </ul>
           {hasMore && <div ref={sentinelRef} className="h-1" />}
         </>
+      )}
+      {hideToast && (
+        <Toast message={`"${hideToast.title}" hidden`} actionLabel="Undo" onAction={handleUndoHide} />
       )}
     </div>
   );

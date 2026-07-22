@@ -281,6 +281,13 @@
       "when": 1784738608741,
       "tag": "0039_mute_hiroim",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1784755787625,
+      "tag": "0040_exotic_marauders",
+      "breakpoints": true
     }
   ]
 }

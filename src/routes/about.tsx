@@ -56,7 +56,7 @@ const featureGroups = [
   {
     title: "Search & discovery",
     description:
-      "Search recipes by title, tag, or ingredient in one box, browse every tag in use, browse public cookbooks from other users, and see recipes similar to the one you're viewing.",
+      "Search recipes by title, tag, or ingredient in one box, browse every tag in use, browse public cookbooks from other users, and see recipes similar to the one you're viewing. Not interested in a recipe? Hide it from your own browse, search, and similar-recipes results with one click, with an undo right after.",
   },
   {
     title: "Sharing & visibility",

@@ -11,9 +11,10 @@ type RecipeCardProps = {
     coverPhotoUrl: string | null;
   };
   rating?: { average: number; count: number };
+  onHide?: () => void;
 };
 
-export function RecipeCard({ recipe, rating }: RecipeCardProps) {
+export function RecipeCard({ recipe, rating, onHide }: RecipeCardProps) {
   const imageUrl = recipe.coverPhotoUrl ?? recipe.photoUrls[0];
 
   return (
@@ -25,10 +26,27 @@ export function RecipeCard({ recipe, rating }: RecipeCardProps) {
       )}
       <div className="min-w-0 flex-1">
         <Link to="/recipes/$recipeId" params={{ recipeId: recipe.id }} className="block">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <span className="font-serif text-lg font-medium text-ink">{recipe.title}</span>
-            <span className="text-xs font-medium uppercase tracking-wide text-ink/40">
-              {recipe.visibility}
+            <span className="flex shrink-0 items-center gap-1.5">
+              <span className="text-xs font-medium uppercase tracking-wide text-ink/40">
+                {recipe.visibility}
+              </span>
+              {onHide && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onHide();
+                  }}
+                  aria-label="Hide this recipe"
+                  title="Not interested"
+                  className="flex h-5 w-5 items-center justify-center rounded-full text-ink/40 hover:bg-accent-100 hover:text-ink/70"
+                >
+                  ×
+                </button>
+              )}
             </span>
           </div>
           {rating && (

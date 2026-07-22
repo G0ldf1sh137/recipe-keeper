@@ -1,6 +1,6 @@
 import { and, asc as ascOrder, desc as descOrder, eq, getTableColumns, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { db } from "#/db/index";
-import { recipes, shares, users, ingredientNames, unitNames, tagNames, ratings, comments } from "#/db/schema";
+import { recipes, shares, users, ingredientNames, unitNames, tagNames, ratings, comments, hiddenRecipes } from "#/db/schema";
 import { deleteImageUrls } from "#/uploads/uploads.server";
 import type { createRecipeSchema, deleteRecipeSchema, updateRecipeSchema } from "./schemas";
 import type { z } from "zod";
@@ -20,6 +20,17 @@ function visibleToViewer(viewerId: string | undefined) {
   return viewerId
     ? or(eq(recipes.visibility, "public"), eq(recipes.ownerId, viewerId))
     : eq(recipes.visibility, "public");
+}
+
+// Hiding is per-viewer and applies to algorithmic surfaces only (browse,
+// tag counts, similar recipes, random recipe) — direct links, profile pages,
+// and cookbooks/Meal Weeks/polls a recipe was already added to are unaffected.
+function notHiddenByViewer(viewerId: string | undefined) {
+  if (!viewerId) return sql`true`;
+  return sql`not exists (
+    select 1 from ${hiddenRecipes}
+    where ${hiddenRecipes.recipeId} = ${recipes.id} and ${hiddenRecipes.userId} = ${viewerId}
+  )`;
 }
 
 /**
@@ -116,7 +127,7 @@ export async function findRecipeById(
  * @returns 
  */
 function buildRecipeFilterConditions(filters: RecipeFilters, viewerId: string | undefined) {
-  const conditions = [visibleToViewer(viewerId)];
+  const conditions = [visibleToViewer(viewerId), notHiddenByViewer(viewerId)];
   if (filters.ownerId) conditions.push(eq(recipes.ownerId, filters.ownerId));
   if (filters.visibility) conditions.push(eq(recipes.visibility, filters.visibility));
   if (filters.q) {
@@ -182,11 +193,17 @@ export async function findRecipes(
     return paginateRows(rows, limit);
   }
 
-  const rows = await db.query.recipes.findMany({
-    where: and(...conditions),
-    orderBy: (r, { desc, asc }) => [desc(r.createdAt), asc(r.id)],
-    ...(limit ? { limit: limit + 1, offset } : {}),
-  });
+  // Uses the plain query builder rather than db.query.recipes.findMany (the
+  // relational query builder) because RQB mis-qualifies raw-sql column
+  // references to other tables (e.g. hiddenRecipes.recipeId) as belonging to
+  // "recipes" instead of "hidden_recipes", breaking the not-hidden filter.
+  const query = db
+    .select(getTableColumns(recipes))
+    .from(recipes)
+    .where(and(...conditions))
+    .orderBy(descOrder(recipes.createdAt), ascOrder(recipes.id))
+    .$dynamic();
+  const rows = limit ? await query.limit(limit + 1).offset(offset) : await query;
   return paginateRows(rows, limit);
 }
 
@@ -271,10 +288,11 @@ export async function findTagCounts(viewerId: string | undefined): Promise<{ tag
   const visibility = viewerId
     ? sql`(${recipes.visibility} = 'public' or ${recipes.ownerId} = ${viewerId})`
     : sql`${recipes.visibility} = 'public'`;
+  const notHidden = notHiddenByViewer(viewerId);
   const rows = await db.execute<{ tag: string; count: number }>(sql`
     select tag, count(*)::int as count
     from ${recipes}, unnest(${recipes.tags}) as tag
-    where ${visibility}
+    where ${visibility} and ${notHidden}
     group by tag
     order by count desc, tag asc
   `);
@@ -330,7 +348,7 @@ export async function findSimilarRecipes(
         ${tagOverlap} as tag_overlap,
         ${ingredientOverlap} as ingredient_overlap
       from ${recipes}
-      where ${recipes.id} != ${excludeRecipeId} and ${visibility}
+      where ${recipes.id} != ${excludeRecipeId} and ${visibility} and ${notHiddenByViewer(viewerId)}
     ) as scored
     where tag_overlap + ingredient_overlap > 0
     order by tag_overlap + ingredient_overlap desc, "createdAt" desc

@@ -10,6 +10,7 @@ import {
   revokeRecipeShare,
   forkRecipe,
 } from "#/recipes/recipes.functions";
+import { hideRecipe, unhideRecipe } from "#/hidden-recipes/hidden-recipes.functions";
 import { RecipeCard } from "#/recipes/RecipeCard";
 import { RecipeCardSkeleton } from "#/recipes/RecipeCardSkeleton";
 import { getSessionUser } from "#/auth/auth.functions";
@@ -105,6 +106,9 @@ function RecipePage() {
   const revokeShareFn = useServerFn(revokeRecipeShare);
   const forkRecipeFn = useServerFn(forkRecipe);
   const reportRecipeFn = useServerFn(reportRecipe);
+  const hideRecipeFn = useServerFn(hideRecipe);
+  const unhideRecipeFn = useServerFn(unhideRecipe);
+  const [hiding, setHiding] = useState(false);
   const getRelatedRecipesFn = useServerFn(getRelatedRecipes);
   const getRatingSummariesFn = useServerFn(getRatingSummaries);
   const getCombinedPantryNamesFn = useServerFn(getCombinedPantryNames);
@@ -183,6 +187,20 @@ function RecipePage() {
     await reportRecipeFn({ data: { recipeId: recipe.id, reason } });
   }
 
+  async function handleToggleHide() {
+    setHiding(true);
+    try {
+      if (recipe.isHidden) {
+        await unhideRecipeFn({ data: { recipeId: recipe.id } });
+      } else {
+        await hideRecipeFn({ data: { recipeId: recipe.id } });
+      }
+      await router.invalidate();
+    } finally {
+      setHiding(false);
+    }
+  }
+
   async function handleRevoke() {
     await revokeShareFn({ data: { recipeId: recipe.id } });
     await router.invalidate();
@@ -237,6 +255,16 @@ function RecipePage() {
               className="whitespace-nowrap text-sm font-medium text-accent-600 hover:text-accent-700 disabled:opacity-50 dark:hover:text-accent-400"
             >
               {forking ? "Forking..." : "Fork"}
+            </button>
+          )}
+          {!!user && !recipe.isOwner && (
+            <button
+              type="button"
+              onClick={handleToggleHide}
+              disabled={hiding}
+              className="whitespace-nowrap text-sm font-medium text-accent-600 hover:text-accent-700 disabled:opacity-50 dark:hover:text-accent-400"
+            >
+              {recipe.isHidden ? "Unhide" : "Hide"}
             </button>
           )}
           {!!user && !recipe.isOwner && <ReportButton onReport={handleReport} />}

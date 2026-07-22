@@ -30,6 +30,7 @@ import {
 } from "./recipes.server";
 import { insertNotification } from "#/notifications/notifications.server";
 import { findFollow } from "#/follows/follows.server";
+import { isRecipeHidden } from "#/hidden-recipes/hidden-recipes.server";
 import {
   sessionMiddleware,
   requireAuthMiddleware,
@@ -64,6 +65,8 @@ export const getRecipe = createServerFn({ method: "GET" })
     const isFollowingOwner = canFollowOwner
       ? !!(await findFollow(context.user!.id, recipe.ownerId))
       : false;
+    const isHidden =
+      !isOwner && !!context.user ? await isRecipeHidden(context.user.id, recipe.id) : false;
     return {
       ...recipe,
       isOwner,
@@ -72,6 +75,7 @@ export const getRecipe = createServerFn({ method: "GET" })
       forkedFrom,
       canFollowOwner,
       isFollowingOwner,
+      isHidden,
     };
   });
 
