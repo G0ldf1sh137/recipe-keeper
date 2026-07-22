@@ -26,6 +26,8 @@ import { AddToGroceryList } from "#/grocery/AddToGroceryList";
 import { AddIngredientToGroceryList, presenceKey } from "#/grocery/AddIngredientToGroceryList";
 import { getCalendarsForRecipe } from "#/calendars/calendars.functions";
 import { AddToCalendar } from "#/calendars/AddToCalendar";
+import { getPollsForRecipe } from "#/polls/polls.functions";
+import { AddToDinnerPoll } from "#/polls/AddToDinnerPoll";
 import { AddIngredientToPantry } from "#/pantry/AddIngredientToPantry";
 import { getCombinedPantryNames } from "#/pantry/pantry.functions";
 import { getMyNote } from "#/notes/notes.functions";
@@ -66,13 +68,14 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
           getMyNote({ data: { recipeId: params.recipeId } }),
         ])
       : [[], null];
-    const [groceryLists, calendars] = isSubscriber
+    const [groceryLists, calendars, polls] = isSubscriber
       ? await Promise.all([
           getGroceryListsForRecipe({ data: { recipeId: params.recipeId } }),
           getCalendarsForRecipe({ data: { recipeId: params.recipeId } }),
+          getPollsForRecipe({ data: { recipeId: params.recipeId } }),
         ])
-      : [[], []];
-    return { recipe, user, rating, makeCount, collections, groceryLists, calendars, note, isSubscriber };
+      : [[], [], []];
+    return { recipe, user, rating, makeCount, collections, groceryLists, calendars, polls, note, isSubscriber };
   },
   component: RecipePage,
   notFoundComponent: () => (
@@ -92,7 +95,7 @@ export const Route = createFileRoute("/recipes/$recipeId/")({
 });
 
 function RecipePage() {
-  const { recipe, user, rating, makeCount, collections, groceryLists, calendars, note, isSubscriber } =
+  const { recipe, user, rating, makeCount, collections, groceryLists, calendars, polls, note, isSubscriber } =
     Route.useLoaderData();
   const { st: shareToken } = Route.useSearch();
   const navigate = useNavigate();
@@ -497,6 +500,7 @@ function RecipePage() {
             isLoggedIn={!!user}
             weekStartDay={user?.weekStartDay ?? "sun"}
           />
+          <AddToDinnerPoll recipeId={recipe.id} polls={polls} canSave={isSubscriber} isLoggedIn={!!user} />
         </div>
       </section>
 

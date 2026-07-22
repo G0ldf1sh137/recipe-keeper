@@ -104,14 +104,25 @@ export type PantryMatch = {
 export async function findRecipesByPantry(
   pantryNames: string[],
   viewerId: string | undefined,
-  limit = 30,
+  options: { q?: string; limit?: number; requireMatch?: boolean } = {},
 ): Promise<PantryMatch[]> {
-  if (pantryNames.length === 0) return [];
+  const { q, limit = 30, requireMatch = true } = options;
+  if (pantryNames.length === 0 && !q) return [];
 
   const lowerNames = pantryNames.map((n) => n.toLowerCase());
   const visibility = viewerId
     ? sql`(${recipes.visibility} = 'public' or ${recipes.ownerId} = ${viewerId})`
     : sql`${recipes.visibility} = 'public'`;
+  const matchFilter = requireMatch ? sql`and matched > 0` : sql``;
+  const titleFilter = q ? sql`and title ilike ${`%${q}%`}` : sql``;
+  // drizzle's sql tag expands a JS array into a comma-separated IN(...) list,
+  // not a bound Postgres array — an empty list is invalid SQL, so fall back
+  // to a literal 0 rather than querying IN () when there's no pantry data.
+  const matchedSql =
+    lowerNames.length > 0
+      ? sql`(select count(*) from jsonb_array_elements(${recipes.ingredients}) as ing
+          where lower(ing->>'name') in ${lowerNames})`
+      : sql`0`;
 
   const rows = await db.execute<{
     id: string;
@@ -135,12 +146,11 @@ export async function findRecipesByPantry(
         ${recipes.ingredients} as ingredients,
         ${recipes.createdAt} as "createdAt",
         (select count(*) from jsonb_array_elements(${recipes.ingredients}) as ing) as total,
-        (select count(*) from jsonb_array_elements(${recipes.ingredients}) as ing
-          where lower(ing->>'name') in ${lowerNames}) as matched
+        ${matchedSql} as matched
       from ${recipes}
       where ${visibility}
     ) as scored
-    where total > 0 and matched > 0
+    where total > 0 ${matchFilter} ${titleFilter}
     order by (total - matched) asc, matched desc, "createdAt" desc
     limit ${limit}
   `);

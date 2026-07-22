@@ -34,6 +34,11 @@ const featureGroups = [
       "Organize recipes into cookbooks, drag to reorder them (with swipe-to-remove and an undo), schedule them across a Meal Week with drag-and-drop (including moving a recipe from one day to another), and bulk-add a Meal Week's recipes to a grocery list in one click. Choose whether your Meal Week starts on Sunday or Monday in Settings.",
   },
   {
+    title: "Dinner Polls",
+    description:
+      "Propose a poll of recipes for a night, and let everyone in your household vote — one vote each, changeable until the poll's creator closes it. A clear winner can be auto-scheduled straight onto your Meal Week.",
+  },
+  {
     title: "Grocery lists",
     description:
       "Build a shopping list from one or more recipes, with duplicate ingredients automatically combined, plus manually-added items. Anything you've already got in your pantry is called out separately, so you're not shopping for things you already have.",
@@ -46,7 +51,7 @@ const featureGroups = [
   {
     title: "Subscription",
     description:
-      "Grocery lists, pantry mode, Meal Weeks, and AI import are subscriber features — subscribe for $5/month right from Settings, and manage or cancel anytime from the same page.",
+      "Grocery lists, pantry mode, Meal Weeks, Dinner Polls, and AI import are subscriber features — subscribe for $5/month right from Settings, and manage or cancel anytime from the same page.",
   },
   {
     title: "Search & discovery",

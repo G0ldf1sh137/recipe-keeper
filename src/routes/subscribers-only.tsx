@@ -9,10 +9,11 @@ const featureLabels = {
   grocery: "Grocery lists",
   pantry: "Pantry",
   calendars: "Meal Weeks",
+  polls: "Dinner Polls",
 } as const;
 
 const subscribersOnlySearchSchema = z.object({
-  feature: z.enum(["grocery", "pantry", "calendars"]).optional(),
+  feature: z.enum(["grocery", "pantry", "calendars", "polls"]).optional(),
 });
 
 export const Route = createFileRoute("/subscribers-only")({

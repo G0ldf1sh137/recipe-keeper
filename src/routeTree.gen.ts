@@ -17,6 +17,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RecipesIndexRouteImport } from './routes/recipes/index'
+import { Route as PollsIndexRouteImport } from './routes/polls/index'
 import { Route as NotificationsIndexRouteImport } from './routes/notifications/index'
 import { Route as MessagesIndexRouteImport } from './routes/messages/index'
 import { Route as GroceryIndexRouteImport } from './routes/grocery/index'
@@ -25,6 +26,7 @@ import { Route as CalendarsIndexRouteImport } from './routes/calendars/index'
 import { Route as SharedTokenRouteImport } from './routes/shared/$token'
 import { Route as RecipesTagsRouteImport } from './routes/recipes/tags'
 import { Route as RecipesNewRouteImport } from './routes/recipes/new'
+import { Route as PollsPollIdRouteImport } from './routes/polls/$pollId'
 import { Route as MessagesConversationIdRouteImport } from './routes/messages/$conversationId'
 import { Route as GroceryListIdRouteImport } from './routes/grocery/$listId'
 import { Route as DevLoginRouteImport } from './routes/dev/login'
@@ -87,6 +89,11 @@ const RecipesIndexRoute = RecipesIndexRouteImport.update({
   path: '/recipes/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PollsIndexRoute = PollsIndexRouteImport.update({
+  id: '/polls/',
+  path: '/polls/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NotificationsIndexRoute = NotificationsIndexRouteImport.update({
   id: '/notifications/',
   path: '/notifications/',
@@ -125,6 +132,11 @@ const RecipesTagsRoute = RecipesTagsRouteImport.update({
 const RecipesNewRoute = RecipesNewRouteImport.update({
   id: '/recipes/new',
   path: '/recipes/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PollsPollIdRoute = PollsPollIdRouteImport.update({
+  id: '/polls/$pollId',
+  path: '/polls/$pollId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MessagesConversationIdRoute = MessagesConversationIdRouteImport.update({
@@ -252,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/dev/login': typeof DevLoginRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
+  '/polls/$pollId': typeof PollsPollIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
@@ -260,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/grocery/': typeof GroceryIndexRoute
   '/messages/': typeof MessagesIndexRoute
   '/notifications/': typeof NotificationsIndexRoute
+  '/polls/': typeof PollsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -291,6 +305,7 @@ export interface FileRoutesByTo {
   '/dev/login': typeof DevLoginRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
+  '/polls/$pollId': typeof PollsPollIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
@@ -299,6 +314,7 @@ export interface FileRoutesByTo {
   '/grocery': typeof GroceryIndexRoute
   '/messages': typeof MessagesIndexRoute
   '/notifications': typeof NotificationsIndexRoute
+  '/polls': typeof PollsIndexRoute
   '/recipes': typeof RecipesIndexRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -331,6 +347,7 @@ export interface FileRoutesById {
   '/dev/login': typeof DevLoginRoute
   '/grocery/$listId': typeof GroceryListIdRoute
   '/messages/$conversationId': typeof MessagesConversationIdRoute
+  '/polls/$pollId': typeof PollsPollIdRoute
   '/recipes/new': typeof RecipesNewRoute
   '/recipes/tags': typeof RecipesTagsRoute
   '/shared/$token': typeof SharedTokenRoute
@@ -339,6 +356,7 @@ export interface FileRoutesById {
   '/grocery/': typeof GroceryIndexRoute
   '/messages/': typeof MessagesIndexRoute
   '/notifications/': typeof NotificationsIndexRoute
+  '/polls/': typeof PollsIndexRoute
   '/recipes/': typeof RecipesIndexRoute
   '/api/webhooks/stripe': typeof ApiWebhooksStripeRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
@@ -372,6 +390,7 @@ export interface FileRouteTypes {
     | '/dev/login'
     | '/grocery/$listId'
     | '/messages/$conversationId'
+    | '/polls/$pollId'
     | '/recipes/new'
     | '/recipes/tags'
     | '/shared/$token'
@@ -380,6 +399,7 @@ export interface FileRouteTypes {
     | '/grocery/'
     | '/messages/'
     | '/notifications/'
+    | '/polls/'
     | '/recipes/'
     | '/api/webhooks/stripe'
     | '/auth/google/callback'
@@ -411,6 +431,7 @@ export interface FileRouteTypes {
     | '/dev/login'
     | '/grocery/$listId'
     | '/messages/$conversationId'
+    | '/polls/$pollId'
     | '/recipes/new'
     | '/recipes/tags'
     | '/shared/$token'
@@ -419,6 +440,7 @@ export interface FileRouteTypes {
     | '/grocery'
     | '/messages'
     | '/notifications'
+    | '/polls'
     | '/recipes'
     | '/api/webhooks/stripe'
     | '/auth/google/callback'
@@ -450,6 +472,7 @@ export interface FileRouteTypes {
     | '/dev/login'
     | '/grocery/$listId'
     | '/messages/$conversationId'
+    | '/polls/$pollId'
     | '/recipes/new'
     | '/recipes/tags'
     | '/shared/$token'
@@ -458,6 +481,7 @@ export interface FileRouteTypes {
     | '/grocery/'
     | '/messages/'
     | '/notifications/'
+    | '/polls/'
     | '/recipes/'
     | '/api/webhooks/stripe'
     | '/auth/google/callback'
@@ -490,6 +514,7 @@ export interface RootRouteChildren {
   DevLoginRoute: typeof DevLoginRoute
   GroceryListIdRoute: typeof GroceryListIdRoute
   MessagesConversationIdRoute: typeof MessagesConversationIdRoute
+  PollsPollIdRoute: typeof PollsPollIdRoute
   RecipesNewRoute: typeof RecipesNewRoute
   RecipesTagsRoute: typeof RecipesTagsRoute
   SharedTokenRoute: typeof SharedTokenRoute
@@ -498,6 +523,7 @@ export interface RootRouteChildren {
   GroceryIndexRoute: typeof GroceryIndexRoute
   MessagesIndexRoute: typeof MessagesIndexRoute
   NotificationsIndexRoute: typeof NotificationsIndexRoute
+  PollsIndexRoute: typeof PollsIndexRoute
   RecipesIndexRoute: typeof RecipesIndexRoute
   ApiWebhooksStripeRoute: typeof ApiWebhooksStripeRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
@@ -571,6 +597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/polls/': {
+      id: '/polls/'
+      path: '/polls'
+      fullPath: '/polls/'
+      preLoaderRoute: typeof PollsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/notifications/': {
       id: '/notifications/'
       path: '/notifications'
@@ -625,6 +658,13 @@ declare module '@tanstack/react-router' {
       path: '/recipes/new'
       fullPath: '/recipes/new'
       preLoaderRoute: typeof RecipesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/polls/$pollId': {
+      id: '/polls/$pollId'
+      path: '/polls/$pollId'
+      fullPath: '/polls/$pollId'
+      preLoaderRoute: typeof PollsPollIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/messages/$conversationId': {
@@ -794,6 +834,7 @@ const rootRouteChildren: RootRouteChildren = {
   DevLoginRoute: DevLoginRoute,
   GroceryListIdRoute: GroceryListIdRoute,
   MessagesConversationIdRoute: MessagesConversationIdRoute,
+  PollsPollIdRoute: PollsPollIdRoute,
   RecipesNewRoute: RecipesNewRoute,
   RecipesTagsRoute: RecipesTagsRoute,
   SharedTokenRoute: SharedTokenRoute,
@@ -802,6 +843,7 @@ const rootRouteChildren: RootRouteChildren = {
   GroceryIndexRoute: GroceryIndexRoute,
   MessagesIndexRoute: MessagesIndexRoute,
   NotificationsIndexRoute: NotificationsIndexRoute,
+  PollsIndexRoute: PollsIndexRoute,
   RecipesIndexRoute: RecipesIndexRoute,
   ApiWebhooksStripeRoute: ApiWebhooksStripeRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,

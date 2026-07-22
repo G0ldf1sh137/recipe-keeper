@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSubscriberMiddleware } from "#/auth/auth-middleware";
-import { pantryItemSchema, removeHouseholdPantryItemSchema } from "./schemas";
+import { pantryItemSchema, removeHouseholdPantryItemSchema, searchRecipesByPantryMatchSchema } from "./schemas";
 import {
   listPantryItems,
   listCombinedPantryNames,
@@ -41,6 +41,22 @@ export const getPantryMatches = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const pantryNames = await listCombinedPantryNames(context.user.id);
     return findRecipesByPantry(pantryNames, context.user.id);
+  });
+
+// Reused by the Dinner Polls "Add a recipe option" search so results are ranked
+// the same way Pantry mode ranks recipes: fewest missing ingredients first.
+// Unlike Pantry mode, doesn't require any ingredient overlap — a text search
+// should still surface a recipe you don't have the ingredients for.
+export const searchRecipesByPantryMatch = createServerFn({ method: "GET" })
+  .middleware([requireSubscriberMiddleware])
+  .validator(searchRecipesByPantryMatchSchema)
+  .handler(async ({ data, context }) => {
+    const pantryNames = await listCombinedPantryNames(context.user.id);
+    return findRecipesByPantry(pantryNames, context.user.id, {
+      q: data.q,
+      limit: data.limit ?? 10,
+      requireMatch: false,
+    });
   });
 
 export const getPantryGroups = createServerFn({ method: "GET" })

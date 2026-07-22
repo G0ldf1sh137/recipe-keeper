@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "#/db/index";
-import { notifications, recipes, users } from "#/db/schema";
+import { notifications, recipes, polls, users } from "#/db/schema";
 import type { NotificationType } from "#/db/schema";
 
 export type NotificationRow = {
@@ -10,6 +10,7 @@ export type NotificationRow = {
   createdAt: Date;
   actor: { id: string; name: string; avatarUrl: string | null; username: string | null };
   recipe: { id: string; title: string } | null;
+  poll: { id: string; title: string } | null;
 };
 
 type PreferenceColumn = "notifyOnComment" | "notifyOnRating" | "notifyOnFork" | "notifyOnFollow";
@@ -28,6 +29,7 @@ export async function insertNotification(input: {
   recipientId: string;
   actorId: string;
   recipeId: string | null;
+  pollId?: string | null;
   type: NotificationType;
 }) {
   if (input.recipientId === input.actorId) return;
@@ -68,17 +70,23 @@ export async function findNotificationsForUser(userId: string): Promise<Notifica
       createdAt: notifications.createdAt,
       actor: { id: users.id, name: users.name, avatarUrl: users.avatarUrl, username: users.username },
       recipe: { id: recipes.id, title: recipes.title },
+      poll: { id: polls.id, title: polls.title },
     })
     .from(notifications)
     .innerJoin(users, eq(notifications.actorId, users.id))
     .leftJoin(recipes, eq(notifications.recipeId, recipes.id))
+    .leftJoin(polls, eq(notifications.pollId, polls.id))
     .where(eq(notifications.recipientId, userId))
     .orderBy(desc(notifications.createdAt))
     .limit(100);
 
-  // A left join with no match fills every selected recipe column with null
-  // rather than nulling out the whole nested object — collapse that here.
-  return rows.map((row) => ({ ...row, recipe: row.recipe?.id ? row.recipe : null }));
+  // A left join with no match fills every selected recipe/poll column with
+  // null rather than nulling out the whole nested object — collapse that here.
+  return rows.map((row) => ({
+    ...row,
+    recipe: row.recipe?.id ? row.recipe : null,
+    poll: row.poll?.id ? row.poll : null,
+  }));
 }
 
 export async function countUnreadNotifications(userId: string): Promise<number> {
