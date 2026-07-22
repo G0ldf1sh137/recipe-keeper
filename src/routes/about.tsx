@@ -24,9 +24,9 @@ const featureGroups = [
       "A distraction-free, one-step-at-a-time view with ingredient scaling, built-in timers for steps with a cook time, a screen wake lock so your display doesn't sleep mid-recipe, and hands-free voice control to move between steps, start a timer, or have a step read aloud.",
   },
   {
-    title: "Scaling",
+    title: "Scaling & unit conversion",
     description:
-      "Instantly scale a recipe's ingredient quantities up or down (0.5x, 2x, or a custom multiplier) without editing the recipe itself.",
+      "Instantly scale a recipe's ingredient quantities up or down (0.5x, 2x, or a custom multiplier) without editing the recipe itself, and toggle ingredients between their original units, US customary, or Metric. Conversions that cross between volume and weight (like cups to grams) are approximate and clearly marked, since they depend on an ingredient's density.",
   },
   {
     title: "Cookbooks & meal planning",
@@ -41,7 +41,7 @@ const featureGroups = [
   {
     title: "Grocery lists",
     description:
-      "Build a shopping list from one or more recipes, with duplicate ingredients automatically combined, plus manually-added items. Anything you've already got in your pantry is called out separately, so you're not shopping for things you already have.",
+      "Build a shopping list from one or more recipes, with duplicate ingredients automatically combined — even across different-but-compatible units (2 tbsp and 1/4 cup of the same ingredient merge into one line) — plus manually-added items. Anything you've already got in your pantry is called out separately, so you're not shopping for things you already have.",
   },
   {
     title: "Pantry mode",

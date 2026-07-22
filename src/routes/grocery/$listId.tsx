@@ -154,6 +154,7 @@ function GroceryListPage() {
                   onChange={() => handleToggleLine(line.itemIds, line.checked)}
                 />
                 <span className={line.checked ? "text-ink/40 line-through" : "text-ink/80"}>
+                  {line.approx && "≈ "}
                   {[line.qty, line.unit].filter(Boolean).join(" ")}
                 </span>
               </label>

@@ -5,6 +5,7 @@ import { findRecipeById } from "#/recipes/recipes.server";
 import { findCalendarForViewer, findEntriesForCalendar } from "#/calendars/calendars.server";
 import { parseQuantity, addFractions, formatFraction } from "#/recipes/quantity";
 import type { Fraction } from "#/recipes/quantity";
+import { normalizeUnit, findDensity, convertQuantity } from "#/recipes/units";
 import { listPantryItems } from "#/pantry/pantry.server";
 
 export async function findGroceryListsByOwner(ownerId: string) {
@@ -195,7 +196,76 @@ export async function setItemsChecked(
   return { ok: true };
 }
 
-type GroceryLine = { qty: string; unit: string; checked: boolean; itemIds: string[] };
+type GroceryLine = { qty: string; unit: string; approx: boolean; checked: boolean; itemIds: string[] };
+
+function formatDecimal(n: number): string {
+  return (Math.round(n * 100) / 100).toString();
+}
+
+// Merges lines within a name-group whose units are different strings but
+// dimensionally compatible (e.g. "2 tbsp" + "1 cup" -> one volume line), on
+// top of the exact-string merge already done in the byUnit pass above. Lines
+// with a unit that doesn't normalize (e.g. "pinch") are left untouched.
+// Cross-type (volume+weight) merging only happens when the ingredient's
+// density is known, and the resulting line is marked `approx`.
+function mergeCompatibleLines(lines: GroceryLine[], ingredientName: string): GroceryLine[] {
+  const withNorm = lines.map((line) => ({ line, norm: normalizeUnit(line.unit) }));
+  const normalizable = withNorm.filter(
+    (x): x is { line: GroceryLine; norm: NonNullable<ReturnType<typeof normalizeUnit>> } => x.norm !== undefined,
+  );
+  const other = withNorm.filter((x) => x.norm === undefined).map((x) => x.line);
+
+  if (normalizable.length < 2) return lines;
+
+  function combine(group: typeof normalizable): GroceryLine | undefined {
+    const parsedQtys = group.map((x) => parseQuantity(x.line.qty));
+    if (parsedQtys.some((q) => q === undefined)) return undefined;
+
+    const targetUnit = group[0].line.unit;
+    let total = 0;
+    let approx = false;
+    for (let i = 0; i < group.length; i++) {
+      const converted = convertQuantity(parsedQtys[i]!, group[i].line.unit, targetUnit, ingredientName);
+      if (!converted) return undefined;
+      total += converted.value;
+      if (converted.approx) approx = true;
+    }
+    return {
+      qty: formatDecimal(total),
+      unit: targetUnit,
+      approx,
+      checked: group.every((x) => x.line.checked),
+      itemIds: group.flatMap((x) => x.line.itemIds),
+    };
+  }
+
+  const density = findDensity(ingredientName);
+  let mergeGroups: (typeof normalizable)[];
+  if (density !== undefined) {
+    mergeGroups = [normalizable];
+  } else {
+    const byType = new Map<string, typeof normalizable>();
+    for (const item of normalizable) {
+      const bucket = byType.get(item.norm.type);
+      if (bucket) bucket.push(item);
+      else byType.set(item.norm.type, [item]);
+    }
+    mergeGroups = Array.from(byType.values());
+  }
+
+  const resultLines: GroceryLine[] = [];
+  for (const group of mergeGroups) {
+    if (group.length < 2) {
+      resultLines.push(...group.map((x) => x.line));
+      continue;
+    }
+    const combined = combine(group);
+    if (combined) resultLines.push(combined);
+    else resultLines.push(...group.map((x) => x.line));
+  }
+
+  return [...resultLines, ...other];
+}
 
 export async function getGroceryListWithGroups(id: string, ownerId: string, isAdmin = false) {
   const list = await findGroceryListById(id, ownerId, isAdmin);
@@ -236,6 +306,7 @@ export async function getGroceryListWithGroups(id: string, ownerId: string, isAd
           {
             qty: formatFraction(sum),
             unit: unitGroup[0].unit,
+            approx: false,
             checked: unitGroup.every((item) => item.checked),
             itemIds: unitGroup.map((item) => item.id),
           },
@@ -244,13 +315,14 @@ export async function getGroceryListWithGroups(id: string, ownerId: string, isAd
       return unitGroup.map((item) => ({
         qty: item.qty,
         unit: item.unit,
+        approx: false,
         checked: item.checked,
         itemIds: [item.id],
       }));
     });
 
     const name = group[0].name;
-    return { name, lines, inPantry: pantrySet.has(name.trim().toLowerCase()) };
+    return { name, lines: mergeCompatibleLines(lines, name), inPantry: pantrySet.has(name.trim().toLowerCase()) };
   });
 
   return { list, groups };

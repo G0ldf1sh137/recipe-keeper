@@ -39,6 +39,9 @@ import { ReportButton } from "#/reports/ReportButton";
 import { scaleQuantity } from "#/recipes/quantity";
 import { useRecipeScale } from "#/recipes/useRecipeScale";
 import { ScaleToggle } from "#/recipes/ScaleToggle";
+import { convertForDisplay } from "#/recipes/units";
+import { useUnitSystem } from "#/recipes/useUnitSystem";
+import { UnitSystemToggle } from "#/recipes/UnitSystemToggle";
 import { ImageModal } from "#/ui/ImageModal";
 import { buildRecipeJsonLd, stringifyJsonLd } from "#/recipes/recipeJsonLd";
 
@@ -116,6 +119,7 @@ function RecipePage() {
   const [deleting, setDeleting] = useState(false);
   const [forking, setForking] = useState(false);
   const { scale, setScale, customInput, handleCustomInputChange, activeFactor, isUnscaled } = useRecipeScale();
+  const { system, setSystem } = useUnitSystem();
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null);
 
   const [related, setRelated] = useState<Awaited<ReturnType<typeof getRelatedRecipes>> | null>(null);
@@ -447,19 +451,29 @@ function RecipePage() {
       <section className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-serif text-xl font-semibold text-ink">Ingredients</h2>
-          <ScaleToggle
-            scale={scale}
-            onScaleChange={setScale}
-            customInput={customInput}
-            onCustomInputChange={handleCustomInputChange}
-          />
+          <div className="flex items-center gap-2">
+            <ScaleToggle
+              scale={scale}
+              onScaleChange={setScale}
+              customInput={customInput}
+              onCustomInputChange={handleCustomInputChange}
+            />
+            <UnitSystemToggle system={system} onSystemChange={setSystem} />
+          </div>
         </div>
         <ul className="mt-2 flex flex-col gap-1 text-ink/80">
           {recipe.ingredients.map((ing, i) => {
-            const displayQty = isUnscaled ? ing.qty : scaleQuantity(ing.qty, activeFactor);
+            const scaledQty = isUnscaled ? ing.qty : scaleQuantity(ing.qty, activeFactor);
+            const converted =
+              system === "original" ? undefined : convertForDisplay(scaledQty, ing.unit, system, ing.name);
+            const displayQty = converted ? converted.qty : scaledQty;
+            const displayUnit = converted ? converted.unit : ing.unit;
             return (
               <li key={i} className="flex list-inside list-disc items-center justify-between gap-2">
-                <span className="list-item">{[displayQty, ing.unit, ing.name].filter(Boolean).join(" ")}</span>
+                <span className="list-item">
+                  {converted?.approx && "≈ "}
+                  {[displayQty, displayUnit, ing.name].filter(Boolean).join(" ")}
+                </span>
                 {isSubscriber && (
                   <span className="flex shrink-0 gap-1.5">
                     <AddIngredientToPantry
@@ -468,7 +482,7 @@ function RecipePage() {
                       loading={pantryNames === null}
                     />
                     <AddIngredientToGroceryList
-                      qty={displayQty}
+                      qty={scaledQty}
                       unit={ing.unit}
                       name={ing.name}
                       groceryLists={groceryLists}
