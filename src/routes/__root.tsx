@@ -255,18 +255,18 @@ function AuthHeader({
       <>
         <CookbooksNavLink onNavigate={() => setMenuOpen(false)} />
         <Link
-          to="/grocery"
-          onClick={() => setMenuOpen(false)}
-          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
-        >
-          Grocery lists
-        </Link>
-        <Link
           to="/pantry"
           onClick={() => setMenuOpen(false)}
           className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
         >
           Pantry
+        </Link>
+        <Link
+          to="/polls"
+          onClick={() => setMenuOpen(false)}
+          className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
+        >
+          Dinner Polls
         </Link>
         <Link
           to="/calendars"
@@ -276,11 +276,11 @@ function AuthHeader({
           Meal Weeks
         </Link>
         <Link
-          to="/polls"
+          to="/grocery"
           onClick={() => setMenuOpen(false)}
           className="text-sm font-medium text-accent-600 hover:text-accent-700 dark:hover:text-accent-400"
         >
-          Dinner Polls
+          Grocery lists
         </Link>
         <Link
           to="/settings"
