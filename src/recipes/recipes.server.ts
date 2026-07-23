@@ -196,10 +196,64 @@ function paginateRows<T>(rows: T[], limit: number | undefined) {
   return { recipes: rows.slice(0, limit), hasMore: rows.length > limit };
 }
 
+const MAX_ROOT_RESOLUTION_HOPS = 5;
+
+// Backfills the ancestor recipe for any fork in a page whose parent isn't
+// itself present in that page (e.g. paginated onto a later page, or filtered
+// out) — walked iteratively since a fork can itself be forked, bounded to a
+// small number of hops rather than a single recursive query, matching this
+// file's plain-query-builder style. Ancestors go through the same
+// visibility/wall/mute/hidden filters as normal listing: an ancestor the
+// viewer shouldn't see simply fails to resolve, leaving that fork to render
+// standalone, the same safe fallback as before this existed.
+async function resolveMissingRoots(
+  pageRows: (typeof recipes.$inferSelect)[],
+  viewerId: string | undefined,
+): Promise<Record<string, typeof recipes.$inferSelect>> {
+  const idsInPage = new Set(pageRows.map((r) => r.id));
+  const resolved = new Map<string, typeof recipes.$inferSelect>();
+  const visited = new Set<string>();
+  let frontier = new Set(
+    pageRows.map((r) => r.parentRecipeId).filter((id): id is string => !!id && !idsInPage.has(id)),
+  );
+
+  for (let hop = 0; hop < MAX_ROOT_RESOLUTION_HOPS && frontier.size > 0; hop++) {
+    const ids = Array.from(frontier).filter((id) => !visited.has(id));
+    if (ids.length === 0) break;
+    ids.forEach((id) => visited.add(id));
+
+    const rows = await db
+      .select(getTableColumns(recipes))
+      .from(recipes)
+      .where(
+        and(
+          inArray(recipes.id, ids),
+          visibleToViewer(viewerId),
+          noWallWithOwner(viewerId),
+          notMutedOwner(viewerId),
+          notHiddenByViewer(viewerId),
+        ),
+      );
+    for (const row of rows) resolved.set(row.id, row);
+
+    frontier = new Set(
+      rows
+        .map((r) => r.parentRecipeId)
+        .filter((id): id is string => !!id && !idsInPage.has(id) && !visited.has(id)),
+    );
+  }
+
+  return Object.fromEntries(resolved);
+}
+
 export async function findRecipes(
   filters: RecipeFilters,
   viewerId: string | undefined,
-): Promise<{ recipes: (typeof recipes.$inferSelect)[]; hasMore: boolean }> {
+): Promise<{
+  recipes: (typeof recipes.$inferSelect)[];
+  hasMore: boolean;
+  extraRoots: Record<string, typeof recipes.$inferSelect>;
+}> {
   const conditions = buildRecipeFilterConditions(filters, viewerId);
   const offset: number = filters.offset ?? 0;
   const limit: number | undefined = filters.limit;
@@ -221,7 +275,8 @@ export async function findRecipes(
       )
       .$dynamic();
     const rows = limit ? await query.limit(limit + 1).offset(offset) : await query;
-    return paginateRows(rows, limit);
+    const page = paginateRows(rows, limit);
+    return { ...page, extraRoots: await resolveMissingRoots(page.recipes, viewerId) };
   }
 
   if (sortBy === "mostComments") {
@@ -234,7 +289,8 @@ export async function findRecipes(
       .orderBy(descOrder(sql`count(${comments.id})`), descOrder(recipes.createdAt), ascOrder(recipes.id))
       .$dynamic();
     const rows = limit ? await query.limit(limit + 1).offset(offset) : await query;
-    return paginateRows(rows, limit);
+    const page = paginateRows(rows, limit);
+    return { ...page, extraRoots: await resolveMissingRoots(page.recipes, viewerId) };
   }
 
   // Uses the plain query builder rather than db.query.recipes.findMany (the
@@ -248,7 +304,8 @@ export async function findRecipes(
     .orderBy(descOrder(recipes.createdAt), ascOrder(recipes.id))
     .$dynamic();
   const rows = limit ? await query.limit(limit + 1).offset(offset) : await query;
-  return paginateRows(rows, limit);
+  const page = paginateRows(rows, limit);
+  return { ...page, extraRoots: await resolveMissingRoots(page.recipes, viewerId) };
 }
 
 export async function findRandomRecipeId(filters: RecipeFilters, viewerId: string | undefined) {

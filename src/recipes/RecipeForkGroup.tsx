@@ -15,11 +15,20 @@ export type RecipeGroup<T extends ForkableRecipe> = { primary: T; forks: T[] };
 
 // Collapses a flat, already-sorted list of recipes so that a recipe and any of
 // its forks present in the same list render as one card with an expandable
-// "N forks" toggle, instead of separate, duplicate-looking entries. Grouping is
-// scoped to whatever's currently loaded: a fork whose original isn't in this
-// list (filtered out, or not yet loaded via infinite scroll) is left standalone.
-export function groupRecipeForks<T extends ForkableRecipe>(recipes: T[]): RecipeGroup<T>[] {
-  const byId = new Map(recipes.map((r) => [r.id, r]));
+// "N forks" toggle, instead of separate, duplicate-looking entries. Grouping
+// primarily works off whatever's currently loaded, but `extraRoots` (backfilled
+// server-side by resolveMissingRoots for any fork whose original isn't in this
+// page) lets a fork resolve to its true primary immediately, rather than
+// rendering standalone until the original happens to paginate in. extraRoots
+// entries are only ever used for this lookup, never rendered as their own
+// top-level card. A fork whose original truly can't be resolved (filtered out
+// by visibility/wall/mute/hidden, not just unloaded) is still left standalone.
+export function groupRecipeForks<T extends ForkableRecipe>(
+  recipes: T[],
+  extraRoots: Map<string, T> = new Map(),
+): RecipeGroup<T>[] {
+  const byId = new Map<string, T>(extraRoots);
+  for (const r of recipes) byId.set(r.id, r);
   const rootIdCache = new Map<string, string>();
 
   function findRootId(id: string): string {

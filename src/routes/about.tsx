@@ -34,19 +34,24 @@ const featureGroups = [
       "Organize recipes into cookbooks, drag to reorder them (with swipe-to-remove and an undo), schedule them across a Meal Week with drag-and-drop (including moving a recipe from one day to another), and bulk-add a Meal Week's recipes to a grocery list in one click. Choose whether your Meal Week starts on Sunday or Monday in Settings.",
   },
   {
+    title: "Pantry mode",
+    description:
+      "List the ingredients you have on hand and see which recipes you can make right now, plus close matches showing exactly what you're missing. Pool your pantry with a household: invite people you live with so everyone's items count toward what you can make together.",
+  },
+  {
     title: "Dinner Polls",
     description:
       "Propose a poll of recipes for a night, and let everyone in your household vote. One vote each, changeable until the poll's creator closes it, and a clear winner can be auto-scheduled straight onto your Meal Week.",
   },
   {
+    title: "Meal Weeks",
+    description: 
+      "Plan out a week of meals with drag-and-drop, and add all the ingredients to a grocery list in one click. See day-by-day totals for calories, protein, carbs, and fat, and optionally include a recipe's nutrition info in the grocery list.",
+  },
+  {
     title: "Grocery lists",
     description:
       "Build a shopping list from one or more recipes, with duplicate ingredients automatically combined (even across different but compatible units, so 2 tbsp and 1/4 cup of the same ingredient merge into one line), plus manually-added items. Anything you've already got in your pantry is called out separately, so you're not shopping for things you already have.",
-  },
-  {
-    title: "Pantry mode",
-    description:
-      "List the ingredients you have on hand and see which recipes you can make right now, plus close matches showing exactly what you're missing. Pool your pantry with a household: invite people you live with so everyone's items count toward what you can make together.",
   },
   {
     title: "Subscription",

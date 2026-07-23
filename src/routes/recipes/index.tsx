@@ -22,9 +22,12 @@ export const Route = createFileRoute("/recipes/")({
   validateSearch: recipesSearchSchema,
   loaderDeps: ({ search }) => search,
   loader: async ({ deps }) => {
-    const [{ recipes, hasMore }, user] = await Promise.all([listRecipes({ data: deps }), getSessionUser()]);
+    const [{ recipes, hasMore, extraRoots }, user] = await Promise.all([
+      listRecipes({ data: deps }),
+      getSessionUser(),
+    ]);
     const ratings = await getRatingSummaries({ data: { recipeIds: recipes.map((r) => r.id) } });
-    return { recipes, hasMore, ratings, isLoggedIn: !!user };
+    return { recipes, hasMore, extraRoots, ratings, isLoggedIn: !!user };
   },
   component: RecipesListPage,
 });
@@ -41,6 +44,7 @@ function RecipesListPage() {
 
   const [recipes, setRecipes] = useState(loaderData.recipes);
   const [hasMore, setHasMore] = useState(loaderData.hasMore);
+  const [extraRoots, setExtraRoots] = useState(() => new Map(Object.entries(loaderData.extraRoots)));
   const [ratingsById, setRatingsById] = useState(() => new Map(Object.entries(loaderData.ratings)));
   const [loadingMore, setLoadingMore] = useState(false);
   const [hideToast, setHideToast] = useState<{ recipeId: string; title: string } | null>(null);
@@ -56,6 +60,7 @@ function RecipesListPage() {
     scrollStateRef.current = { recipes: loaderData.recipes, hasMore: loaderData.hasMore, loadingMore: false };
     setRecipes(loaderData.recipes);
     setHasMore(loaderData.hasMore);
+    setExtraRoots(new Map(Object.entries(loaderData.extraRoots)));
     setRatingsById(new Map(Object.entries(loaderData.ratings)));
   }, [loaderData]);
 
@@ -82,6 +87,11 @@ function RecipesListPage() {
         const nextRecipes = [...current.recipes, ...result.recipes];
         scrollStateRef.current = { recipes: nextRecipes, hasMore: result.hasMore, loadingMore: false };
         setRecipes(nextRecipes);
+        setExtraRoots((prev) => {
+          const next = new Map(prev);
+          for (const [id, recipe] of Object.entries(result.extraRoots)) next.set(id, recipe);
+          return next;
+        });
         setRatingsById((prev) => {
           const next = new Map(prev);
           for (const [id, summary] of Object.entries(newRatings)) next.set(id, summary);
@@ -124,7 +134,7 @@ function RecipesListPage() {
   }
 
   const hasFilters = Boolean(search.visibility || search.q);
-  const groups = useMemo(() => groupRecipeForks(recipes), [recipes]);
+  const groups = useMemo(() => groupRecipeForks(recipes, extraRoots), [recipes, extraRoots]);
 
   async function handleRandom() {
     const id = await getRandomRecipeIdFn({ data: search });
