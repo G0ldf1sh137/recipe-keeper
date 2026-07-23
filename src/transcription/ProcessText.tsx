@@ -123,6 +123,13 @@ export function ProcessText({
                 .join(" · ")}
             </p>
           )}
+          {(result.recipe.yield.trim() ||
+            result.recipe.calories !== null ||
+            result.recipe.protein !== null ||
+            result.recipe.carbs !== null ||
+            result.recipe.fat !== null) && (
+            <p className="mt-1 text-xs text-ink/40">Nutrition info may be estimated by AI and might not be accurate.</p>
+          )}
           {result.recipe.sourceUrl.trim() && (
             <p className="mt-1 text-xs text-ink/50">Source: {result.recipe.sourceUrl.trim()}</p>
           )}

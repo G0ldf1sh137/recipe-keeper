@@ -383,6 +383,10 @@ function RecipePage() {
         </p>
       )}
 
+      {(recipe.yield || recipe.calories || recipe.protein || recipe.carbs || recipe.fat) && (
+        <p className="mt-1 text-xs text-ink/40">Nutrition info may be estimated by AI and might not be accurate.</p>
+      )}
+
       {recipe.sourceUrl && (
         <p className="mt-2 text-sm text-ink/60">
           Originally from{" "}

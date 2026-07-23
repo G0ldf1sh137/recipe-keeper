@@ -11,7 +11,7 @@ const featureGroups = [
   {
     title: "AI-powered import",
     description:
-      "Import a recipe by uploading a photo of a handwritten card, a PDF, pasting text from anywhere, or a source URL. Claude reads it and fills in the form for you.",
+      "Import a recipe by uploading a photo of a handwritten card, a PDF, pasting text from anywhere, or a source URL. Claude reads it and fills in the form for you. Subscribers can also hit \"Calculate nutrition\" on any recipe form to have Claude estimate yield and calories/protein/carbs/fat straight from the ingredient list, no matter how the recipe was entered. These are AI estimates, not lab-tested figures, and are labeled as such wherever they show up.",
   },
   {
     title: "Recipe forking",
@@ -41,7 +41,7 @@ const featureGroups = [
   {
     title: "Grocery lists",
     description:
-      "Build a shopping list from one or more recipes, with duplicate ingredients automatically combined — even across different-but-compatible units (2 tbsp and 1/4 cup of the same ingredient merge into one line) — plus manually-added items. Anything you've already got in your pantry is called out separately, so you're not shopping for things you already have.",
+      "Build a shopping list from one or more recipes, with duplicate ingredients automatically combined (even across different but compatible units, so 2 tbsp and 1/4 cup of the same ingredient merge into one line), plus manually-added items. Anything you've already got in your pantry is called out separately, so you're not shopping for things you already have.",
   },
   {
     title: "Pantry mode",

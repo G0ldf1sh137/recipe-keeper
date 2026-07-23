@@ -275,6 +275,7 @@ function NewRecipePage() {
         knownIngredientNames={knownIngredientNames}
         knownUnitNames={knownUnitNames}
         knownTagNames={knownTagNames}
+        canCalculateNutrition={isSubscriber}
         onPhotoUrlsChange={(photoUrls) => setFormValues((prev) => ({ ...prev, photoUrls }))}
         onSourceUrlChange={(sourceUrl) => setFormValues((prev) => ({ ...prev, sourceUrl }))}
         onSubmit={async (values) => {

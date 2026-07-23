@@ -147,6 +147,106 @@ function buildNormalizationNote(knownIngredientNames: string[], knownUnitNames: 
   return parts.join("\n");
 }
 
+const nutritionEstimateSchema = z.object({
+  yield: z
+    .string()
+    .describe(
+      "The recipe's yield, e.g. '4 servings' or 'Makes 12 muffins'. Keep the given yield as-is if one was provided; otherwise estimate a reasonable yield from the ingredient quantities. Empty string only if there's not enough information to even estimate one.",
+    ),
+  calories: z
+    .number()
+    .int()
+    .nonnegative()
+    .nullable()
+    .describe(
+      "Calories per serving, estimated from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+    ),
+  protein: z
+    .number()
+    .int()
+    .nonnegative()
+    .nullable()
+    .describe(
+      "Grams of protein per serving, estimated from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+    ),
+  carbs: z
+    .number()
+    .int()
+    .nonnegative()
+    .nullable()
+    .describe(
+      "Grams of carbohydrates per serving, estimated from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+    ),
+  fat: z
+    .number()
+    .int()
+    .nonnegative()
+    .nullable()
+    .describe(
+      "Grams of fat per serving, estimated from the ingredients, their quantities, and the yield, using general nutritional knowledge. Null only if there's not enough information to make any reasonable estimate.",
+    ),
+});
+
+export type NutritionEstimate = z.infer<typeof nutritionEstimateSchema>;
+export type NutritionEstimateResult =
+  | { status: "estimated"; nutrition: NutritionEstimate }
+  | { status: "error"; message: string };
+
+function buildIngredientList(ingredients: { qty: string; unit: string; name: string }[]): string {
+  return ingredients
+    .map((ing) => [ing.qty, ing.unit, ing.name].filter((part) => part.trim()).join(" "))
+    .join("\n");
+}
+
+export async function estimateRecipeNutrition(
+  ingredients: { qty: string; unit: string; name: string }[],
+  existingYield: string | null,
+): Promise<NutritionEstimateResult> {
+  const prompt = `Here is a recipe's ingredient list from a recipe-keeping app. The owner pressed a button asking to estimate its nutrition.
+
+Ingredients:
+${buildIngredientList(ingredients)}
+
+${existingYield ? `Stated yield: ${existingYield}` : "No yield has been stated."}
+
+Estimate the recipe's nutrition per serving (calories, protein, carbs, fat) from the ingredients, their quantities, and the yield, using general nutritional knowledge. ${
+    existingYield
+      ? "Keep the stated yield exactly as given."
+      : "Also estimate a reasonable yield from the ingredient quantities."
+  } Only leave a figure blank (empty string / null) if there's not enough information to make any reasonable estimate.`;
+
+  const client = new Anthropic();
+
+  let response;
+  try {
+    response = await client.messages.parse({
+      model: "claude-opus-4-8",
+      max_tokens: 4000,
+      thinking: { type: "adaptive" },
+      output_config: { format: zodOutputFormat(nutritionEstimateSchema) },
+      messages: [{ role: "user", content: [{ type: "text", text: prompt }] }],
+    });
+  } catch (error) {
+    if (error instanceof Anthropic.AuthenticationError) {
+      return { status: "error", message: "The Claude API key is missing or invalid." };
+    }
+    if (error instanceof Anthropic.RateLimitError) {
+      return { status: "error", message: "The Claude API is rate limited right now. Try again in a minute." };
+    }
+    if (error instanceof Anthropic.APIError) {
+      console.error("Nutrition estimate API error:", error.status, error.message);
+      return { status: "error", message: "Estimating nutrition failed. Please try again." };
+    }
+    throw error;
+  }
+
+  if (response.stop_reason === "refusal" || !response.parsed_output) {
+    return { status: "error", message: "Claude couldn't produce a nutrition estimate for these ingredients." };
+  }
+
+  return { status: "estimated", nutrition: response.parsed_output };
+}
+
 export async function transcribeRecipeText(
   recipeText: string,
   knownIngredientNames: string[] = [],

@@ -3,6 +3,8 @@ import { visibilityValues } from "#/db/schema";
 import type { Visibility } from "#/db/schema";
 import { MultiImageUpload } from "#/uploads/ImageUpload";
 import { TagInput } from "#/recipes/TagInput";
+import { CalculateNutrition } from "#/transcription/CalculateNutrition";
+import type { NutritionEstimate } from "#/transcription/transcription.server";
 
 export type IngredientRow = { qty: string; unit: string; name: string };
 export type StepRow = { text: string; imageUrls: string[] };
@@ -75,6 +77,7 @@ export function RecipeForm({
   knownIngredientNames = [],
   knownUnitNames = [],
   knownTagNames = [],
+  canCalculateNutrition = false,
 }: {
   initialValues: RecipeFormValues;
   submitLabel: string;
@@ -84,6 +87,7 @@ export function RecipeForm({
   knownIngredientNames?: string[];
   knownUnitNames?: string[];
   knownTagNames?: string[];
+  canCalculateNutrition?: boolean;
 }) {
   const [title, setTitle] = useState(initialValues.title);
   const [description, setDescription] = useState(initialValues.description);
@@ -120,6 +124,14 @@ export function RecipeForm({
 
   function updateStep(index: number, changes: Partial<StepRow>) {
     setSteps((rows) => rows.map((row, i) => (i === index ? { ...row, ...changes } : row)));
+  }
+
+  function applyNutritionEstimate(nutrition: NutritionEstimate) {
+    if (!yieldInput.trim()) setYieldInput(nutrition.yield);
+    setCaloriesInput(nutrition.calories?.toString() ?? "");
+    setProteinInput(nutrition.protein?.toString() ?? "");
+    setCarbsInput(nutrition.carbs?.toString() ?? "");
+    setFatInput(nutrition.fat?.toString() ?? "");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -207,6 +219,13 @@ export function RecipeForm({
           placeholder="https://example.com/grandmas-pancakes"
         />
       </label>
+
+      <CalculateNutrition
+        ingredients={ingredients}
+        currentYield={yieldInput}
+        onApply={applyNutritionEstimate}
+        canUse={canCalculateNutrition}
+      />
 
       <div className="flex flex-wrap gap-4">
         <label className="flex flex-1 flex-col gap-1">

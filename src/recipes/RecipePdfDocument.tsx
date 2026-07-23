@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
   byline: { fontSize: 10, color: "#666666", marginBottom: 8 },
   description: { marginBottom: 8, lineHeight: 1.4 },
   metaLine: { fontSize: 10, color: "#444444", marginBottom: 8 },
+  nutritionDisclaimer: { fontSize: 8, color: "#999999", marginTop: -6, marginBottom: 8 },
   tags: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 12 },
   tag: {
     fontSize: 9,
@@ -80,6 +81,9 @@ export function RecipePdfPage({ recipe }: { recipe: RecipePdfData }) {
       {recipe.description && <Text style={styles.description}>{recipe.description}</Text>}
       {metaParts.length > 0 && <Text style={styles.metaLine}>{metaParts.join(" · ")}</Text>}
       {macroParts.length > 0 && <Text style={styles.metaLine}>{macroParts.join(" · ")}</Text>}
+      {(metaParts.length > 0 || macroParts.length > 0) && (
+        <Text style={styles.nutritionDisclaimer}>Nutrition info may be estimated by AI and might not be accurate.</Text>
+      )}
 
       {recipe.tags.length > 0 && (
         <View style={styles.tags}>

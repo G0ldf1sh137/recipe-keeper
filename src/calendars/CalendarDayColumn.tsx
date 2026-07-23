@@ -33,7 +33,11 @@ export function CalendarDayColumn({
       {entries.length > 0 && macroParts.length > 0 && (
         <p
           className="mt-1 text-xs text-ink/60"
-          title={totals.incomplete ? "Some recipes this day are missing nutrition info" : undefined}
+          title={
+            totals.incomplete
+              ? "Some recipes this day are missing nutrition info, and any info shown may be estimated by AI."
+              : "Nutrition info may be estimated by AI and might not be accurate."
+          }
         >
           {totals.incomplete ? "~" : ""}
           {macroParts.join(" · ")}
